@@ -8,7 +8,7 @@ months = {'Jan': 'January', 'Feb': 'February', 'Mar': 'March', 'Apr': 'April', '
           'Jul': 'July', 'Aug': 'August', 'Sep': 'September', 'Oct': 'October', 'Nov': 'November', 'Dec': 'December'}
 
 class UonSpider(scrapy.Spider):
-    name = 'uon'
+    name = 'uon_spider'
     allowed_domains = ['www.newcastle.edu.au']
     start_urls = ['http://www.newcastle.edu.au/degrees/']
 

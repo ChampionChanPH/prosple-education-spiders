@@ -8,7 +8,7 @@ def cleanspace(str_in):
 
 
 class IHNASpider(scrapy.Spider):
-    name = 'ihna'
+    name = 'ihna_spider'
     start_urls = [
         "https://ihna.edu.au/courses/"
     ]
