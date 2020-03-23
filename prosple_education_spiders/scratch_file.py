@@ -9,17 +9,12 @@ def strip_tags(phrase, remove_all_tags=True):
     and h4 tags will be converted to strong tag. Other tags will also be cleaned.
     :return: cleaned phrase
     """
-    symbols_to_clean = {"’": "'", "‘": "'", "–": "-", "é": "e"}
 
     if remove_all_tags:
         phrase = re.sub("</?.*?>", "", phrase)
-        for symbol in symbols_to_clean:
-            phrase = phrase.replace(symbol, symbols_to_clean[symbol])
         return phrase.strip()
     else:
         phrase = re.sub("</[h]{1}[1-4]{1}.*?>", "</strong>", phrase)
         phrase = re.sub("<[h]{1}[1-4]{1}.*?>", "<strong>", phrase)
         phrase = clean_html(phrase)
-        for symbol in symbols_to_clean:
-            phrase = phrase.replace(symbol, symbols_to_clean[symbol])
         return phrase.strip()
