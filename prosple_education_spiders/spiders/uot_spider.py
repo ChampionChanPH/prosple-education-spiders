@@ -37,10 +37,6 @@ class UotSpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         courses = response.xpath("//div[@id='courseList']//div[@class='content-border']//a/@href").getall()
-        courses = [
-            "https://www.utas.edu.au/courses/cse/courses/p3h1-bachelor-of-architecture-and-built-environments-creative-innovators-program",
-            "https://www.utas.edu.au/courses/dvc-research/courses/d9c-doctor-of-philosophy-architecture-and-urban-environment",
-            "https://www.utas.edu.au/courses/bus/courses/a4g-bachelor-of-arts-and-bachelor-of-business-with-honours"]
 
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
