@@ -146,7 +146,8 @@ class UotSpiderSpider(scrapy.Spider):
         overview = response.xpath(
             "//div[@class='block block__gutter-md block__shadowed']/div[@class='block block__pad-lg']/div["
             "@class='richtext richtext__medium']/*[not(contains(@class, 'lede'))]").getall()
-        course_item["overview"] = strip_tags("".join(overview), False)
+        if len(overview) > 0:
+            course_item["overview"] = strip_tags("".join(overview), False)
 
         entry = response.xpath("//div[@id='c-entry-eligibility']").get()
         if entry is not None:
