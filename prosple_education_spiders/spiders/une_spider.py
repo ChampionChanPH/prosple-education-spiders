@@ -23,7 +23,6 @@ class UneSpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         courses = response.xpath("//div[@class='content']//td/a/@href").getall()
-        courses= ["https://my.une.edu.au/courses/2020/courses/BAGLAW"]
 
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
