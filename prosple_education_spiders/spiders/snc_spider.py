@@ -65,6 +65,15 @@ class ScSpider(scrapy.Spider):
 
     }
 
+    degrees = {"graduate certificate": {"level": "Postgraduate", "type": "Graduate Certificate"},
+               "graduate diploma": {"level": "Postgraduate", "type": "Graduate Diploma"},
+               "honours": {"level": "Undergraduate", "type": "Bachelor (Honours)"},
+               "bachelor": {"level": "Undergraduate", "type": "Bachelor"},
+               "certificate": {"level": "Undergraduate", "type": "Certificate"},
+               "diploma": {"level": "Undergraduate", "type": "Diploma"},
+               "non-award": {"level": "Undergraduate", "type": "Non-Award"}
+               }
+
     def parse(self, response):
         courses = response.css(".details-btn a::attr(href)").extract()
 
@@ -98,8 +107,15 @@ class ScSpider(scrapy.Spider):
             course_item["courseName"] = raw_course_name
 
         course_item.set_raw_sf()
+        # print(course_item["degreeType"])
+        # print(course_item["rawStudyfield"])
 
-            # print(raw_study_field)
+        degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in course_item["degreeType"]], key=len) #match degree type and get longest match
+        # print(degree_match)
+        course_item["degreeType"] = self.degrees[degree_match]["type"]
+        course_item["courseLevel"] = self.degrees[degree_match]["level"]
+        # print( course_item["degreeType"])
+        # print(course_item["courseLevel"])
         course_item["uid"] = uidPrefix + course_item["courseName"]
         course_item["internationalApplyURL"] = response.request.url
         course_item["domesticApplyURL"] = response.request.url
@@ -170,7 +186,8 @@ class ScSpider(scrapy.Spider):
         #clean domestic Fee Annual
         if "domesticFeeTotal" in course_item:
             # print(course_item["domesticFeeTotal"])
-            tuitions = re.findall("\$(.+?)[<\s\*]", course_item["domesticFeeTotal"])
+            tuitions = re.findall("\$(.+?)[<\s\*&nbsp;]", course_item["domesticFeeTotal"])
+            # print(tuitions)
             tuitions = [int(re.sub(",","",x)) for x in tuitions]
             course_item["domesticFeeTotal"] = max(tuitions)
             # print(course_item["domesticFeeTotal"])
@@ -179,55 +196,4 @@ class ScSpider(scrapy.Spider):
             # print(tuitions)
 
         yield course_item
-
-        # innerContent = response.css("div.inner_content")
-
-
-        #
-        # career_pathways = re.findall('Opportunities<\/h5>(.(?s)*?)<h5',innerContent.extract_first())
-        # if len(career_pathways) == 1:
-        #     course_item["careerPathways"] = career_pathways[0].strip("\n\r")
-        #
-        # studymode = re.findall('Study Modes<\/h5>(.(?s)*?)<h5', innerContent.extract_first())
-        # if len(studymode) == 1:
-        #     holder = []
-        #     if "Face-to-face" in studymode[0]:
-        #         holder.append("In person")
-        #
-        #     course_item["modeOfStudy"] = "|".join(holder)
-        #
-        # coursecontent = re.findall('Course Content<\/h5>(.(?s)*?)<h5', innerContent.extract_first())
-        # if len(coursecontent) == 1:
-        #     course_item["courseStructure"] = coursecontent[0].strip("\n\r")
-        #     filter_html(coursecontent[0].strip("\n\r"))
-        #
-        # creditTransfer = re.findall('Recognition of Prior Learning / Work Experience<\/h5>(.(?s)*?)<h5', innerContent.extract_first())
-        # if len(creditTransfer) == 1:
-        #     course_item["creditTransfer"] = creditTransfer[0].strip("\n\r")
-        #
-        # finSupportSchemes = re.findall('Government Funding<\/h5>(.(?s)*?)<h5', innerContent.extract_first())
-        # if len(finSupportSchemes) == 1:
-        #     course_item["finSupportSchemes"] = finSupportSchemes[0].strip("\n\r")
-        #
-        # # course_item["entryRequirements"] = response.css("div.last_column").css("ul").css("li::text").extract()
-        #
-        # fees = response.css("div.last_column").css("strong::text").extract()
-        #
-        # for fee in fees:
-        #     if "Tuition" in fee:
-        #         # print([fee])
-        #         course_item["domesticFeeTotal"] = re.sub(",","",re.findall("\$([\d,]+)",fee)[0])
-        # last_column = response.css("div.last_column").extract_first()
-        #
-        # if last_column:
-        #     intakes = re.findall('Intakes<\/h5>(.(?s)*?)<', last_column)
-        #     if len(intakes) > 0:
-        #         # print("intakes:", intakes)
-        #         try:
-        #             intakes = "|".join([str(strptime(a.strip(" "),'%b').tm_mon).zfill(2) for a in intakes[0].strip("\n\r").split(",")])
-        #             # print("New Intakes:", intakes)
-        #             course_item["startMonths"] = intakes
-        #         except ValueError:
-        #             pass
-
 
