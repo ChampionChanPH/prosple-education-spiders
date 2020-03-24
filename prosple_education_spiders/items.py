@@ -88,7 +88,6 @@ class Course(scrapy.Item):
     highestScore = scrapy.Field()  # Highest score to receive an offer
     minScoreNextIntake = scrapy.Field()  # Minimum score required for consideration for next intake
 
-
     def set_raw_sf(self):
         if " in " in self["courseName"].lower():
             raw_study_field = self["courseName"].lower().split(" in ")
@@ -98,6 +97,12 @@ class Course(scrapy.Item):
             raw_study_field = [self["courseName"].lower()]
 
         if len(raw_study_field) <= 2:
+            if len(raw_study_field) == 2:
+                self["degreeType"] = raw_study_field[0]
+
+            else:
+                self["degreeType"] = "non-award"
+
             self["rawStudyfield"] = [raw_study_field[-1]]
 
         else:
