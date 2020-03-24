@@ -58,7 +58,7 @@ class TiwaSpiderSpider(scrapy.Spider):
         courses = response.css("a.view-course-btn::attr(href)").extract()
         # print(len(courses))
         for course in courses:
-            yield SplashRequest(response.urljoin(course), callback=self.course_parse, args={'wait': 15.0}, meta={'url': response.urljoin(course)})
+            yield SplashRequest(response.urljoin(course), callback=self.course_parse, args={'wait': 25.0}, meta={'url': response.urljoin(course)})
 
     def course_parse(self, response):
         canonical_group = "StudyPerth"
@@ -87,19 +87,6 @@ class TiwaSpiderSpider(scrapy.Spider):
         course_item["uid"] = uidPrefix + course_item["courseName"]
 
         course_item.set_raw_sf()
-        # print(course_item["rawStudyfield"])
-        # if " in " in course_item["courseName"].lower():
-        #     raw_study_field = course_item["courseName"].lower().split(" in ")
-        # elif " of " in course_item["courseName"]:
-        #     raw_study_field = course_item["courseName"].lower().split(" of ")
-        # else:
-        #     raw_study_field = [course_item["courseName"].lower()]
-        #
-        # if len(raw_study_field) <= 2:
-        #     course_item["rawStudyfield"] = raw_study_field[-1]
-        #
-        # else:
-        #     pass
 
         codes = response.css("hgroup h3::text").extract_first()
         # print(codes)
