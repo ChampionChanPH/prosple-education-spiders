@@ -107,19 +107,15 @@ class ScSpider(scrapy.Spider):
             course_item["courseName"] = raw_course_name
 
         course_item.set_raw_sf()
-        # print(course_item["degreeType"])
-        # print(course_item["rawStudyfield"])
 
         degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in course_item["degreeType"]], key=len) #match degree type and get longest match
         # print(degree_match)
         course_item["degreeType"] = self.degrees[degree_match]["type"]
         course_item["courseLevel"] = self.degrees[degree_match]["level"]
-        # print( course_item["degreeType"])
-        # print(course_item["courseLevel"])
+
         course_item["uid"] = uidPrefix + course_item["courseName"]
         course_item["internationalApplyURL"] = response.request.url
         course_item["domesticApplyURL"] = response.request.url
-        # course_item["courseLevel"] = "Undergraduate"
 
         cricos = response.css("div.section-head span::text").extract()
         if len(cricos) > 0:
@@ -186,9 +182,11 @@ class ScSpider(scrapy.Spider):
         #clean domestic Fee Annual
         if "domesticFeeTotal" in course_item:
             # print(course_item["domesticFeeTotal"])
-            tuitions = re.findall("\$(.+?)[<\s\*&nbsp;]", course_item["domesticFeeTotal"])
+            tuitions = re.findall("\$([\d,]*)", course_item["domesticFeeTotal"])
             # print(tuitions)
+
             tuitions = [int(re.sub(",","",x)) for x in tuitions]
+
             course_item["domesticFeeTotal"] = max(tuitions)
             # print(course_item["domesticFeeTotal"])
 
