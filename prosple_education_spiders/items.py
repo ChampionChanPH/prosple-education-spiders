@@ -89,21 +89,35 @@ class Course(scrapy.Item):
     minScoreNextIntake = scrapy.Field()  # Minimum score required for consideration for next intake
 
     def set_raw_sf(self):
-        if " in " in self["courseName"].lower():
-            raw_study_field = self["courseName"].lower().split(" in ")
-        elif " of " in self["courseName"]:
-            raw_study_field = self["courseName"].lower().split(" of ")
-        else:
-            raw_study_field = [self["courseName"].lower()]
+        delims = [" of ", " in "]
+        degree_types = [self["courseName"].split(x, 1)[0] for x in delims]
+        degree_type = min(degree_types, key=len)
+        study_fields = [y[-1] for y in [self["courseName"].split(x, 1) for x in delims] if len(y) == 2]
+        try:
+            study_field = max(study_fields, key=len)
+            self["rawStudyfield"] = [study_field.lower()]
+            self["degreeType"] = degree_type.lower()
 
-        if len(raw_study_field) <= 2:
-            if len(raw_study_field) == 2:
-                self["degreeType"] = raw_study_field[0]
+        except ValueError:
+            self["rawStudyfield"] = [self["courseName"].lower()]
+            self["degreeType"] = "non-award"
 
-            else:
-                self["degreeType"] = "non-award"
 
-            self["rawStudyfield"] = [raw_study_field[-1]]
-
-        else:
-            pass
+        # if " in " in self["courseName"].lower():
+        #     raw_study_field = self["courseName"].lower().split(" in ")
+        # elif " of " in self["courseName"]:
+        #     raw_study_field = self["courseName"].lower().split(" of ")
+        # else:
+        #     raw_study_field = [self["courseName"].lower()]
+        #
+        # if len(raw_study_field) <= 2:
+        #     if len(raw_study_field) == 2:
+        #         self["degreeType"] = raw_study_field[0]
+        #
+        #     else:
+        #         self["degreeType"] = "non-award"
+        #
+        #     self["rawStudyfield"] = [raw_study_field[-1]]
+        #
+        # else:
+        #     self["degreeType"] = raw_study_field.pop(0)
