@@ -108,8 +108,8 @@ class ScSpider(scrapy.Spider):
 
         course_item.set_raw_sf()
 
+        # print(course_item["rawStudyfield"])
         degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in course_item["degreeType"]], key=len) #match degree type and get longest match
-        # print(degree_match)
         course_item["degreeType"] = self.degrees[degree_match]["type"]
         course_item["courseLevel"] = self.degrees[degree_match]["level"]
 

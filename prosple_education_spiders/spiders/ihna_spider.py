@@ -24,6 +24,15 @@ class IHNASpider(scrapy.Spider):
         "Melbourne CBD Campus": "37790"
     }
 
+    degrees = {"graduate certificate": {"level": "Postgraduate", "type": "Graduate Certificate"},
+               "graduate diploma": {"level": "Postgraduate", "type": "Graduate Diploma"},
+               "honours": {"level": "Undergraduate", "type": "Bachelor (Honours)"},
+               "bachelor": {"level": "Undergraduate", "type": "Bachelor"},
+               "certificate": {"level": "Undergraduate", "type": "Certificate"},
+               "diploma": {"level": "Undergraduate", "type": "Diploma"},
+               "non-award": {"level": "Undergraduate", "type": "Non-Award"}
+               }
+
     def parse(self, response):
         courses = response.css("div.col-lg-12").css("a.text-decoration-none::attr(href)").extract()
         self.international = [i for i in courses if bool(re.search("int$",i))]
@@ -34,7 +43,7 @@ class IHNASpider(scrapy.Spider):
 
 
     def course_parse(self, response):
-        print("test")
+        # print("test")
         canonical_group = "StudyPerth"
         group_number = 23
         institution = "Institute of Health and Nursing Australia"
@@ -59,6 +68,12 @@ class IHNASpider(scrapy.Spider):
         else:
             course_item["courseCode"] = full_course_name.split(" ")[0]
             course_item["courseName"] = full_course_name[len(course_item["courseCode"]):].strip(" ")
+
+        course_item.set_raw_sf()
+
+        degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in course_item["degreeType"]], key=len)  # match degree type and get longest match
+        course_item["degreeType"] = self.degrees[degree_match]["type"]
+        course_item["courseLevel"] = self.degrees[degree_match]["level"]
 
         course_item["uid"] = uidPrefix + course_item["courseName"]
         course_item["overview"] = response.css("p.text-justify::text").extract()
