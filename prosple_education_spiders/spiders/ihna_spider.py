@@ -97,9 +97,9 @@ class IHNASpider(scrapy.Spider):
             except ValueError:
                 pass
 
-        aqf = re.findall("AQF\sLevel.*?\d",course_brief)
-        if len(aqf) == 1:
-            course_item["degreeType"] = aqf[0][-1]
+        # aqf = re.findall("AQF\sLevel.*?\d",course_brief)
+        # if len(aqf) == 1:
+        #     course_item["degreeType"] = aqf[0][-1]
 
         duration = re.findall("Duration.*?strong>(.*)<",course_brief)
         if len(duration) == 1:
