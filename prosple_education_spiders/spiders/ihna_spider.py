@@ -79,8 +79,8 @@ class IHNASpider(scrapy.Spider):
         course_item["overview"] = response.css("p.text-justify::text").extract()
         course_item["overviewSummary"] = course_item["overview"][0]
         course_item["overview"] = "\n".join(course_item["overview"])
-        course_item["courseLevel"] = "Undergraduate"
-        course_item["studyField"] = "Medical & Health Sciences"
+        # course_item["courseLevel"] = "Undergraduate"
+        # course_item["studyField"] = "Medical & Health Sciences"
 
         # course_item["campusNID"] = response.css("div.campus").css("a::text").extract()
         campus = response.css("div.campus").css("a::text").extract()
