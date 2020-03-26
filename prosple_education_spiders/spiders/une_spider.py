@@ -12,11 +12,12 @@ class UneSpiderSpider(scrapy.Spider):
     campuses = {"Sydney": "765", "Armidale": "764"}
     degrees = {"Graduate Certificate": "Graduate Certificate",
                "Graduate Diploma": "Graduate Diploma",
-               "Honours": "Bachelor (Honours)",
+               "with Honours": "Bachelor (Honours)",
                "Research": "Masters (Research)",
                "Master": "Masters (Coursework)",
                "Doctor": "Doctorate (PhD)",
                "Bachelor": "Bachelor",
+               "Associate Degree": "Associate Degree",
                "Certificate": "Certificate",
                "Diploma": "Diploma"}
     group = [["Postgraduate", 4, "PostgradAustralia"], ["Undergraduate", 3, "The Uni Guide"]]
@@ -41,12 +42,11 @@ class UneSpiderSpider(scrapy.Spider):
         course_item["courseName"] = response.xpath("//div[@class='main-content']//h2/text()").get()
         course_item["uid"] = uidPrefix + re.sub(" ", "-", course_item["courseName"])
         for degree in self.degrees:
+            if "degreeType" in course_item:
+                break
             if re.search(degree, course_item["courseName"], re.IGNORECASE):
                 course_item["degreeType"] = self.degrees[degree]
-                break
-            else:
-                course_item["degreeType"] = ""
-        if course_item["degreeType"] == "":
+        if "degreeType" not in course_item:
             course_item["degreeType"] = "Non-Award"
         if course_item["degreeType"] in ["Graduate Certificate", "Graduate Diploma", "Bachelor (Honours)",
                                          "Masters (Research)", "Masters (Coursework)", "Doctorate (PhD)"]:

@@ -31,12 +31,15 @@ class UotSpiderSpider(scrapy.Spider):
                "Master": "Masters (Coursework)",
                "Doctor": "Doctorate (PhD)",
                "Bachelor": "Bachelor",
+               "Associate Degree": "Associate Degree",
                "Certificate": "Certificate",
                "Diploma": "Diploma"}
     group = [["Postgraduate", 4, "PostgradAustralia"], ["Undergraduate", 3, "The Uni Guide"]]
 
     def parse(self, response):
         courses = response.xpath("//div[@id='courseList']//div[@class='content-border']//a/@href").getall()
+        courses = ["https://www.utas.edu.au/courses/chm/courses/h5q-graduate-certificate-in-quality-services-health"
+                   "-and-safety", "https://www.utas.edu.au/courses/cale/courses/r0z-cross-institution-undergrad-arts"]
 
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
@@ -55,12 +58,11 @@ class UotSpiderSpider(scrapy.Spider):
         course_item["courseName"] = response.xpath("//h1[@class='l-object-page-header--page-title']/text()").get()
         course_item["uid"] = uidPrefix + re.sub(" ", "-", course_item["courseName"])
         for degree in self.degrees:
+            if "degreeType" in course_item:
+                break
             if re.search(degree, course_item["courseName"], re.IGNORECASE):
                 course_item["degreeType"] = self.degrees[degree]
-                break
-            else:
-                course_item["degreeType"] = ""
-        if course_item["degreeType"] == "":
+        if "degreeType" not in course_item:
             course_item["degreeType"] = "Non-Award"
         if course_item["degreeType"] in ["Graduate Certificate", "Graduate Diploma", "Bachelor (Honours)",
                                          "Masters (Research)", "Masters (Coursework)", "Doctorate (PhD)"]:
