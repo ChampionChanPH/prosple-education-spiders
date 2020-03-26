@@ -13,8 +13,13 @@ class CoursesItem(scrapy.Item):
     # name = scrapy.Field()
     pass
 
+
 class Course(scrapy.Item):
-    ###Priority Fields (Required)###
+
+    flag = scrapy.Field()  # Non cms field. contains list of potential errors during scrape.
+    # {"field name" : "short description"} eg. {"courseName": "full course name too long. could be a double degree"}
+
+    # Priority Fields (Required) #
     group = scrapy.Field()  # group : Integer corresponding to group
     canonicalGroup = scrapy.Field()  # Canonical Group : String. Name of canonical group.
     published = scrapy.Field()  # Published : 1 or 0
@@ -29,7 +34,7 @@ class Course(scrapy.Item):
     sourceURL = scrapy.Field()  # Record Source URL
     courseCode = scrapy.Field()  # Course code
 
-    ###Important Fields (Fill as much as you can. Can be blank if info is not available###
+    # Important Fields (Fill as much as you can. Can be blank if info is not availablem#
     cricosCode = scrapy.Field()  # CRICOS code
     internationalApps = scrapy.Field()  # Accept International Applications : 1 or 0
     modeOfStudy = scrapy.Field()  # Mode of study : In person or Online
@@ -56,7 +61,7 @@ class Course(scrapy.Item):
     internationalApplyEmail = scrapy.Field()  # International apply by form email
     studyField = scrapy.Field()  # Study Field : leave blank. Will be filled by flow
 
-    #Lower priority fields
+    # Lower priority fields #
     faculty = scrapy.Field()  # Faculty name
     creditTransfer = scrapy.Field()  # Credit for prior study or work
     careerPathways = scrapy.Field()  # Career pathways
@@ -101,23 +106,3 @@ class Course(scrapy.Item):
         except ValueError:
             self["rawStudyfield"] = [self["courseName"].lower()]
             self["degreeType"] = "non-award"
-
-
-        # if " in " in self["courseName"].lower():
-        #     raw_study_field = self["courseName"].lower().split(" in ")
-        # elif " of " in self["courseName"]:
-        #     raw_study_field = self["courseName"].lower().split(" of ")
-        # else:
-        #     raw_study_field = [self["courseName"].lower()]
-        #
-        # if len(raw_study_field) <= 2:
-        #     if len(raw_study_field) == 2:
-        #         self["degreeType"] = raw_study_field[0]
-        #
-        #     else:
-        #         self["degreeType"] = "non-award"
-        #
-        #     self["rawStudyfield"] = [raw_study_field[-1]]
-        #
-        # else:
-        #     self["degreeType"] = raw_study_field.pop(0)
