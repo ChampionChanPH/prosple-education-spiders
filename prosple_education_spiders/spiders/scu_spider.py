@@ -40,18 +40,14 @@ class ScuSpiderSpider(scrapy.Spider):
     group = [["Postgraduate", 4, "PostgradAustralia"], ["Undergraduate", 3, "The Uni Guide"]]
 
     def parse(self, response):
-        # self.courses.extend(response.xpath("//div[@class='courses-table-wrap']//td/a/@href").getall())
-        #
-        # next_page = response.xpath("//ul[@class='pagination']//a[@class='pbc-pag-next']/@href").get()
-        #
-        # if next_page is not None:
-        #     yield response.follow(next_page, callback=self.parse)
+        self.courses.extend(response.xpath("//div[@class='courses-table-wrap']//td/a/@href").getall())
 
-        courses = [
-            "https://www.scu.edu.au/study-at-scu/courses/bachelor-of-education-honours-3507292/2020/#domestic"
-        ]
+        next_page = response.xpath("//ul[@class='pagination']//a[@class='pbc-pag-next']/@href").get()
 
-        for course in courses:
+        if next_page is not None:
+            yield response.follow(next_page, callback=self.parse)
+
+        for course in self.courses:
             yield response.follow(course, callback=self.course_parse)
 
     def course_parse(self, response):
