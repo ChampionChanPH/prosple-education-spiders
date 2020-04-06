@@ -72,10 +72,9 @@ class ScuSpiderSpider(scrapy.Spider):
         course_item["uid"] = uidPrefix + re.sub(" ", "-", course_item["courseName"])
 
         for degree in self.degrees:
-            if "degreeType" in course_item:
-                break
             if re.search(degree, course_item["courseName"], re.I):
                 course_item["degreeType"] = self.degrees[degree]
+                break
         if "degreeType" not in course_item:
             course_item["degreeType"] = "Non-Award"
         if course_item["degreeType"] in ["Graduate Certificate", "Graduate Diploma", "Bachelor (Honours)",
