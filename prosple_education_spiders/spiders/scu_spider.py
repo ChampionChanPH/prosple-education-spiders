@@ -47,6 +47,8 @@ class ScuSpiderSpider(scrapy.Spider):
         if next_page is not None:
             yield response.follow(next_page, callback=self.parse)
 
+        print(len(self.courses))
+
         for course in self.courses:
             yield response.follow(course, callback=self.course_parse)
 
@@ -71,7 +73,8 @@ class ScuSpiderSpider(scrapy.Spider):
         for degree in self.degrees:
             if re.search(degree, course_item["courseName"], re.IGNORECASE):
                 degree_holder.append(self.degrees[degree])
-        course_item["degreeType"] = max(degree_holder)
+        if len(degree_holder) > 0:
+            course_item["degreeType"] = max(degree_holder)
         if "degreeType" not in course_item:
             course_item["degreeType"] = "Non-Award"
         if course_item["degreeType"] in ["Graduate Certificate", "Graduate Diploma", "Bachelor (Honours)",
