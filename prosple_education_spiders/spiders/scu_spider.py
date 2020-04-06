@@ -47,9 +47,7 @@ class ScuSpiderSpider(scrapy.Spider):
         if next_page is not None:
             yield response.follow(next_page, callback=self.parse)
 
-        print(len(self.courses))
-
-        for course in self.courses:
+        for course in courses:
             yield response.follow(course, callback=self.course_parse)
 
     def course_parse(self, response):
