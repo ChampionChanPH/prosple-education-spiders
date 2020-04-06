@@ -40,21 +40,18 @@ class ScuSpiderSpider(scrapy.Spider):
     group = [["Postgraduate", 4, "PostgradAustralia"], ["Undergraduate", 3, "The Uni Guide"]]
 
     def parse(self, response):
-        self.courses.extend(response.xpath("//div[@class='courses-table-wrap']//td/a/@href").getall())
+        # self.courses.extend(response.xpath("//div[@class='courses-table-wrap']//td/a/@href").getall())
+        #
+        # next_page = response.xpath("//ul[@class='pagination']//a[@class='pbc-pag-next']/@href").get()
+        #
+        # if next_page is not None:
+        #     yield response.follow(next_page, callback=self.parse)
 
-        next_page = response.xpath("//ul[@class='pagination']//a[@class='pbc-pag-next']/@href").get()
+        courses = [
+            "https://www.scu.edu.au/study-at-scu/courses/bachelor-of-education-honours-3507292/2020/"
+        ]
 
-        if next_page is not None:
-            yield response.follow(next_page, callback=self.parse)
-
-        # courses = [
-        #     "https://www.scu.edu.au/study-at-scu/courses/bachelor-of-psychological-science-bachelor-of-laws-3207007/2020/",
-        #     "https://www.scu.edu.au/study-at-scu/courses/postgraduate-qualifying-program-9509920/2020/#tab-international",
-        #     "https://www.scu.edu.au/study-at-scu/courses/graduate-certificate-in-business-1007294/2020/#tab-course-summary",
-        #     "https://www.scu.edu.au/study-at-scu/courses/bachelor-of-marine-science-and-management-3007157/2020/#international"
-        # ]
-
-        for course in self.courses:
+        for course in courses:
             yield response.follow(course, callback=self.course_parse)
 
     def course_parse(self, response):
@@ -77,7 +74,7 @@ class ScuSpiderSpider(scrapy.Spider):
         for degree in self.degrees:
             if "degreeType" in course_item:
                 break
-            if re.search(degree, course_item["courseName"], re.IGNORECASE):
+            if re.search(degree, course_item["courseName"], re.I):
                 course_item["degreeType"] = self.degrees[degree]
         if "degreeType" not in course_item:
             course_item["degreeType"] = "Non-Award"
@@ -179,7 +176,8 @@ class ScuSpiderSpider(scrapy.Spider):
                     campus_holder.append(self.campuses[campus])
             if re.search("Online", get_dom_details, re.I | re.M):
                 study_holder.append("Online")
-        course_item["campusNID"] = "|".join(campus_holder)
+        if len(campus_holder) > 0:
+            course_item["campusNID"] = "|".join(campus_holder)
         if "campusNID" in course_item:
             study_holder.append("In Person")
         course_item["modeOfStudy"] = "|".join(study_holder)
