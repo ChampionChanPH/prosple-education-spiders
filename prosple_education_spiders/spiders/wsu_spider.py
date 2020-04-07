@@ -34,9 +34,15 @@ class WsuSpiderSpider(scrapy.Spider):
         "international student": ["internationalFeeTotal", "domesticFeeTotal"]
     }
 
+    def research_coursework(self, url):
+        if "research" in url:
+            return "Masters (Research)"
+        else:
+            return "Masters (Coursework)"
+
     degrees = {"graduate certificate": {"rank": 2, "level": "Postgraduate", "type": "Graduate Certificate"},
                "graduate diploma": {"rank": 2, "level": "Postgraduate", "type": "Graduate Diploma"},
-               "master": {"rank": 2, "level": "Postgraduate", "type": "Masters (Coursework)"},
+               "master": {"rank": 2, "level": "Postgraduate", "type": research_coursework},
                "honours": {"rank": 1, "level": "Undergraduate", "type": "Bachelor (Honours)"},
                "bachelor": {"rank": 1, "level": "Undergraduate", "type": "Bachelor"},
                "certificate": {"rank": 1, "level": "Undergraduate", "type": "Certificate"},
@@ -44,6 +50,9 @@ class WsuSpiderSpider(scrapy.Spider):
                "non-award": {"rank": 1, "level": "Undergraduate", "type": "Non-Award"},
                "no match": {"rank": 99, "level": "no match", "type": "No Match"}
     }
+
+    count = 0
+    courses_scraped = []
 
     def parse(self, response):
         print(response.request.url)
@@ -53,18 +62,28 @@ class WsuSpiderSpider(scrapy.Spider):
         categories = response.css("article.tile__2x2 a::attr(href)").extract()
         for category in categories:
         # print(categories[7])
-            yield SplashRequest(category, callback=self.category_splash, args={'wait': 10})
+            if category != "http://www.westernsydney.edu.au/future/why-western.html":
+                yield SplashRequest(category, callback=self.category_splash, args={'wait': 10})
 
     def category_splash(self, response):
         courses = response.css("article.tile__1x1 a::attr(href)").extract()
-        courses = list(dict.fromkeys(courses))
-        del courses[courses.index("#")]
+        courses = list(dict.fromkeys(courses, 0).keys())
+        if "#" in courses:
+            del courses[courses.index("#")]
+
         for course in courses:
-            yield SplashRequest(course, callback=self.course_parse, args={'wait': 20}, meta={'url': course})
+            if course not in self.courses_scraped:
+                # print(course)
+                self.count += 1
+                # print(self.count)
+                self.courses_scraped.append(course)
+                yield SplashRequest(course, callback=self.course_parse, args={'wait': 20}, meta={'url': course})
 
     def course_parse(self, response):
         # canonical_group = "StudyPerth"
         # group_number = 23
+
+
         institution = "Western Sydney University"
         uidPrefix = "AU-WSU-"
 
@@ -100,10 +119,14 @@ class WsuSpiderSpider(scrapy.Spider):
                 course_item.add_flag("degreeType", "no degree type match")
             if course_item["degreeType"] == "":
                 course_item["degreeType"] = self.degrees[degree_match]["type"]
+                if callable(course_item["degreeType"]):
+                    course_item["degreeType"] = course_item["degreeType"](self, response.meta['url'])
                 rank = self.degrees[degree_match]["rank"]
             else:
                 if rank > self.degrees[degree_match]["rank"]:
                     course_item["degreeType"] = self.degrees[degree_match]["type"]
+                    if callable(course_item["degreeType"]):
+                        course_item["degreeType"] = course_item["degreeType"](self, response.meta['url'])
 
         info_block = response.css("div.tile-carousel-side")#get block that has overview, duration and intake
 
