@@ -94,15 +94,34 @@ class Course(scrapy.Item):
     minScoreNextIntake = scrapy.Field()  # Minimum score required for consideration for next intake
 
     def set_raw_sf(self):
-        delims = [" of ", " in "]
-        degree_types = [self["courseName"].split(x, 1)[0] for x in delims]
-        degree_type = min(degree_types, key=len)
-        study_fields = [y[-1] for y in [self["courseName"].split(x, 1) for x in delims] if len(y) == 2]
-        try:
-            study_field = max(study_fields, key=len)
-            self["rawStudyfield"] = [study_field.lower()]
-            self["degreeType"] = degree_type.lower()
+        self["rawStudyfield"] = []
+        self["degreeType"] = []
+        if "doubleDegree" in self and self["doubleDegree"] == 1:
+            names = self["courseName"].split(" / ")
+        else:
+            names = [self["courseName"]]
 
-        except ValueError:
-            self["rawStudyfield"] = [self["courseName"].lower()]
-            self["degreeType"] = "non-award"
+        delims = [" of ", " in "]
+        for name in names:
+            degree_types = [name.split(x, 1)[0] for x in delims]
+            degree_type = min(degree_types, key=len)
+            study_fields = [y[-1] for y in [self["courseName"].split(x, 1) for x in delims] if len(y) == 2] #try both delimiters but discard if length of split is 1 (i.e. delimiter not present in string)
+            try:
+                study_field = max(study_fields, key=len)
+                self["rawStudyfield"].append(study_field.lower())
+                self["degreeType"].append(degree_type.lower())
+
+            except ValueError:
+                self["rawStudyfield"].append(self["courseName"].lower())
+                self["degreeType"].append("non-award")
+
+    def add_flag(self, field, message):
+
+        if "flag" not in self:
+            self["flag"] = {}
+
+        if field in list(dict.fromkeys(self["flag"])):
+            self["flag"][field].append(message)
+        else:
+            self["flag"][field] = [message]
+
