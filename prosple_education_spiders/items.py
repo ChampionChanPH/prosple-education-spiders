@@ -120,7 +120,7 @@ class Course(scrapy.Item):
         if "flag" not in self:
             self["flag"] = {}
 
-        if field in list(dict.fromkeys(self["flag"])):
+        if field in list(dict.fromkeys(self["flag"]).keys()):
             self["flag"][field].append(message)
         else:
             self["flag"][field] = [message]
