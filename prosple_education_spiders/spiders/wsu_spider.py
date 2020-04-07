@@ -132,7 +132,7 @@ class WsuSpiderSpider(scrapy.Spider):
                 degree_match = "no match"
                 course_item.add_flag("degreeType", "no degree type match")
 
-            if course_item["degreeType"]["type"] == "Non-Award":
+            if degreeTypes[index] == "non-award":
                 course_item["doubleDegree"] = 0
 
             if rank > self.degrees[degree_match]["rank"]:
