@@ -51,9 +51,9 @@ class WsuSpiderSpider(scrapy.Spider):
 
     def mainpage_splash(self, response):
         categories = response.css("article.tile__2x2 a::attr(href)").extract()
-        # for category in categories:
-        print(categories[7])
-        yield SplashRequest(categories[7], callback=self.category_splash, args={'wait': 10})
+        for category in categories:
+        # print(categories[7])
+            yield SplashRequest(category, callback=self.category_splash, args={'wait': 10})
 
     def category_splash(self, response):
         courses = response.css("article.tile__1x1 a::attr(href)").extract()
