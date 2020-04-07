@@ -67,7 +67,7 @@ class WsuSpiderSpider(scrapy.Spider):
 
     count = 0
     courses_scraped = []
-
+    blacklist =["http://www.westernsydney.edu.au/future/study/courses/tesol-and-interpreting-and-translation-courses.html"]
     def parse(self, response):
         print(response.request.url)
         yield SplashRequest(response.request.url, callback=self.mainpage_splash, args={'wait': 10}) #need to load js for main page.
@@ -86,7 +86,7 @@ class WsuSpiderSpider(scrapy.Spider):
             del courses[courses.index("#")]
 
         for course in courses:
-            if course not in self.courses_scraped:
+            if course not in self.courses_scraped and course not in self.blacklist:
                 # print(course)
                 self.count += 1
                 # print(self.count)
