@@ -56,11 +56,11 @@ def cleanspace(str_in):
 
 def get_month(str_in):
     try:
-        return strptime(str_in.strip(" "), '%b').tm_mon
+        return strptime(cleanspace(str_in.strip(" ")), '%b').tm_mon
 
     except ValueError:
         try:
-            return strptime(str_in.strip(" "), '%B').tm_mon
+            return strptime(cleanspace(str_in.strip(" ")), '%B').tm_mon
 
         except ValueError:
             return ""
