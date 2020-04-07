@@ -71,7 +71,7 @@ class IHNASpider(scrapy.Spider):
 
         course_item.set_raw_sf()
 
-        degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in course_item["degreeType"]], key=len)  # match degree type and get longest match
+        degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in course_item["degreeType"][0]], key=len)  # match degree type and get longest match
         course_item["degreeType"] = self.degrees[degree_match]["type"]
         course_item["courseLevel"] = self.degrees[degree_match]["level"]
 
