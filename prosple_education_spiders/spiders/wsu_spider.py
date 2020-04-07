@@ -114,7 +114,10 @@ class WsuSpiderSpider(scrapy.Spider):
         degreeTypes = course_item["degreeType"][:]
         course_item["degreeType"] = ""
         for index in range(len(degreeTypes)):
-            degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in degreeTypes[index]], key=len, default="no match")  # match degree type and get longest match
+            try:
+                degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in degreeTypes[index]], key=len)  # match degree type and get longest match
+            except ValueError:
+                degree_match = "no match"
             if degree_match == "no match":
                 course_item.add_flag("degreeType", "no degree type match")
             if course_item["degreeType"] == "":
