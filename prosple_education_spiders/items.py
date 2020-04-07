@@ -105,14 +105,14 @@ class Course(scrapy.Item):
         for name in names:
             degree_types = [name.split(x, 1)[0] for x in delims]
             degree_type = min(degree_types, key=len)
-            study_fields = [y[-1] for y in [self["courseName"].split(x, 1) for x in delims] if len(y) == 2] #try both delimiters but discard if length of split is 1 (i.e. delimiter not present in string)
+            study_fields = [y[-1] for y in [name.split(x, 1) for x in delims] if len(y) == 2] #try both delimiters but discard if length of split is 1 (i.e. delimiter not present in string)
             try:
                 study_field = max(study_fields, key=len)
                 self["rawStudyfield"].append(study_field.lower())
                 self["degreeType"].append(degree_type.lower())
 
             except ValueError:
-                self["rawStudyfield"].append(self["courseName"].lower())
+                self["rawStudyfield"].append(name.lower())
                 self["degreeType"].append("non-award")
 
     def add_flag(self, field, message):
