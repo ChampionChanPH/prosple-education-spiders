@@ -34,19 +34,33 @@ class WsuSpiderSpider(scrapy.Spider):
         "international student": ["internationalFeeTotal", "domesticFeeTotal"]
     }
 
-    def research_coursework(self, url):
-        if "research" in url:
+    def research_coursework(self, course_item):
+        if "research" in course_item["sourceURL"]:
             return "Masters (Research)"
         else:
             return "Masters (Coursework)"
 
+    def bachelor_honours(self, course_item):
+        if "honours" in course_item["sourceURL"]:
+            return "Bachelor (Honours)"
+        else:
+            return "Bachelor"
+
+    def doctor(self, course_item):
+        if course_item["courseLevel"] == "Undergraduate":
+            return "Bachelor"
+        else:
+            return "Doctorate (PhD)"
+
     degrees = {"graduate certificate": {"rank": 2, "level": "Postgraduate", "type": "Graduate Certificate"},
                "graduate diploma": {"rank": 2, "level": "Postgraduate", "type": "Graduate Diploma"},
                "master": {"rank": 2, "level": "Postgraduate", "type": research_coursework},
-               "honours": {"rank": 1, "level": "Undergraduate", "type": "Bachelor (Honours)"},
-               "bachelor": {"rank": 1, "level": "Undergraduate", "type": "Bachelor"},
+               "bachelor": {"rank": 1, "level": "Undergraduate", "type": bachelor_honours},
+               "doctor": {"rank": 1, "level": "Undergraduate", "type": doctor},
                "certificate": {"rank": 1, "level": "Undergraduate", "type": "Certificate"},
                "diploma": {"rank": 1, "level": "Undergraduate", "type": "Diploma"},
+               "associate degree": {"rank": 1, "level": "Undergraduate", "type": "Associate Degree"},
+               "university foundation studies": {"rank": 1, "level": "Undergraduate", "type": "Non-Award"},
                "non-award": {"rank": 1, "level": "Undergraduate", "type": "Non-Award"},
                "no match": {"rank": 99, "level": "no match", "type": "No Match"}
     }
@@ -80,9 +94,6 @@ class WsuSpiderSpider(scrapy.Spider):
                 yield SplashRequest(course, callback=self.course_parse, args={'wait': 20}, meta={'url': course})
 
     def course_parse(self, response):
-        # canonical_group = "StudyPerth"
-        # group_number = 23
-
 
         institution = "Western Sydney University"
         uidPrefix = "AU-WSU-"
@@ -93,7 +104,7 @@ class WsuSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.meta['url']
         course_item["published"] = 1
         course_item["institution"] = institution
-        course_item["internationalApplyURL"] = response.meta['url']
+
         course_item["domesticApplyURL"] = response.meta['url']
 
         course_item["courseName"] = response.css("h1.title__text::text").extract_first()
@@ -112,24 +123,24 @@ class WsuSpiderSpider(scrapy.Spider):
 
         course_item.set_raw_sf()
         degreeTypes = course_item["degreeType"][:]
-        course_item["degreeType"] = ""
+        rank = 999
+
         for index in range(len(degreeTypes)):
             try:
                 degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in degreeTypes[index]], key=len)  # match degree type and get longest match
             except ValueError:
                 degree_match = "no match"
-            if degree_match == "no match":
                 course_item.add_flag("degreeType", "no degree type match")
-            if course_item["degreeType"] == "":
+
+            if course_item["degreeType"]["type"] == "Non-Award":
+                course_item["doubleDegree"] = 0
+
+            if rank > self.degrees[degree_match]["rank"]:
                 course_item["degreeType"] = self.degrees[degree_match]["type"]
                 if callable(course_item["degreeType"]):
-                    course_item["degreeType"] = course_item["degreeType"](self, response.meta['url'])
+                    course_item["degreeType"] = course_item["degreeType"](self, course_item)
                 rank = self.degrees[degree_match]["rank"]
-            else:
-                if rank > self.degrees[degree_match]["rank"]:
-                    course_item["degreeType"] = self.degrees[degree_match]["type"]
-                    if callable(course_item["degreeType"]):
-                        course_item["degreeType"] = course_item["degreeType"](self, response.meta['url'])
+
 
         info_block = response.css("div.tile-carousel-side")#get block that has overview, duration and intake
 
@@ -172,7 +183,10 @@ class WsuSpiderSpider(scrapy.Spider):
         campuses = campus_blocks.css("h3::text").extract()
         course_item["campusNID"] = "|".join([self.campus_map[x] for x in campuses if x != "Online"])
         if "Online" in campuses:
-            course_item["modeOfStudy"] = "In person|Online"
+            if len(campuses) == 1:
+                course_item["modeOfStudy"] = "Online"
+            else:
+                course_item["modeOfStudy"] = "In person|Online"
         else:
             course_item["modeOfStudy"] = "In person"
         for campus_block in campus_blocks:
@@ -184,12 +198,14 @@ class WsuSpiderSpider(scrapy.Spider):
                     if "courseCode" in course_item and value != course_item["courseCode"]:
                         course_item.add_flag("courseCode", "Inconsistent course code")
                     else:
-                        course_item["courseCode"] = value
+                        if re.match("\d+", value):
+                            course_item["courseCode"] = value
 
                 elif label == "CRICOS CODE":
                     course_item["internationalApps"] = 1
+                    course_item["internationalApplyURL"] = response.meta['url']
                     if "cricosCode" in course_item and value != course_item["cricosCode"]:
-                        course_item.add_flag("courseCode", "Inconsistent course code")
+                        course_item.add_flag("courseCode", "Inconsistent cricos code")
                     else:
                         course_item["cricosCode"] = value
 
