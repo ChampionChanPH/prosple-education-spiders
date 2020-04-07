@@ -97,7 +97,7 @@ class Course(scrapy.Item):
         self["rawStudyfield"] = []
         self["degreeType"] = []
         if "doubleDegree" in self and self["doubleDegree"] == 1:
-            names = self["courseName"].split(" / ")
+            names = [x.strip(" ") for x in self["courseName"].split("/")]
         else:
             names = [self["courseName"]]
 
