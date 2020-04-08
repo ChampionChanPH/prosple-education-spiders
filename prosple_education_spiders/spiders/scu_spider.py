@@ -88,9 +88,8 @@ class ScuSpiderSpider(scrapy.Spider):
             course_item["courseLevel"] = ""
             course_item["group"] = self.group[1][1]
             course_item["canonicalGroup"] = self.group[1][2]
-        separate_holder = re.split(",\s(?=Bachelor|Graduate|Diploma|Master|Doctor|Associate|Certificate)", course_item["courseName"])
-        if len(separate_holder) == 1:
-            separate_holder = re.split("/", course_item["courseName"])
+        separate_holder = re.split("\s?[,/]\s?(?=Bachelor|Graduate|Diploma|Masters|Doctor|Associate|Certificate)",
+                                   course_item["courseName"])
         if len(separate_holder) > 1:
             course_item["doubleDegree"] = 1
         holder = []
