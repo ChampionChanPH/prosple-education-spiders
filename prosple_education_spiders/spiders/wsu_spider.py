@@ -7,6 +7,28 @@ from datetime import date
 from time import strptime
 from scrapy_splash import SplashRequest
 
+
+def research_coursework(course_item):
+    if "research" in course_item["sourceURL"]:
+        return "12"
+    else:
+        return "11"
+
+
+def bachelor_honours(course_item):
+    if "honours" in course_item["sourceURL"]:
+        return "3"
+    else:
+        return "2"
+
+
+def doctor(course_item):
+    if course_item["courseLevel"] == "Undergraduate":
+        return "2"
+    else:
+        return "6"
+
+
 class WsuSpiderSpider(scrapy.Spider):
     name = 'wsu_spider'
     start_urls = ['https://www.westernsydney.edu.au/future/study/courses.html']
@@ -34,40 +56,23 @@ class WsuSpiderSpider(scrapy.Spider):
         "international student": ["internationalFeeTotal", "domesticFeeTotal"]
     }
 
-    def research_coursework(self, course_item):
-        if "research" in course_item["sourceURL"]:
-            return "Masters (Research)"
-        else:
-            return "Masters (Coursework)"
-
-    def bachelor_honours(self, course_item):
-        if "honours" in course_item["sourceURL"]:
-            return "Bachelor (Honours)"
-        else:
-            return "Bachelor"
-
-    def doctor(self, course_item):
-        if course_item["courseLevel"] == "Undergraduate":
-            return "Bachelor"
-        else:
-            return "Doctorate (PhD)"
-
-    degrees = {"graduate certificate": {"rank": 2, "level": "Postgraduate", "type": "Graduate Certificate"},
-               "graduate diploma": {"rank": 2, "level": "Postgraduate", "type": "Graduate Diploma"},
+    degrees = {"graduate certificate": {"rank": 2, "level": "Postgraduate", "type": "7"},
+               "graduate diploma": {"rank": 2, "level": "Postgraduate", "type": "8"},
                "master": {"rank": 2, "level": "Postgraduate", "type": research_coursework},
                "bachelor": {"rank": 1, "level": "Undergraduate", "type": bachelor_honours},
                "doctor": {"rank": 1, "level": "Undergraduate", "type": doctor},
-               "certificate": {"rank": 1, "level": "Undergraduate", "type": "Certificate"},
-               "diploma": {"rank": 1, "level": "Undergraduate", "type": "Diploma"},
-               "associate degree": {"rank": 1, "level": "Undergraduate", "type": "Associate Degree"},
-               "university foundation studies": {"rank": 1, "level": "Undergraduate", "type": "Non-Award"},
-               "non-award": {"rank": 1, "level": "Undergraduate", "type": "Non-Award"},
-               "no match": {"rank": 99, "level": "no match", "type": "No Match"}
+               "certificate": {"rank": 1, "level": "Undergraduate", "type": "4"},
+               "diploma": {"rank": 1, "level": "Undergraduate", "type": "5"},
+               "associate degree": {"rank": 1, "level": "Undergraduate", "type": "1"},
+               "university foundation studies": {"rank": 1, "level": "Undergraduate", "type": "13"},
+               "non-award": {"rank": 1, "level": "Undergraduate", "type": "13"},
+               "no match": {"rank": 99, "level": "no match", "type": "15"}
     }
 
     count = 0
     courses_scraped = []
     blacklist =["http://www.westernsydney.edu.au/future/study/courses/tesol-and-interpreting-and-translation-courses.html"]
+
     def parse(self, response):
         print(response.request.url)
         yield SplashRequest(response.request.url, callback=self.mainpage_splash, args={'wait': 10}) #need to load js for main page.
@@ -118,32 +123,9 @@ class WsuSpiderSpider(scrapy.Spider):
         course_item["canonicalGroup"] = self.groups[course_item["courseLevel"]]["name"]
         course_item["group"] = self.groups[course_item["courseLevel"]]["number"]
 
-        if "/" in course_item["courseName"]:
-            course_item["doubleDegree"] = 1
-
-        course_item.set_raw_sf()
-        degreeTypes = course_item["degreeType"][:]
-        rank = 999
-
-        for index in range(len(degreeTypes)):
-            try:
-                degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in degreeTypes[index]], key=len)  # match degree type and get longest match
-            except ValueError:
-                degree_match = "no match"
-                course_item.add_flag("degreeType", "no degree type match")
-
-            if degreeTypes[index] == "non-award":
-                course_item["doubleDegree"] = 0
-
-            if rank > self.degrees[degree_match]["rank"]:
-                course_item["degreeType"] = self.degrees[degree_match]["type"]
-                if callable(course_item["degreeType"]):
-                    course_item["degreeType"] = course_item["degreeType"](self, course_item)
-                rank = self.degrees[degree_match]["rank"]
-
+        course_item.set_sf_dt(self.degrees)
 
         info_block = response.css("div.tile-carousel-side")#get block that has overview, duration and intake
-
         course_description = info_block[0].css("div.component--wysiwyg p::text").extract()
         course_item["overviewSummary"] = cleanspace(course_description[0])
         course_item["overview"] = "\n".join([cleanspace(x) for x in course_description])
