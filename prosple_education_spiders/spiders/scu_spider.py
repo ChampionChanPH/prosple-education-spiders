@@ -75,6 +75,7 @@ class ScuSpiderSpider(scrapy.Spider):
             course_item["degreeType"] = max(degree_holder)
         if "degreeType" not in course_item:
             course_item["degreeType"] = "Non-Award"
+            course_item.add_flag("degreeType", "assigned non-award")
         if course_item["degreeType"] in ["Graduate Certificate", "Graduate Diploma", "Bachelor (Honours)",
                                          "Masters (Research)", "Masters (Coursework)", "Doctorate (PhD)"]:
             course_item["courseLevel"] = self.group[0][0]
