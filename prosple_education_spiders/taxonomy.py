@@ -1,4 +1,4 @@
-degree_types = {
+taxonomy_degree_types = {
     "1": "Associate Degree",
     "2": "Bachelor",
     "3": "Bachelor (Honours)",
@@ -13,5 +13,6 @@ degree_types = {
     "12": "Masters (Research)",
     "13": "Non-Award",
     "14": "Professional Certificate",
+    "15": "No Match"
 }
 
