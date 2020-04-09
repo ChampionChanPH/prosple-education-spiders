@@ -130,7 +130,7 @@ class Course(scrapy.Item):
                 degree_match = max([x for x in list(dict.fromkeys(degrees)) if x in raw_degree_types[index]], key=len)  # match degree type and get longest match
             except ValueError:
                 degree_match = "no match"
-                self.add_flag("degreeType", "no degree type match")
+                self.add_flag("degreeType", "no degree type match for "+raw_degree_types[index])
 
             if rank > degrees[degree_match]["rank"]:
                 self["degreeType"] = degrees[degree_match]["type"]
