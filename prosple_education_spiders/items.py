@@ -6,7 +6,7 @@
 # https://docs.scrapy.org/en/latest/topics/items.html
 
 import scrapy
-
+import re
 
 class CoursesItem(scrapy.Item):
     # define the fields for your item here like:
@@ -28,7 +28,7 @@ class Course(scrapy.Item):
     rawStudyfield = scrapy.Field()  # non cms field to store program name : List of raw study field, all lowercase
     campusNID = scrapy.Field()  # Campus NID : Pipe separated string of ids of campuses e.g. "154|345|454"
     uid = scrapy.Field()  # UID
-    courseLevel = scrapy.Field()  # Course level : Graduate or Undergraduate
+    courseLevel = scrapy.Field()  # Course level : Postgraduate or Undergraduate
     degreeType = scrapy.Field()  # Degree type : Bachelor or Certificate etc
     lastUpdate = scrapy.Field()  # Data last updated : mm/dd/yy
     sourceURL = scrapy.Field()  # Record Source URL
@@ -93,27 +93,50 @@ class Course(scrapy.Item):
     highestScore = scrapy.Field()  # Highest score to receive an offer
     minScoreNextIntake = scrapy.Field()  # Minimum score required for consideration for next intake
 
-    def set_raw_sf(self):
-        self["rawStudyfield"] = []
-        self["degreeType"] = []
-        if "doubleDegree" in self and self["doubleDegree"] == 1:
-            names = [x.strip(" ") for x in self["courseName"].split("/")]
-        else:
-            names = [self["courseName"]]
+    def set_sf_dt(self, degrees, type_delims=["of", "in"], degree_delims=["/"]):
+        '''
+        :param degrees: dictionary; degree mapping
+        :param type_delims: Optional; Default = ["of", "in"]; list of possible delimiters between degree type and study field. e.g. ["of","in","-"]
+        :param degree_delims: Optional; Default = ["/"]; list of possible double degree delimiters. e.g. ["/",",","-"]
+        :return:
+        '''
 
-        delims = [" of ", " in "]
+        self["rawStudyfield"] = []
+        raw_degree_types = []
+        rank = 999
+
+        pattern = "\s?["+"".join(degree_delims)+"]\s?(?="+"|".join(list(degrees.keys()))+")"
+        names = re.split(pattern, self["courseName"], flags=re.IGNORECASE)
+        if len(names) > 1:
+            self["doubleDegree"] = 1
+
+        # Master of Engineering in Biotech
+        delims = type_delims[:]
         for name in names:
-            degree_types = [name.split(x, 1)[0] for x in delims]
+            degree_types = [name.split(x, 1)[0].strip(" ") for x in delims]  # [Master, Master of Engineering]
             degree_type = min(degree_types, key=len)
-            study_fields = [y[-1] for y in [name.split(x, 1) for x in delims] if len(y) == 2] #try both delimiters but discard if length of split is 1 (i.e. delimiter not present in string)
+            study_fields = [y[-1].strip(" ") for y in [name.split(x, 1) for x in delims] if len(y) == 2]  # try both delimiters but discard if length of split is 1 (i.e. delimiter not present in string)
+
             try:
                 study_field = max(study_fields, key=len)
                 self["rawStudyfield"].append(study_field.lower())
-                self["degreeType"].append(degree_type.lower())
-
+                raw_degree_types.append(degree_type.lower())
             except ValueError:
                 self["rawStudyfield"].append(name.lower())
-                self["degreeType"].append("non-award")
+                raw_degree_types.append("non-award")
+
+        for index in range(len(raw_degree_types)):
+            try:
+                degree_match = max([x for x in list(dict.fromkeys(degrees)) if x in raw_degree_types[index]], key=len)  # match degree type and get longest match
+            except ValueError:
+                degree_match = "no match"
+                self.add_flag("degreeType", "no degree type match")
+
+            if rank > degrees[degree_match]["rank"]:
+                self["degreeType"] = degrees[degree_match]["type"]
+                if callable(self["degreeType"]):
+                    self["degreeType"] = self["degreeType"](self)
+                rank = degrees[degree_match]["rank"]
 
     def add_flag(self, field, message):
 
