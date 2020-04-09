@@ -38,17 +38,17 @@ class WsuSpiderSpider(scrapy.Spider):
                 "Undergraduate": {"number": 3, "name": "The Uni Guide"}
               }
     campus_map = {
-        "Bankstown": "39700",
-        "Campbelltown": "39701",
-        "Hawkesbury": "39702",
-        "Lithgow": "39703",
-        "Liverpool City": "39704",
-        "Nirimba": "39705",
-        "Parramatta City": "39707",
-        "Parramatta South": "39708",
-        "Penrith": "39709",
-        "Sydney City": "39710",
-        "Sydney Olympic Park": "39711"
+        "Bankstown": "855",
+        "Campbelltown": "857",
+        "Hawkesbury": "11718",
+        "Lithgow": "39903",#
+        "Liverpool City": "858",
+        "Nirimba": "859",
+        "Parramatta City": "860",
+        "Parramatta South": "853",
+        "Penrith": "856",
+        "Sydney City": "854",
+        "Sydney Olympic Park": "39902"
     }
 
     fee_map = {
