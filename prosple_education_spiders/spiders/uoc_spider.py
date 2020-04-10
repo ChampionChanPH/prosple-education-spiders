@@ -1,12 +1,67 @@
-# -*- coding: utf-8 -*-
 import scrapy
+import re
+from ..items import Course
+from ..scratch_file import strip_tags
+from datetime import date
 
 
 class UocSpiderSpider(scrapy.Spider):
     name = 'uoc_spider'
     allowed_domains = ['search.canberra.edu.au', 'www.canberra.edu.au', 'canberra.edu.au']
-    start_urls = ['http://https://search.canberra.edu.au/s/search.html?collection=courses&form=course-search&profile'
-                  '=_default&query=!padre&course-search-widget__submit=&meta_C_and=COURSE&sort=metaH/']
+    start_urls = ['https://search.canberra.edu.au/s/search.html?collection=courses&form=course-search&profile'
+                  '=_default&query=!padre&course-search-widget__submit=&meta_C_and=COURSE&sort=metaH&f.Type|B'
+                  '=undergraduate&f.Course+Status%7CD=Open',
+                  'https://search.canberra.edu.au/s/search.html?collection=courses&form=course-search&profile'
+                  '=_default&query=!padre&course-search-widget__submit=&meta_C_and=COURSE&sort=metaH&f.Course+Status'
+                  '%7CD=Open&f.Type|B=postgraduate',
+                  'https://search.canberra.edu.au/s/search.html?collection=courses&form=course-search&profile'
+                  '=_default&query=!padre&course-search-widget__submit=&meta_C_and=COURSE&sort=metaH&f.Course+Status'
+                  '%7CD=Open&f.Type|B=research']
+    courses = []
 
     def parse(self, response):
-        pass
+        # self.courses.extend(response.xpath("//table[@class='table course_results']//tr/@data-fb-result").getall())
+        #
+        # next_page = response.xpath("//ul[@class='pagination pagination-lg']/li/a[@rel='next']/@href").get()
+        #
+        # if next_page is not None:
+        #     yield response.follow(next_page, callback=self.parse)
+
+        courses = ["https://www.canberra.edu.au/coursesandunits/course?course_cd=MGB302&version_number=1&title"
+                   "=Bachelor-of-Commerce-(Business-Economics)&location=BRUCE&rank=AAA&faculty=Faculty-of-Business,"
+                   "-Government---Law&year=2020",
+                   "https://www.canberra.edu.au/coursesandunits/course?course_cd=142JA&version_number=3&title"
+                   "=Bachelor-of-Applied-Science-in-Forensic-Studies&location=BRUCE&rank=AAA&faculty=Faculty-of"
+                   "-Science-and-Technology&year=2020",
+                   "https://www.canberra.edu.au/coursesandunits/course?course_cd=910AA&version_number=2&title=Master"
+                   "-of-Applied-Science-(Research)&location=BRUCE&rank=FFF&faculty=Faculty-of-Science-and-Technology"
+                   "&year=2020",
+                   "https://www.canberra.edu.au/coursesandunits/course?course_cd=723AL&version_number=3&title=Master"
+                   "-of-Business-Administration-(Bhutan)&location=RIM-BHUTAN&rank=CCC&faculty=Faculty-of-Business,"
+                   "-Government---Law&year=2020",
+                   "https://www.canberra.edu.au/coursesandunits/course?course_cd=MGB001&version_number=1&title"
+                   "=Bachelor-of-Accounting&location=BRUCE&rank=AAA&faculty=Faculty-of-Business,"
+                   "-Government---Law&year=2020"]
+
+        for course in courses:
+            yield response.follow(course, callback=self.course_parse)
+
+    def course_parse(self, response):
+        institution = "University of Canberra"
+        uidPrefix = "AU-UOC-"
+
+        course_item = Course()
+
+        course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
+        course_item["sourceURL"] = response.request.url
+        course_item["published"] = 1
+        course_item["institution"] = institution
+        course_item["internationalApplyURL"] = response.request.url
+        course_item["domesticApplyURL"] = response.request.url
+
+        course_name, course_code = re.split(r" - ", response.xpath("//h1[@class='course_title']/text()").get())
+        course_item["courseName"] = course_name
+        course_item["courseCode"] = course_code
+
+        yield course_item
+
