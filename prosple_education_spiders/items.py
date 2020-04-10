@@ -105,7 +105,18 @@ class Course(scrapy.Item):
         raw_degree_types = []
         rank = 999
 
-        pattern = "\s?["+"".join(degree_delims)+"]\s?(?="+"|".join(list(degrees.keys()))+")"
+        single_chars = [x for x in degree_delims if len(x) == 1]  # Isolate single character delimiter like "/", "-"
+        words = [x for x in degree_delims if len(x) != 1]  # Isolate word delimiters like "and"
+        words = [x for x in words if re.match("\s" + x + "\s(?=" + "|".join(list(degrees.keys())))]  #get word followed by degree that has a match in the course name
+        if len(words) == 1:
+            pattern = "\s"+words[0]+"\s(?="+"|".join(list(degrees.keys()))  # set pattern for word case
+
+        elif len(words) > 1:
+            self.add_flag("doubleDegree", "Matched multiple degree delims"+words)  # matching on two delimiters is odd. need to flag
+
+        else:
+            pattern = "\s?["+"".join(single_chars)+"]\s?(?="+"|".join(list(degrees.keys()))+")"  # if no match on the word delims, default to single char delims
+
         names = re.split(pattern, self["courseName"], flags=re.IGNORECASE)
         if len(names) > 1:
             self["doubleDegree"] = 1
