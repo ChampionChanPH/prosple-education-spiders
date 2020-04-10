@@ -63,5 +63,47 @@ class UocSpiderSpider(scrapy.Spider):
         course_item["courseName"] = course_name
         course_item["courseCode"] = course_code
 
-        yield course_item
+        cricos = response.xpath("//table[@class='course-details-table']//tr/th[contains(text(), "
+                                "'CRICOS')]/following-sibling::td").get()
+        if cricos is not None:
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos)
+            if len(cricos) > 0:
+                course_item["cricosCode"] = cricos[0]
 
+        career = response.xpath("//div[@id='introduction']/h2[contains(text(), 'Career "
+                                "opportunities')]/following-sibling::ul").get()
+        if career is not None:
+            course_item["careerPathways"] = career
+
+        overview = response.xpath("//div[@id='introduction']//h2[contains(text(), 'Study a')]/preceding::p").getall()
+        if len(overview) == 0:
+            overview = response.xpath("//div[@id='introduction']/h2[contains(text(), "
+                                      "'Introduction')]/following-sibling::p").getall()
+            if len(overview) > 0:
+                overview = "".join(overview)
+                course_item["overview"] = strip_tags(overview, False)
+        else:
+            overview = "".join(overview)
+            course_item["overview"] = strip_tags(overview, False)
+
+        learn = response.xpath("//div[@id='introduction']//h2[contains(text(), 'Study "
+                               "a')]/following-sibling::ul").get()
+        if learn is not None:
+            course_item["whatLearn"] = learn
+
+        for header, content in zip(response.xpath("//div[@id='fees']//table//tr/th/text()").getall(),
+                                   response.xpath("//div[@id='fees']//table//tr/td/text()").getall()):
+            if re.search("domestic", header, re.I):
+                dom_fee = re.findall("\$(\d+),?(\d{3})", content)
+                if len(dom_fee) > 0:
+                    course_item["domesticFeeAnnual"] = "".join(dom_fee[0])
+            if re.search("international", header, re.I):
+                int_fee = re.findall("\$(\d+),?(\d{3})", content)
+                if len(int_fee) > 0:
+                    course_item["internationalFeeAnnual"] = "".join(int_fee[0])
+
+        entry = response.xpath("//div[@id='admission']/h2[contains(text(), 'Admission')]/following-sibling::p[1]").get()
+        if entry is not None:
+            course_item["entryRequirements"] = entry
+
+        yield course_item
