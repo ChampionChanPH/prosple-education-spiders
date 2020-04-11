@@ -5,6 +5,20 @@ from ..scratch_file import strip_tags
 from datetime import date
 
 
+def research_coursework(course_item):
+    if re.search("research", course_item["courseName"], re.I):
+        return "12"
+    else:
+        return "11"
+
+
+def bachelor_honours(course_item):
+    if re.search("honours", course_item["courseName"], re.I):
+        return "3"
+    else:
+        return "2"
+
+
 class UocSpiderSpider(scrapy.Spider):
     name = 'uoc_spider'
     allowed_domains = ['search.canberra.edu.au', 'www.canberra.edu.au', 'canberra.edu.au']
@@ -19,31 +33,34 @@ class UocSpiderSpider(scrapy.Spider):
                   '%7CD=Open&f.Type|B=research']
     courses = []
 
+    degrees = {"graduate certificate": {"rank": 2, "level": "Postgraduate", "type": "7"},
+               "graduate diploma": {"rank": 2, "level": "Postgraduate", "type": "8"},
+               "master": {"rank": 2, "level": "Postgraduate", "type": research_coursework},
+               "bachelor": {"rank": 1, "level": "Undergraduate", "type": bachelor_honours},
+               "doctor": {"rank": 1, "level": "Postgraduate", "type": "6"},
+               "certificate": {"rank": 1, "level": "Undergraduate", "type": "4"},
+               "diploma": {"rank": 1, "level": "Undergraduate", "type": "5"},
+               "associate degree": {"rank": 1, "level": "Undergraduate", "type": "1"},
+               "university foundation studies": {"rank": 1, "level": "Undergraduate", "type": "13"},
+               "non-award": {"rank": 1, "level": "Undergraduate", "type": "13"},
+               "no match": {"rank": 99, "level": "no match", "type": "15"}
+    }
+
+    campuses = {
+        "Singapore": "738",
+        "Canberra": "735",
+        "Sydney": "737"
+    }
+
     def parse(self, response):
-        # self.courses.extend(response.xpath("//table[@class='table course_results']//tr/@data-fb-result").getall())
-        #
-        # next_page = response.xpath("//ul[@class='pagination pagination-lg']/li/a[@rel='next']/@href").get()
-        #
-        # if next_page is not None:
-        #     yield response.follow(next_page, callback=self.parse)
+        self.courses.extend(response.xpath("//table[@class='table course_results']//tr/@data-fb-result").getall())
 
-        courses = ["https://www.canberra.edu.au/coursesandunits/course?course_cd=MGB302&version_number=1&title"
-                   "=Bachelor-of-Commerce-(Business-Economics)&location=BRUCE&rank=AAA&faculty=Faculty-of-Business,"
-                   "-Government---Law&year=2020",
-                   "https://www.canberra.edu.au/coursesandunits/course?course_cd=142JA&version_number=3&title"
-                   "=Bachelor-of-Applied-Science-in-Forensic-Studies&location=BRUCE&rank=AAA&faculty=Faculty-of"
-                   "-Science-and-Technology&year=2020",
-                   "https://www.canberra.edu.au/coursesandunits/course?course_cd=910AA&version_number=2&title=Master"
-                   "-of-Applied-Science-(Research)&location=BRUCE&rank=FFF&faculty=Faculty-of-Science-and-Technology"
-                   "&year=2020",
-                   "https://www.canberra.edu.au/coursesandunits/course?course_cd=723AL&version_number=3&title=Master"
-                   "-of-Business-Administration-(Bhutan)&location=RIM-BHUTAN&rank=CCC&faculty=Faculty-of-Business,"
-                   "-Government---Law&year=2020",
-                   "https://www.canberra.edu.au/coursesandunits/course?course_cd=MGB001&version_number=1&title"
-                   "=Bachelor-of-Accounting&location=BRUCE&rank=AAA&faculty=Faculty-of-Business,"
-                   "-Government---Law&year=2020"]
+        next_page = response.xpath("//ul[@class='pagination pagination-lg']/li/a[@rel='next']/@href").get()
 
-        for course in courses:
+        if next_page is not None:
+            yield response.follow(next_page, callback=self.parse)
+
+        for course in self.courses:
             yield response.follow(course, callback=self.course_parse)
 
     def course_parse(self, response):
@@ -62,6 +79,7 @@ class UocSpiderSpider(scrapy.Spider):
         course_name, course_code = re.split(r" - ", response.xpath("//h1[@class='course_title']/text()").get())
         course_item["courseName"] = course_name
         course_item["courseCode"] = course_code
+        course_item["uid"] = uidPrefix + re.sub(" ", "-", course_item["courseName"])
 
         cricos = response.xpath("//table[@class='course-details-table']//tr/th[contains(text(), "
                                 "'CRICOS')]/following-sibling::td").get()
@@ -69,6 +87,30 @@ class UocSpiderSpider(scrapy.Spider):
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos)
             if len(cricos) > 0:
                 course_item["cricosCode"] = cricos[0]
+
+        campus_holder = []
+        location = response.xpath("//table[@class='course-details-table']//tr/th[contains(text(), "
+                                  "'Location')]/following-sibling::td").get()
+        if location is not None:
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.append(self.campuses[campus])
+        if len(campus_holder) > 0:
+            course_item["campusNID"] = "|".join(set(campus_holder))
+
+        course_item.set_sf_dt(self.degrees)
+
+        if course_item["degreeType"] in ["3", "6", "7", "8", "10", "11", "12"]:
+            course_item["courseLevel"] = "Postgraduate"
+            course_item["group"] = 4
+            course_item["canonicalGroup"] = "PostgradAustralia"
+        elif course_item["degreeType"] in ["1", "2", "4", "5"]:
+            course_item["courseLevel"] = "Undergraduate"
+            course_item["group"] = 3
+            course_item["canonicalGroup"] = "The Uni Guide"
+        else:
+            course_item["group"] = 3
+            course_item["canonicalGroup"] = "The Uni Guide"
 
         career = response.xpath("//div[@id='introduction']/h2[contains(text(), 'Career "
                                 "opportunities')]/following-sibling::ul").get()

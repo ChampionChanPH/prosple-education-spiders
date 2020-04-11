@@ -122,6 +122,7 @@ class Course(scrapy.Item):
             self["doubleDegree"] = 1
 
         # Master of Engineering in Biotech
+        study_field_holder = []
         delims = type_delims[:]
         for name in names:
             degree_types = [name.split(x, 1)[0].strip(" ") for x in delims]  # [Master, Master of Engineering]
@@ -130,11 +131,13 @@ class Course(scrapy.Item):
 
             try:
                 study_field = max(study_fields, key=len)
+                study_field_holder.append(study_field)
                 self["rawStudyfield"].append(study_field.lower())
                 raw_degree_types.append(degree_type.lower())
             except ValueError:
                 self["rawStudyfield"].append(name.lower())
                 raw_degree_types.append("non-award")
+        self["specificStudyField"] = "/".join(study_field_holder)
 
         for index in range(len(raw_degree_types)):
             try:
