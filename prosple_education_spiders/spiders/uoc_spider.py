@@ -33,18 +33,20 @@ class UocSpiderSpider(scrapy.Spider):
                   '%7CD=Open&f.Type|B=research']
     courses = []
 
-    degrees = {"graduate certificate": {"rank": 2, "level": "Postgraduate", "type": "7"},
-               "graduate diploma": {"rank": 2, "level": "Postgraduate", "type": "8"},
-               "master": {"rank": 2, "level": "Postgraduate", "type": research_coursework},
-               "bachelor": {"rank": 1, "level": "Undergraduate", "type": bachelor_honours},
-               "doctor": {"rank": 1, "level": "Postgraduate", "type": "6"},
-               "certificate": {"rank": 1, "level": "Undergraduate", "type": "4"},
-               "diploma": {"rank": 1, "level": "Undergraduate", "type": "5"},
-               "associate degree": {"rank": 1, "level": "Undergraduate", "type": "1"},
-               "university foundation studies": {"rank": 1, "level": "Undergraduate", "type": "13"},
-               "non-award": {"rank": 1, "level": "Undergraduate", "type": "13"},
-               "no match": {"rank": 99, "level": "no match", "type": "15"}
-    }
+    degrees = {"graduate certificate": "7",
+               "graduate diploma": "8",
+               "master": research_coursework,
+               "bachelor": bachelor_honours,  # One course "Honours in Information Sciences" not captured, manually
+               # updated
+               "doctor": "6",
+               "certificate": "4",
+               "diploma": "5",
+               "associate degree": "1",
+               "university foundation studies": "13",
+               "non-award": "13",  # "University of Canberra International Foundation Studies" not captured, manually
+               # updated
+               "no match": "15"
+               }
 
     campuses = {
         "Singapore": "738",
@@ -87,6 +89,7 @@ class UocSpiderSpider(scrapy.Spider):
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos)
             if len(cricos) > 0:
                 course_item["cricosCode"] = cricos[0]
+                course_item["internationalApps"] = 1
 
         campus_holder = []
         location = response.xpath("//table[@class='course-details-table']//tr/th[contains(text(), "
@@ -99,18 +102,6 @@ class UocSpiderSpider(scrapy.Spider):
             course_item["campusNID"] = "|".join(set(campus_holder))
 
         course_item.set_sf_dt(self.degrees)
-
-        if course_item["degreeType"] in ["3", "6", "7", "8", "10", "11", "12"]:
-            course_item["courseLevel"] = "Postgraduate"
-            course_item["group"] = 4
-            course_item["canonicalGroup"] = "PostgradAustralia"
-        elif course_item["degreeType"] in ["1", "2", "4", "5"]:
-            course_item["courseLevel"] = "Undergraduate"
-            course_item["group"] = 3
-            course_item["canonicalGroup"] = "The Uni Guide"
-        else:
-            course_item["group"] = 3
-            course_item["canonicalGroup"] = "The Uni Guide"
 
         career = response.xpath("//div[@id='introduction']/h2[contains(text(), 'Career "
                                 "opportunities')]/following-sibling::ul").get()
