@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # by: Johnel Bacani
+
 import scrapy
 import re
 from ..items import Course
@@ -34,15 +35,14 @@ class WsuSpiderSpider(scrapy.Spider):
     name = 'wsu_spider'
     start_urls = ['https://www.westernsydney.edu.au/future/study/courses.html']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
-    groups = {
-                "Postgraduate": {"number": 4, "name": "PostgradAustralia"},
-                "Undergraduate": {"number": 3, "name": "The Uni Guide"}
-              }
+    institution = "Western Sydney University"
+    uidPrefix = "AU-WSU-"
+
     campus_map = {
         "Bankstown": "855",
         "Campbelltown": "857",
         "Hawkesbury": "11718",
-        "Lithgow": "39903",#
+        "Lithgow": "39903",
         "Liverpool City": "858",
         "Nirimba": "859",
         "Parramatta City": "860",
@@ -81,7 +81,6 @@ class WsuSpiderSpider(scrapy.Spider):
     def mainpage_splash(self, response):
         categories = response.css("article.tile__2x2 a::attr(href)").extract()
         for category in categories:
-        # print(categories[7])
             if category != "http://www.westernsydney.edu.au/future/why-western.html":
                 yield SplashRequest(category, callback=self.category_splash, args={'wait': 10})
 
@@ -93,29 +92,27 @@ class WsuSpiderSpider(scrapy.Spider):
 
         for course in courses:
             if course not in self.courses_scraped and course not in self.blacklist:
-                # print(course)
                 self.count += 1
-                # print(self.count)
                 self.courses_scraped.append(course)
                 yield SplashRequest(course, callback=self.course_parse, args={'wait': 20}, meta={'url': course})
 
     def course_parse(self, response):
-
-        institution = "Western Sydney University"
-        uidPrefix = "AU-WSU-"
-
         course_item = Course()
-
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.meta['url']
         course_item["published"] = 1
-        course_item["institution"] = institution
+        course_item["institution"] = self.institution
 
         course_item["domesticApplyURL"] = response.meta['url']
 
         course_item["courseName"] = response.css("h1.title__text::text").extract_first()
-        course_item["uid"] = uidPrefix + course_item["courseName"]
+        course_item["uid"] = self.uidPrefix + course_item["courseName"]
         course_level = response.css("div.pb__content-inner span::text").extract_first()
+        if course_level in ["Undergraduate", "The College"]:
+            course_item["courseLevel"] = "Undergraduate"
+
+        else:
+            course_item["courseLevel"] = "Postgraduate"
 
         course_item.set_sf_dt(self.degrees)
 
