@@ -137,6 +137,7 @@ class Course(scrapy.Item):
 
     def set_sf_dt(self, degrees_map=raw_degrees_map, type_delims=["of", "in"], degree_delims=["/"]):
         '''
+        Sets raw study field, specific study field, degree type, course level, group, and canonical group
         :param degrees_map: dictionary; degree mapping
         :param type_delims: Optional; Default = ["of", "in"]; list of possible delimiters between degree type and study field. e.g. ["of","in","-"]
         :param degree_delims: Optional; Default = ["/"]; list of possible double degree delimiters. e.g. ["/",",","-"]
