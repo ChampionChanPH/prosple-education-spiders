@@ -93,7 +93,25 @@ class Course(scrapy.Item):
     highestScore = scrapy.Field()  # Highest score to receive an offer
     minScoreNextIntake = scrapy.Field()  # Minimum score required for consideration for next intake
 
-    def set_sf_dt(self, degrees, type_delims=["of", "in"], degree_delims=["/"]):
+    degrees = {
+        "associate degree": {"rank": 1, "level": "Undergraduate", "type": "1"},
+        "bachelor": {"rank": 1, "level": "Undergraduate", "type": "2"},
+        "bachelor (honours)": {"rank": 1, "level": "Undergraduate", "type": "3"},
+        "certificate": {"rank": 1, "level": "Undergraduate", "type": "4"},
+        "diploma": {"rank": 1, "level": "Undergraduate", "type": "5"},
+        "doctor": {"rank": 1, "level": "Undergraduate", "type": "6"},
+        "graduate certificate": {"rank": 2, "level": "Postgraduate", "type": "7"},
+        "graduate diploma": {"rank": 2, "level": "Postgraduate", "type": "8"},
+        "high school certificate": {"rank": 1, "level": "Postgraduate", "type": "9"},
+        "juris doctor": {"rank": 2, "level": "Postgraduate", "type": "10"},
+        "masters (coursework)": {"rank": 2, "level": "Postgraduate", "type": "11"},
+        "masters (research)": {"rank": 2, "level": "Postgraduate", "type": "12"},
+        "non-award": {"rank": 1, "level": "Undergraduate", "type": "13"},
+        "professional certificate": {"rank": 1, "level": "Undergraduate", "type": "13"},
+        "no match": {"rank": 99, "level": "no match", "type": "15"}
+    }
+
+    def set_sf_dt(self, degrees=degrees, type_delims=["of", "in"], degree_delims=["/"]):
         '''
         :param degrees: dictionary; degree mapping
         :param type_delims: Optional; Default = ["of", "in"]; list of possible delimiters between degree type and study field. e.g. ["of","in","-"]
