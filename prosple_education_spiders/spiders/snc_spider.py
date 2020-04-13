@@ -65,13 +65,14 @@ class ScSpider(scrapy.Spider):
 
     }
 
-    degrees = {"graduate certificate": {"level": "Postgraduate", "type": "Graduate Certificate"},
-               "graduate diploma": {"level": "Postgraduate", "type": "Graduate Diploma"},
-               "honours": {"level": "Undergraduate", "type": "Bachelor (Honours)"},
-               "bachelor": {"level": "Undergraduate", "type": "Bachelor"},
-               "certificate": {"level": "Undergraduate", "type": "Certificate"},
-               "diploma": {"level": "Undergraduate", "type": "Diploma"},
-               "non-award": {"level": "Undergraduate", "type": "Non-Award"}
+    degrees = {"bachelor": "2",
+               "honours": "3",
+               "certificate": "4",
+               "diploma": "5",
+               "graduate certificate": "7",
+               "graduate diploma": "8",
+               "non-award": "13",
+               "no match": "15"
                }
 
     def parse(self, response):
@@ -92,10 +93,10 @@ class ScSpider(scrapy.Spider):
         course_item = Course()
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.request.url
-        course_item["group"] = group_number
         course_item["published"] = 1
         course_item["institution"] = institution
         course_item["canonicalGroup"] = canonical_group
+        course_item["group"] = group_number
 
         raw_course_name = cleanspace(''.join([i if ord(i) < 128 else ' ' for i in response.css("h1::text").extract_first()]))
 
@@ -106,12 +107,7 @@ class ScSpider(scrapy.Spider):
         else:
             course_item["courseName"] = raw_course_name
 
-        course_item.set_raw_sf()
-
-        # print(course_item["rawStudyfield"])
-        degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in course_item["degreeType"][0]], key=len) #match degree type and get longest match
-        course_item["degreeType"] = self.degrees[degree_match]["type"]
-        course_item["courseLevel"] = self.degrees[degree_match]["level"]
+        course_item.set_sf_dt(self.degrees)
 
         course_item["uid"] = uidPrefix + course_item["courseName"]
         course_item["internationalApplyURL"] = response.request.url
