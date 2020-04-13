@@ -112,7 +112,7 @@ class Course(scrapy.Item):
             pattern = "\s"+words[0]+"\s(?="+"|".join(list(degrees.keys()))  # set pattern for word case
 
         elif len(words) > 1:
-            self.add_flag("doubleDegree", "Matched multiple degree delims"+words)  # matching on two delimiters is odd. need to flag
+            self.add_flag("doubleDegree", "Matched multiple degree delims "+", ".join(words))  # matching on two delimiters is odd. need to flag
 
         else:
             pattern = "\s?["+"".join(single_chars)+"]\s?(?="+"|".join(list(degrees.keys()))+")"  # if no match on the word delims, default to single char delims
@@ -123,14 +123,14 @@ class Course(scrapy.Item):
 
         # Master of Engineering in Biotech
         study_field_holder = []
-        delims = type_delims[:]
+        delims = [" " + x + " " for x in type_delims]
         for name in names:
             degree_types = [name.split(x, 1)[0].strip(" ") for x in delims]  # [Master, Master of Engineering]
             degree_type = min(degree_types, key=len)
             study_fields = [y[-1].strip(" ") for y in [name.split(x, 1) for x in delims] if len(y) == 2]  # try both delimiters but discard if length of split is 1 (i.e. delimiter not present in string)
 
             try:
-                study_field = max(study_fields, key=len)
+                study_field = max(study_fields, key=len)  # this line returns an error if both split attempts result in a length 1 list. meaning name has no degree type. i.e. non-award
                 study_field_holder.append(study_field)
                 self["rawStudyfield"].append(study_field.lower())
                 raw_degree_types.append(degree_type.lower())
