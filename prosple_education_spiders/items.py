@@ -93,27 +93,51 @@ class Course(scrapy.Item):
     highestScore = scrapy.Field()  # Highest score to receive an offer
     minScoreNextIntake = scrapy.Field()  # Minimum score required for consideration for next intake
 
-    degrees = {
-        "associate degree": {"rank": 1, "level": "Undergraduate", "type": "1"},
-        "bachelor": {"rank": 1, "level": "Undergraduate", "type": "2"},
-        "bachelor (honours)": {"rank": 1, "level": "Undergraduate", "type": "3"},
-        "certificate": {"rank": 1, "level": "Undergraduate", "type": "4"},
-        "diploma": {"rank": 1, "level": "Undergraduate", "type": "5"},
-        "doctor": {"rank": 1, "level": "Undergraduate", "type": "6"},
-        "graduate certificate": {"rank": 2, "level": "Postgraduate", "type": "7"},
-        "graduate diploma": {"rank": 2, "level": "Postgraduate", "type": "8"},
-        "high school certificate": {"rank": 1, "level": "Postgraduate", "type": "9"},
-        "juris doctor": {"rank": 2, "level": "Postgraduate", "type": "10"},
-        "masters (coursework)": {"rank": 2, "level": "Postgraduate", "type": "11"},
-        "masters (research)": {"rank": 2, "level": "Postgraduate", "type": "12"},
-        "non-award": {"rank": 1, "level": "Undergraduate", "type": "13"},
-        "professional certificate": {"rank": 1, "level": "Undergraduate", "type": "13"},
-        "no match": {"rank": 99, "level": "no match", "type": "15"}
+    raw_degrees_map = {
+        "associate degree": "1",
+        "bachelor": "2",
+        "bachelor (honours)": "3",
+        "certificate": "4",
+        "diploma": "5",
+        "doctor": "6",
+        "graduate certificate": "7",
+        "graduate diploma": "8",
+        "high school certificate": "9",
+        "juris doctor": "10",
+        "masters (coursework)": "11",
+        "masters (research)": "12",
+        "non-award": "13",
+        "professional certificate": "14",
+        "no match": "15"
     }
 
-    def set_sf_dt(self, degrees=degrees, type_delims=["of", "in"], degree_delims=["/"]):
+    # level is for course level. rank is for double degree selection logic
+    degrees = {
+        "1": {"level": "1", "rank": 1},
+        "2": {"level": "1", "rank": 1},
+        "3": {"level": "1", "rank": 1},
+        "4": {"level": "1", "rank": 1},
+        "5": {"level": "1", "rank": 1},
+        "6": {"level": "1", "rank": 1},
+        "7": {"level": "2", "rank": 2},
+        "8": {"level": "2", "rank": 2},
+        "9": {"level": "1", "rank": 1},
+        "10": {"level": "2", "rank": 2},
+        "11": {"level": "2", "rank": 2},
+        "12": {"level": "2", "rank": 2},
+        "13": {"level": "1", "rank": 1},
+        "14": {"level": "1", "rank": 1},
+        "15": {"level": "1", "rank": 99}
+    }
+
+    groups = {
+        "1": {"num": 3, "name": "The Uni Guide"},
+        "2": {"num": 4, "name": "PostgradAustralia"}
+    }
+
+    def set_sf_dt(self, degrees_map=raw_degrees_map, type_delims=["of", "in"], degree_delims=["/"]):
         '''
-        :param degrees: dictionary; degree mapping
+        :param degrees_map: dictionary; degree mapping
         :param type_delims: Optional; Default = ["of", "in"]; list of possible delimiters between degree type and study field. e.g. ["of","in","-"]
         :param degree_delims: Optional; Default = ["/"]; list of possible double degree delimiters. e.g. ["/",",","-"]
         :return:
@@ -125,15 +149,15 @@ class Course(scrapy.Item):
 
         single_chars = [x for x in degree_delims if len(x) == 1]  # Isolate single character delimiter like "/", "-"
         words = [x for x in degree_delims if len(x) != 1]  # Isolate word delimiters like "and"
-        words = [x for x in words if re.match("\s" + x + "\s(?=" + "|".join(list(degrees.keys())))]  #get word followed by degree that has a match in the course name
+        words = [x for x in words if re.match("\s" + x + "\s(?=" + "|".join(list(degrees_map.keys())))]  #get word followed by degree that has a match in the course name
         if len(words) == 1:
-            pattern = "\s"+words[0]+"\s(?="+"|".join(list(degrees.keys()))  # set pattern for word case
+            pattern = "\s"+words[0]+"\s(?="+"|".join(list(degrees_map.keys()))  # set pattern for word case
 
         elif len(words) > 1:
             self.add_flag("doubleDegree", "Matched multiple degree delims "+", ".join(words))  # matching on two delimiters is odd. need to flag
 
         else:
-            pattern = "\s?["+"".join(single_chars)+"]\s?(?="+"|".join(list(degrees.keys()))+")"  # if no match on the word delims, default to single char delims
+            pattern = "\s?["+"".join(single_chars)+"]\s?(?="+"|".join(list(degrees_map.keys()))+")"  # if no match on the word delims, default to single char delims
 
         names = re.split(pattern, self["courseName"], flags=re.IGNORECASE)
         if len(names) > 1:
@@ -160,16 +184,22 @@ class Course(scrapy.Item):
 
         for index in range(len(raw_degree_types)):
             try:
-                degree_match = max([x for x in list(dict.fromkeys(degrees)) if x in raw_degree_types[index]], key=len)  # match degree type and get longest match
+                degree_match = max([x for x in list(dict.fromkeys(degrees_map)) if x in raw_degree_types[index]], key=len)  # match degree type and get longest match
             except ValueError:
                 degree_match = "no match"
                 self.add_flag("degreeType", "no degree type match for "+raw_degree_types[index])
 
-            if rank > degrees[degree_match]["rank"]:
-                self["degreeType"] = degrees[degree_match]["type"]
-                if callable(self["degreeType"]):
-                    self["degreeType"] = self["degreeType"](self)
-                rank = degrees[degree_match]["rank"]
+            degree_match = degrees_map[degree_match]
+            if callable(degree_match):
+                degree_match = degree_match(self)
+
+            if rank > self.degrees[degree_match]["rank"]:
+                self["degreeType"] = degree_match
+                rank = self.degrees[degree_match]["rank"]
+
+        self["courseLevel"] = self.degrees[self["degreeType"]]["level"]
+        self["group"] = self.groups[self["courseLevel"]]["num"]
+        self["canonicalGroup"] = self.groups[self["courseLevel"]]["name"]
 
     def add_flag(self, field, message):
 

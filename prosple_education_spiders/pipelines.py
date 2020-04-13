@@ -9,6 +9,9 @@ from .taxonomy import *
 
 class CoursesPipeline(object):
     def process_item(self, item, spider):
-        if "degreeType" in item and re.match("\d+", item["degreeType"]):
-            item["degreeType"] = taxonomy_degree_types[item["degreeType"]]
+        taxonomy_fields = ["degreeType", "courseLevel"]
+        for field in taxonomy_fields:
+            if field in item and re.match("\d+", item[field]):
+                item[field] = taxonomies[field][item[field]]
+
         return item
