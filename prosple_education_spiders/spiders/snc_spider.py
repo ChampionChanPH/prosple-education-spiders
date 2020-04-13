@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# by: Johnel Bacani
+
 import scrapy
 import re
 from ..items import Course
@@ -95,8 +97,6 @@ class ScSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = institution
-        course_item["canonicalGroup"] = canonical_group
-        course_item["group"] = group_number
 
         raw_course_name = cleanspace(''.join([i if ord(i) < 128 else ' ' for i in response.css("h1::text").extract_first()]))
 
@@ -108,6 +108,9 @@ class ScSpider(scrapy.Spider):
             course_item["courseName"] = raw_course_name
 
         course_item.set_sf_dt(self.degrees)
+        # Override assigned canonical group and group number
+        course_item["canonicalGroup"] = canonical_group
+        course_item["group"] = group_number
 
         course_item["uid"] = uidPrefix + course_item["courseName"]
         course_item["internationalApplyURL"] = response.request.url

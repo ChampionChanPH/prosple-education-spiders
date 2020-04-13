@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# by: Johnel Bacani
 import scrapy
 import re
 from ..items import Course
@@ -56,17 +57,17 @@ class WsuSpiderSpider(scrapy.Spider):
         "international student": ["internationalFeeTotal", "domesticFeeTotal"]
     }
 
-    degrees = {"graduate certificate": {"rank": 2, "level": "Postgraduate", "type": "7"},
-               "graduate diploma": {"rank": 2, "level": "Postgraduate", "type": "8"},
-               "master": {"rank": 2, "level": "Postgraduate", "type": research_coursework},
-               "bachelor": {"rank": 1, "level": "Undergraduate", "type": bachelor_honours},
-               "doctor": {"rank": 1, "level": "Undergraduate", "type": doctor},
-               "certificate": {"rank": 1, "level": "Undergraduate", "type": "4"},
-               "diploma": {"rank": 1, "level": "Undergraduate", "type": "5"},
-               "associate degree": {"rank": 1, "level": "Undergraduate", "type": "1"},
-               "university foundation studies": {"rank": 1, "level": "Undergraduate", "type": "13"},
-               "non-award": {"rank": 1, "level": "Undergraduate", "type": "13"},
-               "no match": {"rank": 99, "level": "no match", "type": "15"}
+    degrees = {"graduate certificate": "7",
+               "graduate diploma": "8",
+               "master": research_coursework,
+               "bachelor": bachelor_honours,
+               "doctor": doctor,
+               "certificate": "4",
+               "diploma": "5",
+               "associate degree": "1",
+               "university foundation studies": "13",
+               "non-award": "13",
+               "no match": "15"
     }
 
     count = 0
@@ -115,13 +116,6 @@ class WsuSpiderSpider(scrapy.Spider):
         course_item["courseName"] = response.css("h1.title__text::text").extract_first()
         course_item["uid"] = uidPrefix + course_item["courseName"]
         course_level = response.css("div.pb__content-inner span::text").extract_first()
-        if course_level in ["Undergraduate", "The College"]:
-            course_item["courseLevel"] = "Undergraduate"
-
-        else:
-            course_item["courseLevel"] = "Postgraduate"
-        course_item["canonicalGroup"] = self.groups[course_item["courseLevel"]]["name"]
-        course_item["group"] = self.groups[course_item["courseLevel"]]["number"]
 
         course_item.set_sf_dt(self.degrees)
 

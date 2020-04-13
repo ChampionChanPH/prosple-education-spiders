@@ -1,3 +1,5 @@
+# by: Johnel Bacani
+
 import scrapy
 import re
 from ..items import Course
@@ -24,13 +26,14 @@ class IHNASpider(scrapy.Spider):
         "Melbourne CBD Campus": "37790"
     }
 
-    degrees = {"graduate certificate": {"level": "Postgraduate", "type": "Graduate Certificate"},
-               "graduate diploma": {"level": "Postgraduate", "type": "Graduate Diploma"},
-               "honours": {"level": "Undergraduate", "type": "Bachelor (Honours)"},
-               "bachelor": {"level": "Undergraduate", "type": "Bachelor"},
-               "certificate": {"level": "Undergraduate", "type": "Certificate"},
-               "diploma": {"level": "Undergraduate", "type": "Diploma"},
-               "non-award": {"level": "Undergraduate", "type": "Non-Award"}
+    degrees = {"bachelor": "2",
+               "honours": "3",
+               "certificate": "4",
+               "diploma": "5",
+               "graduate certificate": "7",
+               "graduate diploma": "8",
+               "non-award": "13",
+               "no match": "15"
                }
 
     def parse(self, response):
@@ -52,10 +55,8 @@ class IHNASpider(scrapy.Spider):
         course_item = Course()
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.request.url
-        course_item["group"] = group_number
         course_item["published"] = 1
         course_item["institution"] = institution
-        course_item["canonicalGroup"] = canonical_group
 
 
         # print(response.css("#inner-header strong::text").extract_first())
@@ -69,18 +70,15 @@ class IHNASpider(scrapy.Spider):
             course_item["courseCode"] = full_course_name.split(" ")[0]
             course_item["courseName"] = full_course_name[len(course_item["courseCode"]):].strip(" ")
 
-        course_item.set_raw_sf()
-
-        degree_match = max([x for x in list(dict.fromkeys(self.degrees)) if x in course_item["degreeType"][0]], key=len)  # match degree type and get longest match
-        course_item["degreeType"] = self.degrees[degree_match]["type"]
-        course_item["courseLevel"] = self.degrees[degree_match]["level"]
+        course_item.set_sf_dt(self.degrees)
+        # Override assigned canonical group and group number
+        course_item["canonicalGroup"] = canonical_group
+        course_item["group"] = group_number
 
         course_item["uid"] = uidPrefix + course_item["courseName"]
         course_item["overview"] = response.css("p.text-justify::text").extract()
         course_item["overviewSummary"] = course_item["overview"][0]
         course_item["overview"] = "\n".join(course_item["overview"])
-        # course_item["courseLevel"] = "Undergraduate"
-        # course_item["studyField"] = "Medical & Health Sciences"
 
         # course_item["campusNID"] = response.css("div.campus").css("a::text").extract()
         campus = response.css("div.campus").css("a::text").extract()
