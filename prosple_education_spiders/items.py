@@ -115,7 +115,7 @@ class Course(scrapy.Item):
     degrees = {
         "1": {"level": "1", "rank": 1},
         "2": {"level": "1", "rank": 1},
-        "3": {"level": "1", "rank": 1},
+        "3": {"level": "2", "rank": 2},
         "4": {"level": "1", "rank": 1},
         "5": {"level": "1", "rank": 1},
         "6": {"level": "1", "rank": 1},
