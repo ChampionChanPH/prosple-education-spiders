@@ -137,7 +137,8 @@ class Course(scrapy.Item):
             except ValueError:
                 self["rawStudyfield"].append(name.lower())
                 raw_degree_types.append("non-award")
-        self["specificStudyField"] = "/".join(study_field_holder)
+        if len(study_field_holder) > 0:
+            self["specificStudyField"] = "/".join(study_field_holder)
 
         for index in range(len(raw_degree_types)):
             try:
