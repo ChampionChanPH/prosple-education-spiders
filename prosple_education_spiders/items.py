@@ -135,7 +135,7 @@ class Course(scrapy.Item):
         "2": {"num": 4, "name": "PostgradAustralia"}
     }
 
-    def set_sf_dt(self, degrees_map=raw_degrees_map, type_delims=["of", "in"], degree_delims=["/"]):
+    def set_sf_dt(self, new_degrees_map=raw_degrees_map, type_delims=["of", "in"], degree_delims=["/"]):
         '''
         Sets raw study field, specific study field, degree type, course level, group, and canonical group
         :param degrees_map: dictionary; degree mapping
@@ -144,12 +144,15 @@ class Course(scrapy.Item):
         :return:
         '''
 
+        degrees_map = self.raw_degrees_map
+        degrees_map.update(new_degrees_map)
+
         self["rawStudyfield"] = []
         raw_degree_types = []
         rank = 999
 
-        single_chars = [x for x in degree_delims if len(x) == 1]  # Isolate single character delimiter like "/", "-"
-        words = [x for x in degree_delims if len(x) != 1]  # Isolate word delimiters like "and"
+        single_chars = [x for x in degree_delims if len(x) == 1 or (len(x) == 2 and "\\" in x)]  # Isolate single character delimiter like "/", "-"
+        words = [x for x in degree_delims if len(x) != 1 and "\\" not in x]  # Isolate word delimiters like "and"
         words = [x for x in words if re.match("\s" + x + "\s(?=" + "|".join(list(degrees_map.keys())))]  #get word followed by degree that has a match in the course name
         if len(words) == 1:
             pattern = "\s"+words[0]+"\s(?="+"|".join(list(degrees_map.keys()))  # set pattern for word case
@@ -160,9 +163,14 @@ class Course(scrapy.Item):
         else:
             pattern = "\s?["+"".join(single_chars)+"]\s?(?="+"|".join(list(degrees_map.keys()))+")"  # if no match on the word delims, default to single char delims
 
+
         names = re.split(pattern, self["courseName"], flags=re.IGNORECASE)
-        if len(names) > 1:
+        names = [x for x in names if x]  # Remove None values when using space as delimiter
+        if len(names) == 2:
             self["doubleDegree"] = 1
+
+        elif len(names) > 2:
+            self.add_flag("doubleDegree", "Course name was split into 3 degrees: "+self["courseName"])
 
         # Master of Engineering in Biotech
         study_field_holder = []
