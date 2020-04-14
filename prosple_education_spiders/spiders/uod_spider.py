@@ -187,6 +187,6 @@ class UodSpiderSpider(scrapy.Spider):
             elif course_item["teachingPeriod"] == 2:
                 course_item["domesticFeeAnnual"] = max(cost_holder) * 2
 
-        course_item.set_sf_dt(self.degrees)
+        course_item.set_sf_dt(self.degrees, ["of", "in"], ["and"])
 
         yield course_item
