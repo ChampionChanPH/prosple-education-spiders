@@ -153,24 +153,31 @@ class Course(scrapy.Item):
 
         single_chars = [x for x in degree_delims if len(x) == 1 or (len(x) == 2 and "\\" in x)]  # Isolate single character delimiter like "/", "-"
         words = [x for x in degree_delims if len(x) != 1 and "\\" not in x]  # Isolate word delimiters like "and"
-        words = [x for x in words if re.match("\s" + x + "\s(?=" + "|".join(list(degrees_map.keys())))]  #get word followed by degree that has a match in the course name
+        words = [x for x in words if re.match("\s" + x + "\s(?=" + "|".join(list(degrees_map.keys()))+")", self["courseName"])]  #get word followed by degree that has a match in the course name
+
         if len(words) == 1:
             pattern = "\s"+words[0]+"\s(?="+"|".join(list(degrees_map.keys()))  # set pattern for word case
 
         elif len(words) > 1:
             self.add_flag("doubleDegree", "Matched multiple degree delims "+", ".join(words))  # matching on two delimiters is odd. need to flag
 
-        else:
+        elif len(single_chars) > 0:
             pattern = "\s?["+"".join(single_chars)+"]\s?(?="+"|".join(list(degrees_map.keys()))+")"  # if no match on the word delims, default to single char delims
 
+        else:
+            pattern = None
 
-        names = re.split(pattern, self["courseName"], flags=re.IGNORECASE)
-        names = [x for x in names if x]  # Remove None values when using space as delimiter
+        if pattern:
+            names = re.split(pattern, self["courseName"], flags=re.IGNORECASE)
+            names = [x for x in names if x]  # Remove None values when using space as delimiter
+        else:
+            names = [self["courseName"]]
+
         if len(names) == 2:
             self["doubleDegree"] = 1
 
         elif len(names) > 2:
-            self.add_flag("doubleDegree", "Course name was split into 3 degrees: "+self["courseName"])
+            self.add_flag("doubleDegree", "Course name was split into 3 or more degrees: "+self["courseName"])
 
         # Master of Engineering in Biotech
         study_field_holder = []
