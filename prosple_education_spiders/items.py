@@ -135,7 +135,7 @@ class Course(scrapy.Item):
         "2": {"num": 4, "name": "PostgradAustralia"}
     }
 
-    def set_sf_dt(self, new_degrees_map=raw_degrees_map, type_delims=["of", "in"], degree_delims=["/"]):
+    def set_sf_dt(self, new_degrees_map=raw_degrees_map, degree_delims=["/"], type_delims=["of", "in"]):
         '''
         Sets raw study field, specific study field, degree type, course level, group, and canonical group
         :param degrees_map: dictionary; degree mapping
@@ -212,6 +212,8 @@ class Course(scrapy.Item):
             if rank > self.degrees[degree_match]["rank"]:
                 self["degreeType"] = degree_match
                 rank = self.degrees[degree_match]["rank"]
+                if "honour" in names[index] and self[degree_type] != "3":
+                    self.add_flag("degreeType", "This could be an honours degree: "+self["courseName"])
 
         self["courseLevel"] = self.degrees[self["degreeType"]]["level"]
         self["group"] = self.groups[self["courseLevel"]]["num"]
