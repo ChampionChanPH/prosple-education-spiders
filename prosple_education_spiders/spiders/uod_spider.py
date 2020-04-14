@@ -82,6 +82,8 @@ class UodSpiderSpider(scrapy.Spider):
     def parse(self, response):
         courses = response.xpath("//div[@class='entry-content']//li/a/@href").getall()
 
+        courses = ["https://divinity.edu.au/courses/bachelor-of-theology-and-bachelor-of-ministry/"]
+
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
 
@@ -185,6 +187,6 @@ class UodSpiderSpider(scrapy.Spider):
             elif course_item["teachingPeriod"] == 2:
                 course_item["domesticFeeAnnual"] = max(cost_holder) * 2
 
-        course_item.set_sf_dt(self.degrees)
+        course_item.set_sf_dt(self.degrees, ["of", "in"], ["and"])
 
         yield course_item
