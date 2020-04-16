@@ -22,7 +22,8 @@ taxonomies = {
     }
 }
 
-
-
+special_chars = {
+    u"\xa0": " "
+}
 
 
