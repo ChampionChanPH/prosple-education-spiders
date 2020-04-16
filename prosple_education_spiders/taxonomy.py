@@ -23,7 +23,9 @@ taxonomies = {
 }
 
 special_chars = {
-    u"\xa0": " "
+    u"\xa0": " ",
+    "’": "'",
+    "‘": "'"
 }
 
 
