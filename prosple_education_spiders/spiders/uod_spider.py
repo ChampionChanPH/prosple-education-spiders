@@ -82,8 +82,6 @@ class UodSpiderSpider(scrapy.Spider):
     def parse(self, response):
         courses = response.xpath("//div[@class='entry-content']//li/a/@href").getall()
 
-        courses = ["https://divinity.edu.au/courses/bachelor-of-theology-and-bachelor-of-ministry/"]
-
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
 
