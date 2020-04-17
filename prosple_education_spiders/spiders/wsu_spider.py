@@ -93,10 +93,7 @@ class WsuSpiderSpider(scrapy.Spider):
 
         for course in courses:
             if course not in self.courses_scraped and course not in self.blacklist:
-                if course in self.superlist:
-                    print(course)
                 if (len(self.superlist) != 0 and course in self.superlist) or len(self.superlist) == 0:
-                    print("hey")
                     self.count += 1
                     self.courses_scraped.append(course)
                     yield SplashRequest(course, callback=self.course_parse, args={'wait': 20}, meta={'url': course})
