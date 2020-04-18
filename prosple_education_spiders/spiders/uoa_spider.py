@@ -20,6 +20,15 @@ def bachelor_honours(course_item):
         return "2"
 
 
+def get_total(field_to_use, field_to_update, course_item):
+    if "durationMinFull" in course_item:
+        if course_item["teachingPeriod"] == 1:
+            if float(course_item["durationMinFull"]) < 1:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+
+
 class UoaSpiderSpider(scrapy.Spider):
     name = 'uoa_spider'
     allowed_domains = ['www.adelaide.edu.au', 'adelaide.edu.au']
@@ -41,14 +50,25 @@ class UoaSpiderSpider(scrapy.Spider):
         "no match": "15"
     }
 
+    months = {
+        "January": "01",
+        "February": "02",
+        "March": "03",
+        "April": "04",
+        "May": "05",
+        "June": "06",
+        "July": "07",
+        "August": "08",
+        "September": "09",
+        "October": "10",
+        "November": "11",
+        "December": "12"
+    }
+
     def parse(self, response):
         courses = response.xpath("//div[@class='c-table']//a/@href").getall()
 
-        courses = [
-            "https://www.adelaide.edu.au/degree-finder/2020/mml_mmaclearn.html",
-            "https://www.adelaide.edu.au/degree-finder/2020/drcd_drclinden.html",
-            "https://www.adelaide.edu.au/degree-finder/2020/mmesc_mmesc.html"
-        ]
+        courses = ["https://www.adelaide.edu.au/degree-finder/2020/bacc_bacc.html"]
 
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
@@ -74,6 +94,9 @@ class UoaSpiderSpider(scrapy.Spider):
                                   "'What will you do?')]]").getall()
         if len(overview) > 0:
             course_item["overview"] = "".join(overview)
+        else:
+            overview = response.xpath("//div[@class='intro-df']/div/p").getall()
+            course_item["overview"] = "".join(overview)
 
         learn = response.xpath("//div[@class='intro-df']/div/*[preceding-sibling::p/strong[contains(text(), "
                                "'What will you do')] and following-sibling::p/strong[contains(text(), 'Where could it"
@@ -88,15 +111,19 @@ class UoaSpiderSpider(scrapy.Spider):
 
         duration = response.xpath("//span[preceding-sibling::span/text()='Duration']").get()
         if duration is not None:
-            duration = re.findall("\d*?\.?\d+(?=\s+?(year|month))", duration, re.I | re.M)
-            if len(duration) > 0:
-                course_item["durationMinFull"] = duration[0]
-        if "durationMinFull" in course_item:
             if re.search("year", duration, re.I | re.M):
                 course_item["teachingPeriod"] = 1
             elif re.search("month", duration, re.I | re.M):
                 course_item["teachingPeriod"] = 12
+            duration = re.findall("(\d*?\.?\d+)(?=\s+?year|month)", duration, re.I | re.M)
+            if len(duration) > 0:
+                course_item["durationMinFull"] = duration[0]
+
         cricos = response.xpath("//span[preceding-sibling::span/text()='CRICOS']").get()
+        if cricos is not None:
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if len(cricos) > 0:
+                course_item["cricosCode"] = ", ".join(cricos)
 
         dom_fee = response.xpath("//*[contains(text(), 'Australian Full-fee place')]/text()").get()
         csp_fee = response.xpath("//*[contains(text(), 'Commonwealth-supported place')]/text()").get()
@@ -105,21 +132,33 @@ class UoaSpiderSpider(scrapy.Spider):
             dom_fee = re.findall("\$(\d+),?(\d{3})", dom_fee, re.M)
             if len(dom_fee) > 0:
                 course_item["domesticFeeAnnual"] = "".join(dom_fee[0])
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
         if csp_fee is not None:
             csp_fee = re.findall("\$(\d+),?(\d{3})", csp_fee, re.M)
             if len(csp_fee) > 0:
                 course_item["domesticSubFeeAnnual"] = "".join(csp_fee[0])
+                get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
         if int_fee is not None:
             int_fee = re.findall("\$(\d+),?(\d{3})", int_fee, re.M)
             if len(int_fee) > 0:
                 course_item["internationalFeeAnnual"] = "".join(int_fee[0])
-                if "durationMinFull" in course_item:
-                    if course_item["teachingPeriod"] == 1:
-                        if course_item["durationMinFull"] < 1:
-                            course_item["internationalFeeTotal"] = course_item["internationalFeeAnnual"]
-                        else:
-                            course_item["internationalFeeTotal"] = float(course_item["internationalFeeAnnual"]) \
-                                                                   * float(course_item["durationMinFull"])
+                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+
+        intake = response.xpath("//th[contains(text(), 'Intake')]/following-sibling::td").getall()
+        start_months = []
+        if len(intake) > 0:
+            for item in intake:
+                for month in self.months:
+                    if re.search(month, item, re.M):
+                        start_months.append(self.months[month])
+        start_months = set(start_months)
+        if len(start_months) > 0:
+            course_item["startMonths"] = "|".join(start_months)
+
+        atar = response.xpath("//th[contains(abbr[@title='Australian Tertiary Admission Rank']/text(), 'ATAR')]/following-sibling::td/text()").get()
+        if atar is not None:
+            atar = float(atar.strip())
+            course_item["minScoreNextIntake"] = atar
 
         course_item.set_sf_dt(self.degrees, ["of", "in"], ["and", "with"])
 
