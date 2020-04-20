@@ -137,8 +137,6 @@ class UoaSpiderSpider(scrapy.Spider):
         if len(campus_holder) > 0:
             course_item["campusNID"] = "|".join(set(campus_holder))
 
-        duration = response.xpath("//h5[contains(text(), 'Duration')]/following::p").get()
-
         cricos = response.xpath("//span[preceding-sibling::span/text()='CRICOS']").get()
         if cricos is not None:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
