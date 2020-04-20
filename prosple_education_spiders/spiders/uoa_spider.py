@@ -79,6 +79,8 @@ class UoaSpiderSpider(scrapy.Spider):
     def parse(self, response):
         courses = response.xpath("//div[@class='c-table']//a/@href").getall()
 
+        courses = ["https://www.adelaide.edu.au/degree-finder/2020/hvito_hbvitoen.html"]
+
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
 
@@ -183,5 +185,12 @@ class UoaSpiderSpider(scrapy.Spider):
                 pass
 
         course_item.set_sf_dt(self.degrees, ["and", "with"])
+
+        if re.search("Honours Degree", course_item["courseName"]):
+            course_item["specificStudyField"] = re.findall("(?<=[in|of]\s)(.+)", course_item["specificStudyField"], re.DOTALL)[0]
+            study_holder = []
+            for item in course_item["rawStudyfield"]:
+                study_holder.append(re.findall("(?<=[in|of]\s)(.+)", item, re.DOTALL)[0])
+            course_item["rawStudyfield"] = study_holder
 
         yield course_item
