@@ -2,7 +2,6 @@
 import scrapy
 import re
 from ..items import Course
-from ..scratch_file import strip_tags
 from datetime import date
 
 
@@ -45,7 +44,7 @@ class UoaSpiderSpider(scrapy.Spider):
         "certificate": "4",
         "diploma": "5",
         "associate degree": "1",
-        "university foundation studies": "13",
+        "honours degree": "3",
         "non-award": "13",
         "no match": "15"
     }
@@ -63,6 +62,18 @@ class UoaSpiderSpider(scrapy.Spider):
         "October": "10",
         "November": "11",
         "December": "12"
+    }
+
+    campuses = {
+        "Waite Campus": "731",
+        "Roseworthy Campus": "733",
+        "Ngee Ann-Adelaide Education Centre": "732",
+        "North Terrace Campus": "730",
+        "Ngee Ann Academy": "728",
+        "Roseworthy": "727",
+        "Adelaide": "726",
+        "Teaching Hospitals": "725",
+        "North Terrace": "724"
     }
 
     def parse(self, response):
@@ -117,11 +128,23 @@ class UoaSpiderSpider(scrapy.Spider):
             if len(duration) > 0:
                 course_item["durationMinFull"] = duration[0]
 
+        location = response.xpath("//span[preceding-sibling::span/text()='Campus']").get()
+        campus_holder = []
+        if location is not None:
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.append(self.campuses[campus])
+        if len(campus_holder) > 0:
+            course_item["campusNID"] = "|".join(set(campus_holder))
+
+        duration = response.xpath("//h5[contains(text(), 'Duration')]/following::p").get()
+
         cricos = response.xpath("//span[preceding-sibling::span/text()='CRICOS']").get()
         if cricos is not None:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if len(cricos) > 0:
                 course_item["cricosCode"] = ", ".join(cricos)
+                course_item["internationalApps"] = 1
 
         dom_fee = response.xpath("//*[contains(text(), 'Australian Full-fee place')]/text()").get()
         csp_fee = response.xpath("//*[contains(text(), 'Commonwealth-supported place')]/text()").get()
@@ -153,11 +176,14 @@ class UoaSpiderSpider(scrapy.Spider):
         if len(start_months) > 0:
             course_item["startMonths"] = "|".join(start_months)
 
-        atar = response.xpath("//th[contains(abbr[@title='Australian Tertiary Admission Rank']/text(), 'ATAR')]/following-sibling::td/text()").get()
+        atar = response.xpath("//th[contains(a/text(), 'Guaranteed Entry Score - ATAR')]/following-sibling::td/text()").get()
         if atar is not None:
-            atar = float(atar.strip())
-            course_item["minScoreNextIntake"] = atar
+            try:
+                atar = float(atar.strip())
+                course_item["guaranteedEntryScore"] = atar
+            except ValueError:
+                pass
 
-        course_item.set_sf_dt(self.degrees, ["of", "in"], ["and", "with"])
+        course_item.set_sf_dt(self.degrees, ["and", "with"])
 
         yield course_item
