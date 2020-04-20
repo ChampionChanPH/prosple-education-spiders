@@ -8,10 +8,22 @@
 import scrapy
 import re
 
-class CoursesItem(scrapy.Item):
+class Rating(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
-    pass
+    overallQuality = scrapy.Field()
+    teachingQuality = scrapy.Field()
+    learnerEngagement = scrapy.Field()
+    learningResources = scrapy.Field()
+    studentSupport = scrapy.Field()
+    skillsDevelopment = scrapy.Field()
+    overallSatisfaction = scrapy.Field()
+    teachingScale = scrapy.Field()
+    skillsScale = scrapy.Field()
+    fullTimeEmployment = scrapy.Field()
+    overallEmployment = scrapy.Field()
+    fullTimeStudy = scrapy.Field()
+    medianSalary = scrapy.Field()
 
 
 class Course(scrapy.Item):
@@ -147,13 +159,13 @@ class Course(scrapy.Item):
         degrees_map = self.raw_degrees_map
         degrees_map.update(new_degrees_map)
 
-        self["rawStudyfield"] = []
+        study_fields = []
         raw_degree_types = []
         rank = 999
 
         single_chars = [x for x in degree_delims if len(x) == 1 or (len(x) == 2 and "\\" in x)]  # Isolate single character delimiter like "/", "-"
         words = [x for x in degree_delims if len(x) != 1 and "\\" not in x]  # Isolate word delimiters like "and"
-        words = [x for x in words if re.search(x + "\s(?=" + "|".join(list(degrees_map.keys()))+")", self["courseName"], flags=re.IGNORECASE)]  #get word followed by degree that has a match in the course name
+        words = [x for x in words if re.search(x + "\s(?=" + "|".join(list(degrees_map.keys()))+")", self["courseName"].lower(), flags=re.IGNORECASE)]  #get word followed by degree that has a match in the course name
 
         if len(words) == 1:
             pattern = "\s"+words[0]+"\s(?="+"|".join(list(degrees_map.keys()))+")"  # set pattern for word case
@@ -180,23 +192,30 @@ class Course(scrapy.Item):
             self.add_flag("doubleDegree", "Course name was split into 3 or more degrees: "+self["courseName"])
 
         # Master of Engineering in Biotech
-        study_field_holder = []
-        delims = [" " + x + " " for x in type_delims]
-        for name in names:
-            degree_types = [name.split(x, 1)[0].strip(" ") for x in delims]  # [Master, Master of Engineering]
-            degree_type = min(degree_types, key=len)
-            study_fields = [y[-1].strip(" ") for y in [name.split(x, 1) for x in delims] if len(y) == 2]  # try both delimiters but discard if length of split is 1 (i.e. delimiter not present in string)
+        delims = [x for x in type_delims if re.search("(?=" + "|".join(list(degrees_map.keys())) + ")\s" + x + "\s", self["courseName"].lower(), flags=re.IGNORECASE)]  # get word followed by degree that has a match in the course name
 
-            try:
-                study_field = max(study_fields, key=len)  # this line returns an error if both split attempts result in a length 1 list. meaning name has no degree type. i.e. non-award
-                study_field_holder.append(study_field)
-                self["rawStudyfield"].append(study_field.lower())
-                raw_degree_types.append(degree_type.lower())
-            except ValueError:
-                self["rawStudyfield"].append(name.lower())
+        for name in names:
+            if len(delims) == 1:
+                pattern = "(?=" + "|".join(list(degrees_map.keys())) + ")\s" + delims[0] + "\s"
+
+            elif len(delims) > 1:
+                self.add_flag("degreeType", "Matched multiple type delims " + ", ".join(delims))  # matching on two delimiters is odd. need to flag
+
+            else:
+                pattern = None #no match. non award
+
+            if pattern:
+                name_split = re.split(pattern, name, flags=re.IGNORECASE)
+                study_fields.append(name_split[-1])
+                raw_degree_types.append(name_split[0].lower())
+
+            else:
+                study_fields.append(name.lower())
                 raw_degree_types.append("non-award")
-        if len(study_field_holder) > 0:
-            self["specificStudyField"] = "/".join(study_field_holder)
+
+        if len(study_fields) > 0:
+            self["rawStudyfield"] = [x.lower() for x in study_fields]
+            self["specificStudyField"] = "/".join(study_fields)
 
         for index in range(len(raw_degree_types)):
             try:
@@ -212,7 +231,7 @@ class Course(scrapy.Item):
             if rank > self.degrees[degree_match]["rank"]:
                 self["degreeType"] = degree_match
                 rank = self.degrees[degree_match]["rank"]
-                if "honour" in names[index] and self[degree_type] != "3":
+                if "honour" in names[index].lower() and self["degreeType"] != "3":
                     self.add_flag("degreeType", "This could be an honours degree: "+self["courseName"])
 
         self["courseLevel"] = self.degrees[self["degreeType"]]["level"]
