@@ -158,7 +158,7 @@ class Course(scrapy.Item):
 
         degrees_map = self.raw_degrees_map
         degrees_map.update(new_degrees_map)
-
+        type_delims = [" " + x + " " for x in type_delims]
         study_fields = []
         raw_degree_types = []
         rank = 999
@@ -192,26 +192,33 @@ class Course(scrapy.Item):
             self.add_flag("doubleDegree", "Course name was split into 3 or more degrees: "+self["courseName"])
 
         # Master of Engineering in Biotech
-        delims = [x for x in type_delims if re.search("(?=" + "|".join(list(degrees_map.keys())) + ")\s" + x + "\s", self["courseName"].lower(), flags=re.IGNORECASE)]  # get word followed by degree that has a match in the course name
+        delims = [x for x in type_delims if re.search("^(?=" + "|".join(list(degrees_map.keys())) + ")\s" + x + "\s", self["courseName"].lower(), flags=re.IGNORECASE)]  # get word followed by degree that has a match in the course name
 
         for name in names:
-            if len(delims) == 1:
-                pattern = "(?=" + "|".join(list(degrees_map.keys())) + ")\s" + delims[0] + "\s"
+            degrees = [x for x in list(degrees_map.keys()) if re.search("^"+x, name.lower())]
+            if len(degrees) in [1, 2]:
+                degree = max(degrees, key=len)
+                name = name[len(degree):]
+                delims = [x for x in type_delims if re.search("^" + x, name.lower())]
+                if len(delims) == 1:
+                    study_field = name[len(delims[0]):]
 
-            elif len(delims) > 1:
-                self.add_flag("degreeType", "Matched multiple type delims " + ", ".join(delims))  # matching on two delimiters is odd. need to flag
+                else:
+                    self.add_flag("studyField", "No type delimiter match")
+                    degree = "no match"
+                    study_field = name
+
+            elif len(degrees) > 2:
+                self.add_flag("degreeType", "Matched more than 2 degree types: " + self["courseName"])  # matching on two delimiters is odd. need to flag
+                degree = "no match"
+                study_field = name
 
             else:
-                pattern = None #no match. non award
+                degree = "non award" #no match. non award
+                study_field = name
 
-            if pattern:
-                name_split = re.split(pattern, name, flags=re.IGNORECASE)
-                study_fields.append(name_split[-1])
-                raw_degree_types.append(name_split[0].lower())
-
-            else:
-                study_fields.append(name.lower())
-                raw_degree_types.append("non-award")
+            raw_degree_types.append(degree)
+            study_fields.append(study_field)
 
         if len(study_fields) > 0:
             self["rawStudyfield"] = [x.lower() for x in study_fields]
