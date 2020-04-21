@@ -79,10 +79,6 @@ class UoaSpiderSpider(scrapy.Spider):
     def parse(self, response):
         courses = response.xpath("//div[@class='c-table']//a/@href").getall()
 
-        courses = ["https://www.adelaide.edu.au/degree-finder/2020/hscmg_hbscmg.html",
-                   "https://www.adelaide.edu.au/degree-finder/2020/adtdi_adtechdi.html",
-                   "https://www.adelaide.edu.au/degree-finder/2020/bmsad_bmathscadv.html"]
-
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
 
