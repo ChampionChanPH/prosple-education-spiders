@@ -11,6 +11,8 @@ import re
 class Rating(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
+    level = scrapy.Field()
+    studyFields = scrapy.Field()
     overallQuality = scrapy.Field()
     teachingQuality = scrapy.Field()
     learnerEngagement = scrapy.Field()
