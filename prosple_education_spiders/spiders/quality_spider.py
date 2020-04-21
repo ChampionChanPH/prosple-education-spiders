@@ -69,10 +69,12 @@ class QualitySpiderSpider(scrapy.Spider):
         level = response.css(".ng-tns-c8-4::text").extract_first()
         institutions = response.css("a.text-secondary::attr(href)").extract()
         for institution in [response.urljoin(x) for x in institutions]:
-            yield SplashRequest(institution, self.institution_scrape, endpoint='execute', args={'lua_source': self.lua, 'url': institution}, meta={'level': level})
+            yield SplashRequest(institution, self.institution_scrape, endpoint='execute', args={'lua_source': self.lua, 'url': institution}, meta={'level': level, 'url': institution})
 
     def institution_scrape(self, response):
         quality_item = Rating()
+        quality_item["institution"] = response.css("h1::text").extract_first()
+        quality_item["url"] = response.meta["url"]
         quality_item["level"] = response.meta["level"]
         study_fields = response.css(".study-area-name strong::text").extract()
         quality_item["studyFields"] = list(set(study_fields))
