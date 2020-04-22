@@ -14,7 +14,7 @@ class Rating(scrapy.Item):
     institution = scrapy.Field()
     url = scrapy.Field()
     level = scrapy.Field()
-    studyFields = scrapy.Field()
+    studyField = scrapy.Field()
     overallQuality = scrapy.Field()
     teachingQuality = scrapy.Field()
     learnerEngagement = scrapy.Field()

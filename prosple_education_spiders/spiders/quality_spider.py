@@ -68,18 +68,34 @@ class QualitySpiderSpider(scrapy.Spider):
     def splash_index(self, response):
         level = response.css(".ng-tns-c8-4::text").extract_first()
         institutions = response.css("a.text-secondary::attr(href)").extract()
+        card_selector = "div.clearFix app-study-area-card"
         for institution in [response.urljoin(x) for x in institutions]:
-            yield SplashRequest(institution, self.institution_scrape, endpoint='execute', args={'lua_source': self.lua, 'url': institution}, meta={'level': level, 'url': institution})
+            yield SplashRequest(institution, self.institution_scrape, endpoint='execute', args={'lua_source': self.lua, 'url': institution}, meta={'card_selector': card_selector, 'level': level, 'url': institution, 'studyField': "Overall"})
 
     def institution_scrape(self, response):
         quality_item = Rating()
-        quality_item["institution"] = response.css("h1::text").extract_first()
+        institution = response.css("a.text-tertiary::text").extract_first()
+        if institution:
+            quality_item["institution"] = institution
+        else:
+            quality_item["institution"] = response.css("h1::text").extract_first()
         quality_item["url"] = response.meta["url"]
         quality_item["level"] = response.meta["level"]
-        study_fields = response.css(".study-area-name strong::text").extract()
-        quality_item["studyFields"] = list(set(study_fields))
-        cards = response.css("div.clearFix app-study-area-card")
+        quality_item["studyField"] = response.meta["studyField"]
+        study_fields = response.css(".study-area-name")
+        done = []
+        if study_fields:
+            card_selector = "app-study-area-card.display-flex-sml"
+            for field in study_fields:
+                link = field.css("a::attr(href)").extract_first()
+                link = response.urljoin(link)
+                if link not in done:
+                    done.append(link)
+                    study_field_name = field.css("strong::text").extract_first()
+                    yield SplashRequest(link, self.institution_scrape, args={'wait': 10}, meta={'card_selector': card_selector, 'level': response.meta["level"], 'url': link, 'studyField': study_field_name})
 
+        cards = response.css(response.meta["card_selector"])
+        # print(cards)
         for card in cards:
             current_label = card.css("b::text").extract_first()
             if current_label in list(self.labels.keys()):
