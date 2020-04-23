@@ -14,7 +14,7 @@ class Rating(scrapy.Item):
     institution = scrapy.Field()
     url = scrapy.Field()
     level = scrapy.Field()
-    studyFields = scrapy.Field()
+    studyField = scrapy.Field()
     overallQuality = scrapy.Field()
     teachingQuality = scrapy.Field()
     learnerEngagement = scrapy.Field()
@@ -178,7 +178,7 @@ class Course(scrapy.Item):
             self.add_flag("doubleDegree", "Matched multiple degree delims "+", ".join(words))  # matching on two delimiters is odd. need to flag
 
         elif len(single_chars) > 0:
-            pattern = "\s?["+"".join(single_chars)+"]\s?(?="+"|".join(list(degrees_map.keys()))+")"  # if no match on the word delims and single char delims not empty
+            pattern = "(?<!graduate)\s?["+"".join(single_chars)+"]\s?(?="+"|".join(list(degrees_map.keys()))+")"  # if no match on the word delims and single char delims not empty
 
         else:
             pattern = None  # if no word delim or single character delim match
