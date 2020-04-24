@@ -129,9 +129,9 @@ class SwiSpiderSpider(scrapy.Spider):
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.append(self.campuses[campus])
-        if re.search("online", location, re.I | re.M):
-            study_holder.append("Online")
-            campus_holder.append("709")
+            if re.search("online", location, re.I | re.M):
+                study_holder.append("Online")
+                campus_holder.append("709")
         if len(campus_holder) > 0:
             course_item["campusNID"] = "|".join(set(campus_holder))
             study_holder.append("In Person")
