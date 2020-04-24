@@ -230,20 +230,19 @@ class SwiSpiderSpider(scrapy.Spider):
         fee = response.xpath("//h3[contains(text(), 'Fees')]/following-sibling::*").get()
         int_fee = []
         if fee is not None:
-            int_fee = re.findall("(\d+?),?(\d{3})(?=\s\([an])", fee, re.I | re.M)
+            int_fee = re.findall("(\d+?),?(\d{3})(?=\s\([at])", fee, re.I | re.M)
         else:
             fee = response.xpath("//h3[contains(text(), 'Course fees')]/following-sibling::*").get()
             if fee is not None:
-                int_fee = re.findall("(\d+?),?(\d{3})(?=\s\([an])", fee, re.I | re.M)
-
+                int_fee = re.findall("(\d+?),?(\d{3})(?=\s\([at])", fee, re.I | re.M)
         if len(int_fee) > 0:
-                course_item["internationalFeeAnnual"] = float("".join(int_fee[0]))
-            if "durationMinFull" in course_item and "internationalFeeAnnual" in course_item:
-                if course_item["durationMinFull"] < 1:
-                    course_item["internationalFeeTotal"] = course_item["internationalFeeAnnual"]
-                else:
-                    course_item["internationalFeeTotal"] = course_item["internationalFeeAnnual"]\
-                                                           * course_item["durationMinFull"]
+            course_item["internationalFeeAnnual"] = float("".join(int_fee[0]))
+        if "durationMinFull" in course_item and "internationalFeeAnnual" in course_item:
+            if course_item["durationMinFull"] < 1:
+                course_item["internationalFeeTotal"] = course_item["internationalFeeAnnual"]
+            else:
+                course_item["internationalFeeTotal"] = course_item["internationalFeeAnnual"]\
+                                                       * course_item["durationMinFull"]
 
         yield course_item
 
