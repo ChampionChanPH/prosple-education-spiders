@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
+# remove courses with "2017 only" on course name
+
 from ..standard_libs import *
 from ..scratch_file import strip_tags
 
