@@ -37,6 +37,7 @@ class SwiSpiderSpider(scrapy.Spider):
         "certificate ii": "4",
         "certificate iii": "4",
         "certificate iv": "4",
+        "advanced diploma": "5",
         "diploma": "5",
         "associate degree": "1",
         "non-award": "13",
@@ -171,13 +172,13 @@ class SwiSpiderSpider(scrapy.Spider):
 
         duration = response.xpath("//h3[contains(text(), 'Duration')]/following-sibling::*").get()
         if duration is not None:
-            duration_full = re.findall("(\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration)
+            duration_full = re.findall("(\d+.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration)
             if len(duration_full) == 1:
                 for period in self.teaching_periods:
                     if re.search(period, duration_full[0][1], re.I):
                         course_item["teachingPeriod"] = self.teaching_periods[period]
                         course_item["durationMinFull"] = float(duration_full[0][0])
-            elif len(duration_full) > 1:
+            if len(duration_full) > 1:
                 course_item["teachingPeriod"] = 1
                 for period in self.teaching_periods:
                     if re.search(period, duration_full[0][1], re.I):
