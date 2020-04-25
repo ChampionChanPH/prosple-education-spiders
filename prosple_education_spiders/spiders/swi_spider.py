@@ -209,6 +209,13 @@ class SwiSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, ["/"])
 
+        if re.search("(?<!Graduate\s)Certificate", course_item["courseName"], re.I):
+            course_item["degreeType"] = "4"
+            split = re.findall("(?<=in\s).+", course_item["courseName"], re.DOTALL)
+            if len(split) > 0:
+                course_item["specificStudyField"] = split[0]
+                course_item["rawStudyfield"] = split[0].lower()
+
         international = response.xpath("//a[@id='tab-international']/@href").get()
 
         if international is not None:
