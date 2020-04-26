@@ -1,7 +1,8 @@
-import scrapy
-import re
-from ..items import Course
-from datetime import date
+# -*- coding: utf-8 -*-
+# by Christian Anasco
+
+from ..standard_libs import *
+from ..scratch_file import strip_tags
 
 
 class CuuSpider(scrapy.Spider):

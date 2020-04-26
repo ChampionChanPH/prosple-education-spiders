@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
-# remove courses with "2017 only" on course name
+# remove courses with "201X only" on course name - 2017, 2018 or 2019
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
@@ -35,6 +35,7 @@ class SwiSpiderSpider(scrapy.Spider):
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
+        "victorian certificate": "4",
         "certificate i": "4",
         "certificate ii": "4",
         "certificate iii": "4",
