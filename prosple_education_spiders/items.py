@@ -218,7 +218,7 @@ class Course(scrapy.Item):
                 study_field = name
 
             else:
-                degree = "non award" #no match. non award
+                degree = "non-award" #no match. non award
                 study_field = name
 
             raw_degree_types.append(degree)
@@ -232,8 +232,12 @@ class Course(scrapy.Item):
             try:
                 degree_match = max([x for x in list(dict.fromkeys(degrees_map)) if x in raw_degree_types[index]], key=len)  # match degree type and get longest match
             except ValueError:
-                degree_match = "no match"
-                self.add_flag("degreeType", "no degree type match for "+raw_degree_types[index])
+                if raw_degree_types[index] == "non-award":
+                    degree_match = "non-award"
+
+                else:
+                    degree_match = "no match"
+                    self.add_flag("degreeType", "no degree type match for "+raw_degree_types[index])
 
             degree_match = degrees_map[degree_match]
             if callable(degree_match):
@@ -242,7 +246,7 @@ class Course(scrapy.Item):
             if rank > self.degrees[degree_match]["rank"]:
                 self["degreeType"] = degree_match
                 rank = self.degrees[degree_match]["rank"]
-                if "honour" in names[index].lower() and self["degreeType"] != "3":
+                if "honour" in names[index].lower() and self["degreeType"] != "3" and "doubleDegree" not in self:
                     self.add_flag("degreeType", "This could be an honours degree: "+self["courseName"])
 
         self["courseLevel"] = self.degrees[self["degreeType"]]["level"]
