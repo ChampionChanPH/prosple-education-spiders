@@ -247,15 +247,18 @@ class Course(scrapy.Item):
         # delims = [x for x in type_delims if re.search("^(?=" + "|".join(list(degrees_map.keys())) + ")\s" + x + "\s", self["courseName"].lower(), flags=re.IGNORECASE)]  # get word followed by degree that has a match in the course name
         #
         for i in range(len(names)):
-            name = names[i][len(degree_matches[i]):]
-            delims = [x for x in type_delims if re.search("^" + x, name.lower())]
-            if len(delims) == 1:
-                study_field = name[len(delims[0]):]
-
-            else:
-                self.add_flag("studyField", "No type delimiter match")
-                degree = "no match"
+            if degree_matches[i] == "non-award":
                 study_field = name
+            else:
+                name = names[i][len(degree_matches[i]):]
+                delims = [x for x in type_delims if re.search("^" + x, name.lower())]
+                if len(delims) == 1:
+                    study_field = name[len(delims[0]):]
+
+                else:
+                    self.add_flag("studyField", "No type delimiter match")
+                    degree = "no match"
+                    study_field = name
 
             study_fields.append(study_field)
 
