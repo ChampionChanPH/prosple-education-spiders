@@ -248,7 +248,7 @@ class Course(scrapy.Item):
         #
         for i in range(len(names)):
             if degree_matches[i] == "non-award":
-                study_field = name
+                study_field = names[i]
             else:
                 name = names[i][len(degree_matches[i]):]
                 delims = [x for x in type_delims if re.search("^" + x, name.lower())]
