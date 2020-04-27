@@ -169,7 +169,7 @@ class Course(scrapy.Item):
         ranges = []
         final_ranges = []
 
-        degree_matches = [re.finditer(x, self["courseName"].lower()) for x in list(degrees_map.keys()) if re.search(x, self["courseName"].lower())]
+        degree_matches = [re.finditer(x + " ", self["courseName"].lower()) for x in list(degrees_map.keys()) if re.search(x + " ", self["courseName"].lower())]
         if degree_matches:
             for match in degree_matches:
                 for r in match:
@@ -191,7 +191,7 @@ class Course(scrapy.Item):
                         lower = i
                         upper = i
             # print(final_ranges)
-            degree_matches = [self["courseName"].lower()[x[0]:x[1]+1] for x in final_ranges]
+            degree_matches = [self["courseName"].lower()[x[0]:x[1]] for x in final_ranges]
 
         else:
             degree_matches = ["non-award"]
@@ -209,7 +209,6 @@ class Course(scrapy.Item):
                     break
         elif len(degree_matches) == 1:
             names = [self["courseName"]]
-
         else:
             self.add_flag("degreeType", "More than 2 degree types were found for: "+self["courseName"])
 
@@ -300,3 +299,6 @@ class Course(scrapy.Item):
         else:
             self["flag"][field] = [message]
 
+    def set_course_name(self, name, prefix):
+        self["courseName"] = re.sub("\s+", " ", name)
+        self["uid"] = prefix + re.sub(" ", "-", self["courseName"])

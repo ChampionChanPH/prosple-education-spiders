@@ -82,6 +82,9 @@ class SwiSpiderSpider(scrapy.Spider):
         "day": 365
     }
 
+    institution = "Swinburne University of Technology"
+    uidPrefix = "AU-SWI-"
+
     def parse(self, response):
         categories = response.xpath("//div[contains(@class, 'teaser-wrap')]//a/@href").getall()
 
@@ -98,29 +101,27 @@ class SwiSpiderSpider(scrapy.Spider):
             self.courses.extend(response.xpath("//div[contains(@class, 'course-list')]//a/@href").getall())
 
         courses = set(self.courses)
+
+        courses = ["https://www.swinburne.edu.au/study/course/Certificate-IV-in-Plumbing-and-Services-CPC40912/local"]
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
 
     def course_parse(self, response):
-        institution = "Swinburne University of Technology"
-        uidPrefix = "AU-SWI-"
-
         course_item = Course()
 
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
-        course_item["institution"] = institution
+        course_item["institution"] = self.institution
         course_item["internationalApplyURL"] = response.request.url
         course_item["domesticApplyURL"] = response.request.url
 
         course = response.xpath("//h1/text()").get()
         course_sub = response.xpath("//h1/following-sibling::h2/text()").get()
         if course_sub is not None:
-            course_item["courseName"] = course.strip() + " " + course_sub.strip()
+            course_item.set_course_name(course.strip() + " " + course_sub.strip(), self.uidPrefix)
         else:
-            course_item["courseName"] = course.strip()
-        course_item["uid"] = uidPrefix + re.sub(" ", "-", course_item["courseName"])
+            course_item.set_course_name(course.strip(), self.uidPrefix)
 
         course_code = response.xpath("//span[@class='course-code']/text()").get()
         if course_code is not None:
@@ -211,14 +212,14 @@ class SwiSpiderSpider(scrapy.Spider):
                 else:
                     course_item["domesticFeeTotal"] = course_item["domesticFeeAnnual"] * course_item["durationMinFull"]
 
-        course_item.set_sf_dt(self.degrees, ["/"])
+        course_item.set_sf_dt(self.degrees, ["and", "/"])
 
-        if re.search("(?<!Graduate\s)Certificate", course_item["courseName"], re.I):
-            course_item["degreeType"] = "4"
-            split = re.findall("(?<=in\s).+", course_item["courseName"], re.DOTALL)
-            if len(split) > 0:
-                course_item["specificStudyField"] = split[0]
-                course_item["rawStudyfield"] = split[0].lower()
+        # if re.search("(?<!Graduate\s)Certificate", course_item["courseName"], re.I):
+        #     course_item["degreeType"] = "4"
+        #     split = re.findall("(?<=in\s).+", course_item["courseName"], re.DOTALL)
+        #     if len(split) > 0:
+        #         course_item["specificStudyField"] = split[0]
+        #         course_item["rawStudyfield"] = split[0].lower()
 
         international = response.xpath("//a[@id='tab-international']/@href").get()
 
