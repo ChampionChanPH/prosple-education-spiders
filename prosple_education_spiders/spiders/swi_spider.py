@@ -177,7 +177,7 @@ class SwiSpiderSpider(scrapy.Spider):
 
         duration = response.xpath("//h3[contains(text(), 'Duration')]/following-sibling::*").get()
         if duration is not None:
-            duration_full = re.findall("(\d+\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration)
+            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration)
             if len(duration_full) == 1:
                 for period in self.teaching_periods:
                     if re.search(period, duration_full[0][1], re.I):
