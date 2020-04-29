@@ -110,6 +110,7 @@ class QutSpiderSpider(scrapy.Spider):
         courses = response.xpath("//div[contains(@class, 'study-level')]//a/@href").getall()
         courses = [x for x in courses if not re.search("online.qut.edu.au", x)]
 
+        courses = ["https://www.qut.edu.au/courses/graduate-certificate-in-education-general-studies"]
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
 
@@ -124,10 +125,10 @@ class QutSpiderSpider(scrapy.Spider):
         course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1/span/text()").get()
-        if course_name is not None:
+        if course_name is None:
             course_name = response.xpath("//h1/text()").get()
-            if course_name is not None:
-                course_item.set_course_name(course_name.strip(), self.uidPrefix)
+        if course_name is not None:
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview_summary = response.xpath("//div[contains(@class, 'hero__header__blurb')]/text()").get()
         if overview_summary == "":
@@ -177,8 +178,8 @@ class QutSpiderSpider(scrapy.Spider):
         duration = response.xpath("//div[@class='quick-box-inner']//dt[contains(text(), "
                                   "'Duration')]/following-sibling::dd[contains(@data-course-audience, "
                                   "'DOM')]").getall()
-        duration_full = 0
-        duration_part = 0
+        duration_full = ""
+        duration_part = ""
         if len(duration) > 0:
             duration = "".join(duration)
             duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\sfull.time)",
@@ -189,10 +190,10 @@ class QutSpiderSpider(scrapy.Spider):
             for item in self.teaching_periods:
                 if re.search(item, duration_full[0][1], re.I):
                     course_item["teachingPeriod"] = self.teaching_periods[item]
-            if "teachingPeriod" not in course_item:
-                for item in self.teaching_periods:
-                    if re.search(item, duration_part[0][1], re.I):
-                        course_item["teachingPeriod"] = self.teaching_periods[item]
+        if "teachingPeriod" not in course_item and len(duration_part) > 0:
+            for item in self.teaching_periods:
+                if re.search(item, duration_part[0][1], re.I):
+                    course_item["teachingPeriod"] = self.teaching_periods[item]
         if len(duration_full) > 0:
             course_item["durationMinFull"] = float(duration_full[0][0])
         if len(duration_part) > 0:
