@@ -35,22 +35,25 @@ class Course(scrapy.Item):
     flag = scrapy.Field()  # Non cms field. contains list of potential errors during scrape.
     # {"field name" : "short description"} eg. {"courseName": "full course name too long. could be a double degree"}
 
-    # Priority Fields (Required) #
-    group = scrapy.Field()  # group : Integer corresponding to group
-    canonicalGroup = scrapy.Field()  # Canonical Group : String. Name of canonical group.
-    published = scrapy.Field()  # Published : 1 or 0
-    courseName = scrapy.Field()  # Full course name
-    institution = scrapy.Field()  # Institution name
+    # Set by function
     rawStudyfield = scrapy.Field()  # non cms field to store program name : List of raw study field, all lowercase
-    campusNID = scrapy.Field()  # Campus NID : Pipe separated string of ids of campuses e.g. "154|345|454"
-    uid = scrapy.Field()  # UID
     courseLevel = scrapy.Field()  # Course level : Postgraduate or Undergraduate
     degreeType = scrapy.Field()  # Degree type : Bachelor or Certificate etc
+    specificStudyField = scrapy.Field()  # Specific study field. Websites own classifications
+    group = scrapy.Field()  # group : Integer corresponding to group
+    canonicalGroup = scrapy.Field()  # Canonical Group : String. Name of canonical group.
+    uid = scrapy.Field()  # UID
+
+    # Priority Fields (Required) #
+    published = scrapy.Field()  # Published : 1 or 0
+    institution = scrapy.Field()  # Institution name
+    courseName = scrapy.Field()  # Full course name
     lastUpdate = scrapy.Field()  # Data last updated : mm/dd/yy
     sourceURL = scrapy.Field()  # Record Source URL
-    courseCode = scrapy.Field()  # Course code
+    campusNID = scrapy.Field()  # Campus NID : Pipe separated string of ids of campuses e.g. "154|345|454"
 
     # Important Fields (Fill as much as you can. Can be blank if info is not availablem#
+    courseCode = scrapy.Field()  # Course code
     cricosCode = scrapy.Field()  # CRICOS code
     internationalApps = scrapy.Field()  # Accept International Applications : 1 or 0
     modeOfStudy = scrapy.Field()  # Mode of study : In person or Online
@@ -87,7 +90,6 @@ class Course(scrapy.Item):
     whatLearn = scrapy.Field()  # What you will learn
     finSupportSchemes = scrapy.Field()  # Financial support schemes
 
-    specificStudyField = scrapy.Field()  # Specific study field. Websites own classifications
     qilt = scrapy.Field()  # QILT Study Field
     postNumerals = scrapy.Field()  # Post numerals
     researchTrainingScheme = scrapy.Field()  # Research training scheme
