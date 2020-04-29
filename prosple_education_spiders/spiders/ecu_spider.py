@@ -167,5 +167,5 @@ class EcuSpiderSpider(scrapy.Spider):
         what_learn = response.xpath("//ol[@class='learning-outcome-list']/li/text()").getall()
         if what_learn:
             course_item["whatLearn"] = "\n".join(["- " + x for x in what_learn])
-        if "flag" in course_item:
-            yield course_item
+        # if "flag" in course_item:
+        yield course_item
