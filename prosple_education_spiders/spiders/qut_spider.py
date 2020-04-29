@@ -110,7 +110,6 @@ class QutSpiderSpider(scrapy.Spider):
         courses = response.xpath("//div[contains(@class, 'study-level')]//a/@href").getall()
         courses = [x for x in courses if not re.search("online.qut.edu.au", x)]
 
-        courses = ["https://www.qut.edu.au/courses/graduate-certificate-in-education-general-studies"]
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
 
