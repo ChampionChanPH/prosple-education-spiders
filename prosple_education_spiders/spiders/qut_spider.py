@@ -33,8 +33,14 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])\
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
                                                / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 52
 
 
 class QutSpiderSpider(scrapy.Spider):
@@ -198,7 +204,9 @@ class QutSpiderSpider(scrapy.Spider):
         if len(duration_full) > 0:
             course_item["durationMinFull"] = float(duration_full[0][0])
         if len(duration_part) > 0:
-            if course_item["teachingPeriod"] == 1 and duration_part[0][1] == "year":
+            if (course_item["teachingPeriod"] == 1 and duration_part[0][1] == "year") or \
+                    (course_item["teachingPeriod"] == 12 and duration_part[0][1] == "month") or \
+                    (course_item["teachingPeriod"] == 52 and duration_part[0][1] == "week"):
                 course_item["durationMinPart"] = float(duration_part[0][0])
             if course_item["teachingPeriod"] == 12 and duration_part[0][1] == "year":
                 course_item["durationMinPart"] = float(duration_part[0][0]) * 12
