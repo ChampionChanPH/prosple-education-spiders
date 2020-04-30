@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
 # Update course level of "University Certificate in Tertiary Preparation for Postgraduate Studies" to Postgraduate
+# Remove courses tagged non-award and not really courses like Scholarships
+# Remove courses with name "last offered 2019"
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
