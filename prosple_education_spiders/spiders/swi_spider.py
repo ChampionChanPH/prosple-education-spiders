@@ -102,8 +102,6 @@ class SwiSpiderSpider(scrapy.Spider):
 
         courses = set(self.courses)
 
-        courses = ["https://www.swinburne.edu.au/study/course/time-and-priority-management/",
-                   "https://www.swinburne.edu.au/study/course/bachelor-of-engineering-honours-bachelor-of-innovation-and-design/telecommunications/"]
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
 
