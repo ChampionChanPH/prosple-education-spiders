@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
+# put on hold, had issues with javascript
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
@@ -23,6 +24,7 @@ class CsuSpiderSpider(scrapy.Spider):
     name = 'csu_spider'
     allowed_domains = ['study.csu.edu.au']
     start_urls = ['https://study.csu.edu.au/courses/all']
+    http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "Charles Sturt University (CSU)"
     uidPrefix = "AU-CSU-"
 
@@ -55,12 +57,22 @@ class CsuSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Adelaide": "719",
-        "Ultimo": "11788",
-        "Sydney": "723",
-        "Perth": "11784",
-        "Brisbane": "720",
-        "Melbourne": "722"
+        "Holmesglen": "540",
+        "Bathurst": "527",
+        "Uni Wide": "529",
+        "Port Macquarie": "532",
+        "Dubbo": "530",
+        "Canberra": "528",
+        "Orange": "539",
+        "CSU Study Centre Brisbane": "534",
+        "Brisbane": "538",
+        "CSU Study Centre Melbourne": "531",
+        "Melbourne": "533",
+        "Northern Sydney Institute": "535",
+        "Sydney": "536",
+        "Albury-Wodonga": "525",
+        "Albury": "537",
+        "Wagga Wagga": "526"
     }
 
     teaching_periods = {
@@ -73,20 +85,88 @@ class CsuSpiderSpider(scrapy.Spider):
         "day": 365
     }
 
+    sessions = {
+        "Session 1 2020": "03",
+        "Session 2 2020": "07"
+    }
+
     def parse(self, response):
         courses = response.xpath("//div[@id='all-courses-list']//a/@href").getall()
 
+        courses = [
+            "https://study.csu.edu.au/courses/business/bachelor-communication-advertising-bachelor-business-marketing",
+            "https://study.csu.edu.au/courses/psychology/bachelor-psychology",
+            "https://study.csu.edu.au/courses/teaching-education/master-adult-vocational-education"]
         for course in courses:
-            yield response.follow(course, callback=self.course_parse)
+            yield SplashRequest(course, callback=self.course_parse, args={"wait": 10}, meta={'url': course})
 
     def course_parse(self, response):
         course_item = Course()
 
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
-        course_item["sourceURL"] = response.request.url
+        course_item["sourceURL"] = response.meta['url']
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["internationalApplyURL"] = response.request.url
-        course_item["domesticApplyURL"] = response.request.url
+        course_item["internationalApplyURL"] = response.meta['url']
+        course_item["domesticApplyURL"] = response.meta['url']
+
+        course_name = response.xpath("//div[@id='banner-heading']/text()").get()
+        if course_name is not None:
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
+
+        study = response.xpath("//*[text()='Study mode']/following-sibling::*").get()
+        study_holder = []
+        if len(study) > 0:
+            if re.search(r"on campus", study, re.I | re.M):
+                study_holder.append("In Person")
+            if re.search(r"online", study, re.I | re.M):
+                study_holder.append("Online")
+        if len(study_holder) > 0:
+            course_item["modeOfStudy"] = "|".join(study_holder)
+
+        location = response.xpath("//*[text()='Campus locations']/following-sibling::*").get()
+        campus_holder = []
+        if location is not None:
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.append(self.campuses[campus])
+        if len(campus_holder) > 0:
+            course_item["campusNID"] = "|".join(campus_holder)
+
+        career = response.xpath("//*[text()='Career opportunities']/following-sibling::*").get()
+        if career is not None:
+            course_item["careerPathways"] = strip_tags(career, False)
+
+        admission = response.xpath("//*[text()='Admission information']/following-sibling::*").get()
+        if admission is not None:
+            score = re.findall(r"(?<=Minimum Selection Rank required for consideration: )\d*\.?\d+", admission, re.M)
+            if len(score) > 0:
+                score = set(score)
+                course_item["minScoreNextIntake"] = float(max(score))
+
+        cricos = response.xpath("//*[contains(@id, 'cYear-intCricos')]").get()
+        if cricos is not None:
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if len(cricos) > 0:
+                cricos = set(cricos)
+                course_item["cricosCode"] = ", ".join(cricos)
+
+        int_check = response.xpath("//div[@class='nonInternational']").get()
+        if int_check is None:
+            course_item["internationalApps"] = 1
+
+        availability = response.xpath("//*[text()='Session availability']/following-sibling::*").get()
+        start_holder = []
+        if availability is not None:
+            for item in self.sessions:
+                if re.search(item, availability, re.M):
+                    start_holder.append(self.sessions[item])
+        if len(start_holder) > 0:
+            course_item["startMonths"] = "|".join(start_holder)
+
+        duration = response.xpath("//*[text()='Duration']/following-sibling::*//p[contains(text(), 'Full-time')]").get()
+        print(duration)
+
+        course_item.set_sf_dt(self.degrees)
 
         yield course_item
