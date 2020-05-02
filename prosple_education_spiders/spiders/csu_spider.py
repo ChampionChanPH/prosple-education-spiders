@@ -98,7 +98,7 @@ class CsuSpiderSpider(scrapy.Spider):
             "https://study.csu.edu.au/courses/psychology/bachelor-psychology",
             "https://study.csu.edu.au/courses/teaching-education/master-adult-vocational-education"]
         for course in courses:
-            yield SplashRequest(course, callback=self.course_parse, args={"wait": 10}, meta={'url': course})
+            yield SplashRequest(course, callback=self.course_parse, args={"wait": 20}, meta={'url': course})
 
     def course_parse(self, response):
         course_item = Course()
@@ -137,9 +137,14 @@ class CsuSpiderSpider(scrapy.Spider):
         if career is not None:
             course_item["careerPathways"] = strip_tags(career, False)
 
-        admission = response.xpath("//*[text()='Admission information']/following-sibling::*").get()
-        if admission is not None:
-            score = re.findall(r"(?<=Minimum Selection Rank required for consideration: )\d*\.?\d+", admission, re.M)
+        c_atar = response.xpath("//*[contains(@id, 'cYear-atar')]").get()
+        f_atar = response.xpath("//*[contains(@id, 'fYear-atar')]").get()
+        if re.search(r"display: none;", c_atar, re.M):
+            atar = f_atar
+        else:
+            atar = c_atar
+        if atar is not None:
+            score = re.findall(r"(?<=Minimum Selection Rank required for consideration: )\d*\.?\d+", atar, re.M)
             if len(score) > 0:
                 score = set(score)
                 course_item["minScoreNextIntake"] = float(max(score))
@@ -164,8 +169,14 @@ class CsuSpiderSpider(scrapy.Spider):
         if len(start_holder) > 0:
             course_item["startMonths"] = "|".join(start_holder)
 
-        duration = response.xpath("//*[text()='Duration']/following-sibling::*//p[contains(text(), 'Full-time')]").get()
-        print(duration)
+        duration = response.xpath("//p[contains(text(), 'Full-time:')]").get()
+        if duration is not None:
+            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration)
+            if len(duration_full) > 0:
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                for period in self.teaching_periods:
+                    if re.search(period, duration_full[0][1], re.I):
+                        course_item["teachingPeriod"] = self.teaching_periods[period]
 
         course_item.set_sf_dt(self.degrees)
 
