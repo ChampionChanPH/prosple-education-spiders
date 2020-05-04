@@ -3,7 +3,6 @@
 # "startMonths" is for year 2020 and 2021
 
 from ..standard_libs import *
-from ..scratch_file import strip_tags
 
 
 def research_coursework(course_item):
@@ -25,7 +24,7 @@ class AiwtSpiderSpider(scrapy.Spider):
     allowed_domains = ['www.aiwt.edu.au', 'aiwt.edu.au']
     start_urls = ['https://www.aiwt.edu.au/new-students-domestic/courses/',
                   'https://www.aiwt.edu.au/new-students-international/courses/']
-    institution = "AIWT"
+    institution = "Australia-International Institute of Workplace Training (AIWT)"
     uidPrefix = "AU-AIWT-"
 
     degrees = {
@@ -74,6 +73,9 @@ class AiwtSpiderSpider(scrapy.Spider):
 
         overview = response.xpath("//div[@class='course-overview']/text()").get()
         if overview is not None:
+            course_item["overview"] = overview
+        if "overview" not in course_item:
+            overview = "Learn more about studying " + course_item["courseName"] + " at " + self.institution + "."
             course_item["overview"] = overview
 
         career = max(response.xpath("//div[contains(h2, 'Career Prospects')]/text()").getall())
