@@ -69,7 +69,7 @@ class AiwtSpiderSpider(scrapy.Spider):
                 course_item["courseCode"] = course_code[0]
             if "courseCode" in course_item:
                 course = re.sub(course_item["courseCode"], "", course)
-            course_item["courseName"] = course.strip()
+            course_item.set_course_name(course.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@class='course-overview']/text()").get()
         if overview is not None:
