@@ -19,6 +19,7 @@ class CoursesPipeline(object):
         fields_to_clean = [
             "whatLearn",
             "overview",
+            "overviewSummary",
             "careerPathways",
             "entryRequirements",
             "courseStructure",
