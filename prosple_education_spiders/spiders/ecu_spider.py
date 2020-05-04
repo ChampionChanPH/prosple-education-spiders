@@ -107,7 +107,7 @@ class EcuSpiderSpider(scrapy.Spider):
         course_item["overviewSummary"] = response.meta["fields"]["description"]
         course_item.set_sf_dt(self.degrees)
         
-        course_item["overview"] = "\n".join(response.css("#introduction p:not(.courseCode)::text").extract())
+        course_item["overview"] = "<br>".join(response.css("#introduction p:not(.courseCode)::text").extract())
 
         # Fees
         domestic_fee = response.css(".audience__panel--domestic p.base__subheading::text").extract_first()
@@ -166,6 +166,6 @@ class EcuSpiderSpider(scrapy.Spider):
 
         what_learn = response.xpath("//ol[@class='learning-outcome-list']/li/text()").getall()
         if what_learn:
-            course_item["whatLearn"] = "\n".join(["- " + x for x in what_learn])
+            course_item["whatLearn"] = "<br>".join(["- " + x for x in what_learn])
         # if "flag" in course_item:
         yield course_item
