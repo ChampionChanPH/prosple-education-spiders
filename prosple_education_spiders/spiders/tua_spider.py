@@ -42,28 +42,21 @@ class TuaSpiderSpider(scrapy.Spider):
         "no match": "15"
     }
 
-    months = {
-        "January": "01",
-        "February": "02",
-        "March": "03",
-        "April": "04",
-        "May": "05",
-        "June": "06",
-        "July": "07",
-        "August": "08",
-        "September": "09",
-        "October": "10",
-        "November": "11",
-        "December": "12"
-    }
-
     campuses = {
-        "Adelaide": "719",
-        "Ultimo": "11788",
-        "Sydney": "723",
-        "Perth": "11784",
-        "Brisbane": "720",
-        "Melbourne": "722"
+        "Gotha Street Campus, Brisbane": "43385",
+        "Torrens University Language Centre, Brisbane": "43384",
+        "Fortitude Valley Campus, Brisbane": "720",
+        "Torrens University Language Centre, Melbourne": "43383",
+        "Fitzroy Campus, Melbourne": "43382",
+        "Flinders Street Campus, Melbourne": "722",
+        "Leura Campus, Sydney": "43374",
+        "Kent Street Campus, Sydney": "43373",
+        "Torrens University Language Centre, Sydney": "43372",
+        "Town Hall Campus, Sydney": "43371",
+        "Pyrmont Campus, Sydney": "11784",
+        "The Rocks Campus, Sydney": "723",
+        "Ultimo Campus, Sydney": "11788",
+        "Wakefield Street Campus, Adelaide": "719"
     }
 
     teaching_periods = {
@@ -88,11 +81,17 @@ class TuaSpiderSpider(scrapy.Spider):
             yield response.follow(item, callback=self.sub_parse)
 
     def sub_parse(self, response):
-        courses = response.xpath("//section[contains(@class, 'courses-section')]//a[contains(@class, "
-                                 "'view-course-button')]/@href").getall()
+        courses = response.css("div.border.black-border")
 
         for item in courses:
-            yield response.follow(item, callback=self.course_parse)
+            fields = {}
+
+            learn = item.css("div.col-12.col-md-4.pb-3").get()
+            if learn is not None:
+                fields["learn"] = re.sub(r"key study outcomes", "Key Study Outcomes", learn, re.M)
+            fields["location"] = item.css("p.pb-0.mb-2").get()
+            course_link = item.css("a.view-course-button::attr(href)").get()
+            yield response.follow(course_link, callback=self.course_parse, meta={'fields': fields})
 
     def course_parse(self, response):
         course_item = Course()
@@ -113,6 +112,7 @@ class TuaSpiderSpider(scrapy.Spider):
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M | re.I)
             if len(cricos) > 0:
                 course_item["cricosCode"] = ", ".join(cricos)
+                course_item["internationalApps"] = 1
 
         overview = response.xpath("//h2/following-sibling::*").get()
         if overview is not None:
@@ -157,17 +157,18 @@ class TuaSpiderSpider(scrapy.Spider):
                     course_item["durationMaxPart"] = float(duration_part[1][0]) * course_item["teachingPeriod"] \
                                                      / self.teaching_periods[duration_part[1][1]]
 
-        learn = response.xpath("//div[contains(text(), 'Learning Outcomes:')]/following-sibling::*").get()
-        if learn is not None:
-            course_item["whatLearn"] = strip_tags(learn, False)
+        course_item["whatLearn"] = response.meta["fields"]["learn"]
 
-        location = response.xpath("//h3[contains(text(), 'Where can I study')]/following-sibling::div").get()
+        location = response.meta["fields"]["location"]
+
+        check_online = response.xpath("//h3[contains(text(), 'Where can I study')]/following-sibling::div").get()
         campus_holder = []
         study_holder = []
         if location is not None:
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.append(self.campuses[campus])
+        if check_online is not None:
             if re.search("online", location, re.I | re.M):
                 study_holder.append("Online")
         if len(campus_holder) > 0:
