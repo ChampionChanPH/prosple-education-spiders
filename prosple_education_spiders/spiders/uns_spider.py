@@ -109,8 +109,8 @@ class UnsSpiderSpider(scrapy.Spider):
             course_item["courseName"] = "Juris Doctor in Law"
 
         # Override weird course with 4 degrees
-        if course_name == "Bachelor of Engineering(Materials Science) (Honours) / Master of Biomedical Engineering":
-            course_item["courseName"] = "Bachelor of Engineering(Materials Science) (Honours) / Master of Biomedical Engineering"
+        if course_name == "Bachelor of Engineering (Materials Science) (Honours)/Master of Biomedical Engineering":
+            course_item["courseName"] = "Bachelor of Engineering (Materials Science) (Honours)/Master of Biomedical Engineering"
 
         # Override Bachelor of Bachelor of Arts
         if "Bachelor of Bachelor of" in course_item["courseName"]:
