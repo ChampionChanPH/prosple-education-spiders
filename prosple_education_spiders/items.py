@@ -7,6 +7,7 @@
 
 import scrapy
 import re
+from .misc_functions import *
 
 class Rating(scrapy.Item):
     # define the fields for your item here like:
@@ -201,6 +202,11 @@ class Course(scrapy.Item):
 
         # print(degree_matches)
         names = []
+        if len(degree_matches) > 2:
+            print(str(len(degree_matches)) + " degrees were found.")
+            self.add_flag("degreeType", str(len(degree_matches)) + " degree types were found for: " + self["courseName"])
+            degree_matches = degree_matches[:2]
+
         if len(degree_matches) == 2:
             self["doubleDegree"] = 1
             for delim in degree_delims:
@@ -211,9 +217,8 @@ class Course(scrapy.Item):
                     break
         elif len(degree_matches) == 1:
             names = [self["courseName"]]
-        else:
-            self.add_flag("degreeType", "More than 2 degree types were found for: "+self["courseName"])
 
+        # print(names)
         # print(names)
 
         # delim =
@@ -258,9 +263,8 @@ class Course(scrapy.Item):
                     study_field = name[len(delims[0]):]
 
                 else:
-                    self.add_flag("studyField", "No type delimiter match")
-                    degree = "no match"
-                    study_field = name
+                    self.add_flag("studyField", "No type delimiter match: " + self["courseName"])
+                    study_field = cleanspace(name)
 
             study_fields.append(study_field)
 
