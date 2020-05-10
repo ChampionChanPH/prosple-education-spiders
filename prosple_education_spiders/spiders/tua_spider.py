@@ -114,8 +114,9 @@ class TuaSpiderSpider(scrapy.Spider):
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
 
-        overview = response.xpath("//h2/following-sibling::*").get()
-        if overview is not None:
+        overview = response.xpath("//h2/following-sibling::*").getall()
+        if len(overview) > 0:
+            overview = "".join(overview)
             course_item["overview"] = strip_tags(overview.strip(), False)
 
         duration_full = response.xpath("//div[i[contains(@class, 'ion-record')]]/following-sibling::*").get()
