@@ -100,7 +100,6 @@ class TuaSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["internationalApplyURL"] = response.request.url
         course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1/text()").get()
@@ -113,6 +112,7 @@ class TuaSpiderSpider(scrapy.Spider):
             if len(cricos) > 0:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
+                course_item["internationalApplyURL"] = response.request.url
 
         overview = response.xpath("//h2/following-sibling::*").getall()
         if len(overview) > 0:
