@@ -24,14 +24,14 @@ class TopSpiderSpider(scrapy.Spider):
     allowed_domains = ['www.top.edu.au', 'top.edu.au']
     start_urls = ['https://www.top.edu.au/school-of-business/undergraduate-programs',
                   'https://www.top.edu.au/school-of-business/postgraduate-programs']
-    banned_urls = ['https://www.top.edu.au/school-of-business/postgraduate-programs/graduate-diploma-of-public'
-                   '-relations-and-marketing/graduate-diploma-of-public-relations-and-marketing',
-                   'https://www.top.edu.au/school-of-business/postgraduate-programs/master-of-professional-accounting'
-                   '-and-business/master-of-professional-accounting-and-business',
-                   'https://www.top.edu.au/school-of-business/postgraduate-programs/master-of-marketing-and-public'
-                   '-relations--/master-of-marketing-and-public-relations',
-                   'https://www.top.edu.au/school-of-business/postgraduate-programs/pathway-to-the-university-of'
-                   '-newcastle/pathway-to-the-university-of-newcastle']
+    banned_urls = ['/school-of-business/postgraduate-programs/graduate-diploma-of-public-relations-and-marketing'
+                   '/graduate-diploma-of-public-relations-and-marketing',
+                   '/school-of-business/postgraduate-programs/master-of-professional-accounting-and-business/master'
+                   '-of-professional-accounting-and-business',
+                   '/school-of-business/postgraduate-programs/master-of-marketing-and-public-relations--/master-of'
+                   '-marketing-and-public-relations',
+                   '/school-of-business/postgraduate-programs/pathway-to-the-university-of-newcastle/pathway-to-the'
+                   '-university-of-newcastle']
     institution = "Top Education Institute"
     uidPrefix = "AU-TOP-"
 
@@ -89,6 +89,8 @@ class TopSpiderSpider(scrapy.Spider):
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         cricos = response.xpath("//td[contains(strong/text(), 'CRICOS')]/following-sibling::*").get()
+        if cricos is None:
+            cricos = response.xpath("//strong[contains(text(), 'CRICOS')]").get()
         if cricos is not None:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M | re.I)
             if len(cricos) > 0:
@@ -105,6 +107,12 @@ class TopSpiderSpider(scrapy.Spider):
                 self.get_period(duration[0][1], course_item)
 
         overview = response.xpath("//td[contains(strong/text(), 'Program Overview')]/following-sibling::*").get()
+        if overview is None:
+            overview = response.xpath("//td[contains(span/strong/text(), 'Program Overview')]/following-sibling::*").get()
+        if overview is None:
+            overview = response.xpath("//td[contains(strong/span/text(), 'Program Overview')]/following-sibling::*").get()
+        if overview is None:
+            overview = response.xpath("//td[contains(span/strong/em/text(), 'Program Overview')]/following-sibling::*").get()
         if overview is not None:
             course_item["overview"] = strip_tags(overview, False)
 
@@ -141,6 +149,8 @@ class TopSpiderSpider(scrapy.Spider):
             course_item["whatLearn"] = strip_tags(learn, False)
 
         structure = response.xpath("//td[contains(strong/text(), 'Course Structure')]/following-sibling::*").get()
+        if structure is None:
+            structure = response.xpath("//td[contains(strong/span/text(), 'Course Structure')]/following-sibling::*").get()
         if structure is not None:
             course_item["courseStructure"] = strip_tags(structure, False)
 
