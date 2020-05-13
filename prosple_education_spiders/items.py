@@ -20,6 +20,7 @@ class Scholarship(scrapy.Item):
     eligible = scrapy.Field()
     degree_types = scrapy.Field()
     campus_names = scrapy.Field()
+    study_mode = scrapy.Field()
     length_support = scrapy.Field()
     total_value = scrapy.Field()
     expired = scrapy.Field()
