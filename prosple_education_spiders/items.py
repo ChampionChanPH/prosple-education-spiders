@@ -11,7 +11,7 @@ from .misc_functions import *
 
 class Scholarship(scrapy.Item):
     source_url = scrapy.Field()
-    identifier = scrapy.Field()
+    uid = scrapy.Field()
     name = scrapy.Field()
     code = scrapy.Field()
     canonical_group = scrapy.Field()
