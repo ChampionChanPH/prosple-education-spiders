@@ -74,17 +74,22 @@ def unique_list(list_in):
     return list(dict.fromkeys(list_in))
 
 
-def campus_NID(campus_map, list_in):
+def map_convert(mapping, list_in):
     """
-    :param campus_map: dictionary of campus names mapped to node id in cms
-    :param list_in: list of campus names
-    "return: list of node ids for each campus.
+    :param mapping: dictionary of key value pairs
+    :param list_in: list of potential key values
+    "return: list of converted values.
     """
-    for i in range(len(list_in)):
-        try:
-            list_in[i] = campus_map[list_in[i]]
+    converted = []
+    failed = []
+    for item in list_in:
+        if item in list(mapping.keys()):
+            converted.append(mapping[item])
 
-        except KeyError:
-            print("Campus name not in Campus Map")
+        else:
+            failed.append(item)
 
-    return list_in
+    return {
+        "converted": converted,
+        "failed": failed
+    }
