@@ -128,7 +128,6 @@ class QutSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["internationalApplyURL"] = response.request.url
         course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1/span/text()").get()
@@ -177,6 +176,7 @@ class QutSpiderSpider(scrapy.Spider):
         if cricos is not None:
             course_item["cricosCode"] = cricos.strip()
             course_item["internationalApps"] = 1
+            course_item["internationalApplyURL"] = response.request.url
 
         course_code = response.xpath("//dt[contains(text(), 'Course code')]/following-sibling::dd/text()").get()
         if course_code is not None:
