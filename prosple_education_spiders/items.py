@@ -9,6 +9,41 @@ import scrapy
 import re
 from .misc_functions import *
 
+class Scholarship(scrapy.Item):
+    source_url = scrapy.Field()
+    identifier = scrapy.Field()
+    name = scrapy.Field()
+    code = scrapy.Field()
+    canonical_group = scrapy.Field()
+    time_zone = scrapy.Field()
+    provider_name = scrapy.Field()
+    eligible = scrapy.Field()
+    degree_types = scrapy.Field()
+    campus_names = scrapy.Field()
+    length_support = scrapy.Field()
+    total_value = scrapy.Field()
+    expired = scrapy.Field()
+    study_field = scrapy.Field()
+    overview = scrapy.Field()
+    summary = scrapy.Field()
+    eligibility = scrapy.Field()
+    criteria = scrapy.Field()
+    app_process = scrapy.Field()
+    retention = scrapy.Field()
+    gender = scrapy.Field()
+    prior_qualification = scrapy.Field()
+    international_apps = scrapy.Field()
+    opens = scrapy.Field()
+    closes = scrapy.Field()
+    starts = scrapy.Field()
+    count = scrapy.Field()
+    count_description = scrapy.Field()
+    frequency = scrapy.Field()
+    apply_url = scrapy.Field()
+    apply_email = scrapy.Field()
+    published = scrapy.Field()
+
+
 class Rating(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
@@ -311,3 +346,5 @@ class Course(scrapy.Item):
     def set_course_name(self, name, prefix):
         self["courseName"] = re.sub("\s+", " ", name)
         self["uid"] = prefix + re.sub(" ", "-", self["courseName"])
+
+
