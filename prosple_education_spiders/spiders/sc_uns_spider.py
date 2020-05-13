@@ -4,7 +4,7 @@ from ..items import Scholarship
 from ..misc_functions import *
 
 class ScunsSpiderSpider(scrapy.Spider):
-    name = 'scuns_spider'
+    name = 'sc_uns_spider'
     # allowed_domains = ['https://www.scholarships.unsw.edu.au/scholarships/search?show=open']
     start_urls = ['https://www.scholarships.unsw.edu.au/scholarships/search?show=all']
     code = "AU-SCUNS-"
