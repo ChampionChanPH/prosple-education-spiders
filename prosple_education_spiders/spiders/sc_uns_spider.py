@@ -41,8 +41,11 @@ class ScunsSpiderSpider(scrapy.Spider):
         code = response.css("h2::text").get()
         if code:
             item["code"] = cleanspace(code)
+            item["identifier"] = self.code+code
 
-        item["identifier"] = self.code+code
+        else:
+            item["identifier"] = self.code + name
+
         value = response.css(".scholarships-table-value .content::text").get()
         if value:
             item["total_value"] = value
