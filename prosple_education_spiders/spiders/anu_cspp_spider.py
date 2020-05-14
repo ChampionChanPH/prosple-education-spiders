@@ -113,7 +113,7 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         if course_name is not None:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//div[@class='introduction']/*").getall()
+        overview = response.xpath("//div[@id='introduction']/*").getall()
         if len(overview) > 0:
             overview = "".join(overview)
             course_item["overview"] = strip_tags(overview, False)
