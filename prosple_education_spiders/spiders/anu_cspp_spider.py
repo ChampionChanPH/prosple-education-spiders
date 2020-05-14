@@ -91,12 +91,13 @@ class AnuCsppSpiderSpider(scrapy.Spider):
                 yield response.follow(item, callback=self.sub_parse)
 
     def sub_parse(self, response):
+        course_name = response.xpath("//h1[@class='title']/text()").get()
         next_page = response.xpath("//a[contains(text(), 'degree program structure, admission requirements and "
                                    "academic information')]/@href").get()
 
         if next_page is not None:
             yield SplashRequest(next_page, callback=self.course_parse, args={'wait': 10.0},
-                                meta={'url': next_page})
+                                meta={'url': next_page, 'name': course_name})
 
     def course_parse(self, response):
         course_item = Course()
@@ -107,7 +108,7 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         course_item["institution"] = self.institution
         course_item["domesticApplyURL"] = response.meta['url']
 
-        course_name = response.xpath("//span[@class='intro__degree-title__component']/text()").get()
+        course_name = response.meta['name']
         if course_name is not None:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
