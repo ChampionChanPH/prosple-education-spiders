@@ -86,9 +86,6 @@ class AnuCsppSpiderSpider(scrapy.Spider):
     def parse(self, response):
         courses = response.xpath("//div[contains(@class, 'panel-display')]//a/@href").getall()
 
-        courses = ["/study/graduate-degrees/graduate-certificate-environmental-management",
-                   "/study/graduate-degrees/master-public-administration",
-                   "/study/graduate-degrees/master-climate-change"]
         for item in courses:
             if item not in self.banned_urls:
                 yield response.follow(item, callback=self.sub_parse)
@@ -130,7 +127,7 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         structure = response.xpath("//*[preceding-sibling::*[contains(text(), 'Program Requirements')]]").getall()
         if len(structure) > 0:
             structure = "".join(structure)
-            course_item["careerPathways"] = strip_tags(structure, False)
+            course_item["courseStructure"] = strip_tags(structure, False)
 
         duration = response.xpath("//span[contains(text(), 'Length')]/following-sibling::*/text()").get()
         if duration is not None:
