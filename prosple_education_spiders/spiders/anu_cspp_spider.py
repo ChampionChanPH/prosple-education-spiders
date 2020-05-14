@@ -92,8 +92,9 @@ class AnuCsppSpiderSpider(scrapy.Spider):
 
     def sub_parse(self, response):
         course_name = response.xpath("//h1[@class='title']/text()").get()
-        next_page = response.xpath("//a[contains(text(), 'degree program structure, admission requirements and "
-                                   "academic information')]/@href").get()
+        next_page = response.xpath("//a[contains(text(), 'degree program structure')]/@href").get()
+        if next_page is None:
+            next_page = response.xpath("//a[contains(text(), 'View full degree details')]/@href").get()
 
         if next_page is not None:
             yield SplashRequest(next_page, callback=self.course_parse, args={'wait': 10.0},
