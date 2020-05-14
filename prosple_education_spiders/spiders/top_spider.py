@@ -113,7 +113,9 @@ class TopSpiderSpider(scrapy.Spider):
             overview = response.xpath("//td[contains(strong/span/text(), 'Program Overview')]/following-sibling::*").get()
         if overview is None:
             overview = response.xpath("//td[contains(span/strong/em/text(), 'Program Overview')]/following-sibling::*").get()
-        if overview is not None:
+        if overview is None:
+            course_item.add_flag("overview", "no overview found: " + response.request.url)
+        else:
             course_item["overview"] = strip_tags(overview, False)
 
         career = response.xpath("//td[contains(strong/text(), 'Career Options')]/following-sibling::*").get()
