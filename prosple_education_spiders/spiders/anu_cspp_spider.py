@@ -114,9 +114,14 @@ class AnuCsppSpiderSpider(scrapy.Spider):
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@id='introduction']/*").getall()
+        relevant_degrees = response.xpath("//*[preceding-sibling::*[contains(text(), 'Relevant Degrees')]]").get()
+        if relevant_degrees is not None:
+            relevant_degrees = "<br><strong>Relevant Degrees</strong><br>" + relevant_degrees
+        else:
+            relevant_degrees = ""
         if len(overview) > 0:
             overview = "".join(overview)
-            course_item["overview"] = strip_tags(overview, False)
+            course_item["overview"] = strip_tags(overview + relevant_degrees, False)
 
         career = response.xpath("//*[preceding-sibling::*[contains(text(), 'Career Options')]]").getall()
         if len(career) > 0:
@@ -127,7 +132,7 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         if learn is not None:
             course_item["whatLearn"] = strip_tags(learn, False)
 
-        structure = response.xpath("//*[preceding-sibling::*[contains(text(), 'Program Requirements')]]").getall()
+        structure = response.xpath("//div[@id='study']//*[preceding-sibling::*[contains(text(), 'Requirements')]]").getall()
         if len(structure) > 0:
             structure = "".join(structure)
             course_item["courseStructure"] = strip_tags(structure, False)
@@ -159,6 +164,8 @@ class AnuCsppSpiderSpider(scrapy.Spider):
                 get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
         course_code = response.xpath("//*[preceding-sibling::*[contains(text(), 'Academic plan')]]/text()").get()
+        if course_code is None:
+            course_code = response.xpath("//*[preceding-sibling::*[contains(text(), 'Specialisation code')]]/text()").get()
         if course_code is not None:
             course_item["courseCode"] = course_code.strip()
 
