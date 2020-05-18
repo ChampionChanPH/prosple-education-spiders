@@ -140,9 +140,9 @@ class UndSpiderSpider(scrapy.Spider):
         study = response.xpath("//*[contains(strong/text(), 'Study mode')]/following-sibling::*").get()
         study_holder = []
         if study is not None:
-            if re.search("online", location, re.I | re.M):
+            if re.search("online", study, re.I | re.M):
                 study_holder.append("Online")
-            if re.search("on campus", location, re.I | re.M):
+            if re.search("on campus", study, re.I | re.M):
                 study_holder.append("In Person")
         if len(study_holder) > 0:
             course_item["modeOfStudy"] = "|".join(study_holder)
