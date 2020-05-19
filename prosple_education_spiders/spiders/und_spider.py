@@ -24,7 +24,7 @@ class UndSpiderSpider(scrapy.Spider):
     allowed_domains = ['www.notredame.edu.au', 'notredame.edu.au']
     start_urls = ['https://www.notredame.edu.au/study/programs']
     banned_urls = ['https://www.notredame.edu.au/programs/fremantle/school-of-arts-and-sciences/undergraduate/double'
-                   '-degrees']
+                   '-degrees', 'https://www.notredame.edu.au/programs/re-usable-snippets/template']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "University of Notre Dame Australia"
     uidPrefix = "AU-UND-"
