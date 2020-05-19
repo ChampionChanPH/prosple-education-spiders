@@ -113,11 +113,6 @@ class UndSpiderSpider(scrapy.Spider):
         if course_name is not None:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        for campus in self.campuses:
-            if re.search(campus, response.request.url, re.I):
-                course_item["uid"] = self.uidPrefix + re.sub(" ", "-", course_item["courseName"]) + "-" + campus.title()
-                break
-
         overview = response.xpath("//h1/following-sibling::div").get()
         if overview is not None:
             course_item["overview"] = strip_tags(overview, remove_all_tags=False)
@@ -163,6 +158,12 @@ class UndSpiderSpider(scrapy.Spider):
                 course_item["cricosCode"] = str(", ".join(cricos_code))
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
+
+        for campus in self.campuses:
+            if re.search(campus, response.request.url, re.I):
+                course_item["uid"] = self.uidPrefix + re.sub(" ", "-", course_item["courseName"]) + "-" + campus.title()
+                if "courseCode" in course_item:
+                    course_item["uid"] = course_item["uid"] + "-" + course_item["courseCode"]
 
         entry = response.xpath("//*[contains(text(), 'Entry requirements')]/following-sibling::*").getall()
         if len(entry) == 0:
