@@ -11,6 +11,8 @@ class UneSpiderSpider(scrapy.Spider):
     start_urls = ['http://my.une.edu.au/courses/2020/courses/browse/']
     banned_urls = ['https://my.une.edu.au/courses/2020/courses/GDPSYA',
                    'https://my.une.edu.au/courses/2020/courses/MHMI']
+    institution = "University of New England (UNE)"
+    uidPrefix = "AU-UNE-"
     campuses = {"Sydney": "765", "Armidale": "764"}
     degrees = {"Graduate Certificate": "Graduate Certificate",
                "Graduate Diploma": "Graduate Diploma",
@@ -31,52 +33,17 @@ class UneSpiderSpider(scrapy.Spider):
             yield response.follow(course, callback=self.course_parse)
 
     def course_parse(self, response):
-        institution = "University of New England (UNE)"
-        uidPrefix = "AU-UNE-"
 
         course_item = Course()
 
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
-        course_item["institution"] = institution
+        course_item["institution"] = self.institution
 
-        course_item["courseName"] = response.xpath("//div[@class='main-content']//h2/text()").get()
-        course_item["uid"] = uidPrefix + re.sub(" ", "-", course_item["courseName"])
-        for degree in self.degrees:
-            if "degreeType" in course_item:
-                break
-            if re.search(degree, course_item["courseName"], re.IGNORECASE):
-                course_item["degreeType"] = self.degrees[degree]
-        if "degreeType" not in course_item:
-            course_item["degreeType"] = "Non-Award"
-        if course_item["degreeType"] in ["Graduate Certificate", "Graduate Diploma", "Bachelor (Honours)",
-                                         "Masters (Research)", "Masters (Coursework)", "Doctorate (PhD)"]:
-            course_item["courseLevel"] = self.group[0][0]
-            course_item["group"] = self.group[0][1]
-            course_item["canonicalGroup"] = self.group[0][2]
-        elif course_item["degreeType"] in ["Bachelor", "Certificate", "Diploma"]:
-            course_item["courseLevel"] = self.group[1][0]
-            course_item["group"] = self.group[1][1]
-            course_item["canonicalGroup"] = self.group[1][2]
-        else:
-            course_item["courseLevel"] = ""
-            course_item["group"] = self.group[1][1]
-            course_item["canonicalGroup"] = self.group[1][2]
-        if re.search("/", course_item["courseName"]):
-            course_item["doubleDegree"] = 1
-        separate_holder = course_item["courseName"].split("/")
-        holder = []
-        for item in separate_holder:
-            if re.search("\s(in|of)\s", item):
-                holder.append(re.findall("(?<=[in|of]\s)(.+)", item, re.DOTALL)[0])
-            else:
-                holder.append(item)
-        course_item["specificStudyField"] = "/".join(holder)
-        lower_holder = []
-        for item in holder:
-            lower_holder.append(item.lower())
-        course_item["rawStudyfield"] = lower_holder[:]
+        course_name = response.xpath("//h2/text()").get()
+        if course_name is not None:
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         course_item["teachingPeriod"] = 1
 
@@ -143,6 +110,8 @@ class UneSpiderSpider(scrapy.Spider):
                 course_item["overviewSummary"] = strip_tags(row[1])
             if re.search("learning", row[0], re.I | re.M):
                 course_item["whatLearn"] = strip_tags(row[1], False)
+
+        course_item.set_sf_dt(self.degrees)
 
         if not re.search(r"This course is not offered in 2020", course_item["overview"], re.M | re.I) or \
                 not re.search(r"Exit Award only", course_item["overview"], re.M | re.I) or \

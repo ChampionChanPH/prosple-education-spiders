@@ -28,7 +28,6 @@ class UndSpiderSpider(scrapy.Spider):
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "University of Notre Dame Australia"
     uidPrefix = "AU-UND-"
-
     degrees = {
         "graduate certificate": "7",
         "graduate diploma": "8",
