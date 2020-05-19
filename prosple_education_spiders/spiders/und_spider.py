@@ -179,6 +179,9 @@ class UndSpiderSpider(scrapy.Spider):
             career = "".join(career)
             course_item["careerPathways"] = strip_tags(career, remove_all_tags=False)
 
+        if "doubleDegree" not in course_item and re.search("/", course_item["courseName"]):
+            course_item["doubleDegree"] = 1
+
         course_item.set_sf_dt(self.degrees)
 
         if response.request.url not in self.banned_urls:
