@@ -113,6 +113,11 @@ class UndSpiderSpider(scrapy.Spider):
         if course_name is not None:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
+        for campus in self.campuses:
+            if re.search(campus, response.request.url, re.I):
+                course_item["uid"] = self.uidPrefix + re.sub(" ", "-", self["courseName"]) + "-" + campus.title()
+                break
+
         overview = response.xpath("//h1/following-sibling::*").get()
         if course_name is not None:
             course_item["overview"] = strip_tags(overview, remove_all_tags=False)
