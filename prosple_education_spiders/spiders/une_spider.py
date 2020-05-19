@@ -121,11 +121,11 @@ class UneSpiderSpider(scrapy.Spider):
                     course_item["durationMinPart"] = float(part_time[0])
                 if len(part_time) == 0 and len(full_time) > 0:
                     course_item["durationMinPart"] = float(full_time[0]) * 2
-            if re.search("Guaranteed ATAR", row[0], re.IGNORECASE | re.MULTILINE):
+            if re.search(r"Guaranteed ATAR", row[0], re.I | re.M):
                 course_item["guaranteedEntryScore"] = row[1]
-            if re.search("Entry Requirements", row[0], re.IGNORECASE | re.MULTILINE):
+            if re.search(r"Entry Requirements", row[0], re.I | re.M):
                 course_item["entryRequirements"] = strip_tags(row[1], False)
-            if re.search("How to Apply", row[0], re.IGNORECASE | re.MULTILINE):
+            if re.search(r"How to Apply", row[0], re.I | re.M):
                 course_item["howToApply"] = strip_tags(row[1], False)
 
         table_holder = []
@@ -137,9 +137,12 @@ class UneSpiderSpider(scrapy.Spider):
             table_holder.append(holder)
 
         for row in table_holder:
-            if re.search("Course Aims", row[0], re.IGNORECASE | re.MULTILINE):
+            if re.search(r"Course Aims", row[0], re.I | re.M):
                 course_item["overviewSummary"] = strip_tags(row[1])
-            if re.search("learning", row[0], re.IGNORECASE | re.MULTILINE):
+            if re.search("learning", row[0], re.I | re.M):
                 course_item["whatLearn"] = strip_tags(row[1], False)
 
-        yield course_item
+        if not re.search(r"This course is not offered in 2020", course_item["overview"], re.M | re.I) or \
+                not re.search(r"Exit Award only", course_item["overview"], re.M | re.I) or \
+                not re.search(r"Applications for 2020 Open Soon", course_item["overview"], re.M | re.I):
+            yield course_item

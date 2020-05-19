@@ -23,6 +23,8 @@ class UndSpiderSpider(scrapy.Spider):
     name = 'und_spider'
     allowed_domains = ['www.notredame.edu.au', 'notredame.edu.au']
     start_urls = ['https://www.notredame.edu.au/study/programs']
+    banned_urls = ['https://www.notredame.edu.au/programs/fremantle/school-of-arts-and-sciences/undergraduate/double'
+                   '-degrees']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "University of Notre Dame Australia"
     uidPrefix = "AU-UND-"
@@ -154,11 +156,11 @@ class UndSpiderSpider(scrapy.Spider):
         code = response.xpath("//*[contains(strong/text(), 'Code')]/following-sibling::*").get()
         if code is not None:
             course_code = re.findall(r"Program Code (\w+)", code, re.M | re.I)
-            cricos_code = re.findall(r"CRICOS Code (\w+)", code, re.M | re.I)
+            cricos_code = re.findall(r"CRICOS Code (\d{6}[0-9a-zA-Z])", code, re.M | re.I)
             if len(course_code) > 0:
-                course_item["courseCode"] = ", ".join(course_code)
+                course_item["courseCode"] = str(", ".join(course_code))
             if len(cricos_code) > 0:
-                course_item["cricosCode"] = ", ".join(cricos_code)
+                course_item["cricosCode"] = str(", ".join(cricos_code))
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
@@ -179,4 +181,5 @@ class UndSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees)
 
-        yield course_item
+        if response.request.url not in self.banned_urls:
+            yield course_item
