@@ -113,9 +113,8 @@ class UndSpiderSpider(scrapy.Spider):
         if course_name is not None:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//h1/following-sibling::*/*").getall()
-        if len(overview) > 0:
-            overview = "".join(overview)
+        overview = response.xpath("//h1/following-sibling::*").get()
+        if course_name is not None:
             course_item["overview"] = strip_tags(overview, remove_all_tags=False)
 
         duration = response.xpath("//*[contains(strong/text(), 'Duration')]/following-sibling::*").get()

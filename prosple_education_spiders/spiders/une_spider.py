@@ -9,6 +9,8 @@ class UneSpiderSpider(scrapy.Spider):
     name = 'une_spider'
     allowed_domains = ['my.une.edu.au', 'une.edu.au']
     start_urls = ['http://my.une.edu.au/courses/2020/courses/browse/']
+    banned_urls = ['https://my.une.edu.au/courses/2020/courses/GDPSYA',
+                   'https://my.une.edu.au/courses/2020/courses/MHMI']
     campuses = {"Sydney": "765", "Armidale": "764"}
     degrees = {"Graduate Certificate": "Graduate Certificate",
                "Graduate Diploma": "Graduate Diploma",
@@ -144,5 +146,6 @@ class UneSpiderSpider(scrapy.Spider):
 
         if not re.search(r"This course is not offered in 2020", course_item["overview"], re.M | re.I) or \
                 not re.search(r"Exit Award only", course_item["overview"], re.M | re.I) or \
-                not re.search(r"Applications for 2020 Open Soon", course_item["overview"], re.M | re.I):
+                not re.search(r"Applications for 2020 Open Soon", course_item["overview"], re.M | re.I) or \
+                response.request.url not in self.banned_urls:
             yield course_item
