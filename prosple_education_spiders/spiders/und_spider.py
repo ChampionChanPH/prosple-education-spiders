@@ -119,7 +119,7 @@ class UndSpiderSpider(scrapy.Spider):
                 break
 
         overview = response.xpath("//h1/following-sibling::div").get()
-        if course_name is not None:
+        if overview is not None:
             course_item["overview"] = strip_tags(overview, remove_all_tags=False)
 
         duration = response.xpath("//*[contains(strong/text(), 'Duration')]/following-sibling::*").get()
