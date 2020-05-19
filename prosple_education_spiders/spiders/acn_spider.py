@@ -88,7 +88,7 @@ class AcnSpiderSpider(scrapy.Spider):
         if months:
             months = months.split(" ")
             months = convert_months(months)
-            course_item["startMonths"] = months
+            course_item["startMonths"] = "|".join(months)
 
         overview = response.xpath("//div[preceding-sibling::h2/text()='Course overview'][2]/div/p/text()").getall()
         if overview:
