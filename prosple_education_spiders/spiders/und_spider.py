@@ -113,14 +113,10 @@ class UndSpiderSpider(scrapy.Spider):
         if course_name is not None:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//*[contains(text(), 'Why study this degree')]/following-sibling::*").getall()
+        overview = response.xpath("//h1/following-sibling::*/*").getall()
         if len(overview) > 0:
             overview = "".join(overview)
             course_item["overview"] = strip_tags(overview, remove_all_tags=False)
-
-        summary = response.xpath("//h1/following-sibling::*/*[2]").get()
-        if summary is not None:
-            course_item["overviewSummary"] = strip_tags(summary, remove_all_tags=True)
 
         duration = response.xpath("//*[contains(strong/text(), 'Duration')]/following-sibling::*").get()
         if duration is not None:
@@ -165,11 +161,15 @@ class UndSpiderSpider(scrapy.Spider):
                 course_item["internationalApplyURL"] = response.request.url
 
         entry = response.xpath("//*[contains(text(), 'Entry requirements')]/following-sibling::*").getall()
+        if len(entry) == 0:
+            entry = response.xpath("//*[contains(text(), 'Admission requirements')]/following-sibling::*").getall()
         if len(entry) > 0:
             entry = "".join(entry)
             course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False)
 
         structure = response.xpath("//*[contains(text(), 'Program summary')]/following-sibling::*").getall()
+        if len(structure) == 0:
+            structure = response.xpath("//*[contains(text(), 'Program structure')]/following-sibling::*").getall()
         if len(structure) > 0:
             structure = "".join(structure)
             course_item["courseStructure"] = strip_tags(structure, remove_all_tags=False)
