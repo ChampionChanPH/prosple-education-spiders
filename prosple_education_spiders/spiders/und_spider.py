@@ -115,7 +115,7 @@ class UndSpiderSpider(scrapy.Spider):
 
         for campus in self.campuses:
             if re.search(campus, response.request.url, re.I):
-                course_item["uid"] = self.uidPrefix + re.sub(" ", "-", self["courseName"]) + "-" + campus.title()
+                course_item["uid"] = self.uidPrefix + re.sub(" ", "-", course_item["courseName"]) + "-" + campus.title()
                 break
 
         overview = response.xpath("//h1/following-sibling::*").get()
