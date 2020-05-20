@@ -1,8 +1,22 @@
-import scrapy
-import re
-from ..items import Course
+# -*- coding: utf-8 -*-
+# by Christian Anasco
+
+from ..standard_libs import *
 from ..scratch_file import strip_tags
-from datetime import date
+
+
+def research_coursework(course_item):
+    if re.search("research", course_item["courseName"], re.I):
+        return "12"
+    else:
+        return "11"
+
+
+def bachelor_honours(course_item):
+    if re.search("honours", course_item["courseName"], re.I):
+        return "3"
+    else:
+        return "2"
 
 
 class UneSpiderSpider(scrapy.Spider):
@@ -13,18 +27,38 @@ class UneSpiderSpider(scrapy.Spider):
                    'https://my.une.edu.au/courses/2020/courses/MHMI']
     institution = "University of New England (UNE)"
     uidPrefix = "AU-UNE-"
-    campuses = {"Sydney": "765", "Armidale": "764"}
-    degrees = {"Graduate Certificate": "Graduate Certificate",
-               "Graduate Diploma": "Graduate Diploma",
-               "with Honours": "Bachelor (Honours)",
-               "Research": "Masters (Research)",
-               "Master": "Masters (Coursework)",
-               "Doctor": "Doctorate (PhD)",
-               "Bachelor": "Bachelor",
-               "Associate Degree": "Associate Degree",
-               "Certificate": "Certificate",
-               "Diploma": "Diploma"}
-    group = [["Postgraduate", 4, "PostgradAustralia"], ["Undergraduate", 3, "The Uni Guide"]]
+    campuses = {
+        "Sydney": "765",
+        "Armidale": "764"
+    }
+
+    degrees = {
+        "Graduate Certificate": "Graduate Certificate",
+        "Graduate Diploma": "Graduate Diploma",
+        "with Honours": "Bachelor (Honours)",
+        "Research": "Masters (Research)",
+        "Master": "Masters (Coursework)",
+        "Doctor": "Doctorate (PhD)",
+        "Bachelor": "Bachelor",
+        "Associate Degree": "Associate Degree",
+        "Certificate": "Certificate",
+        "Diploma": "Diploma"
+    }
+
+    teaching_periods = {
+        "year": 1,
+        "semester": 2,
+        "trimester": 3,
+        "quarter": 4,
+        "month": 12,
+        "week": 52,
+        "day": 365
+    }
+
+    def get_period(self, string_to_use, course_item):
+        for item in self.teaching_periods:
+            if re.search(item, string_to_use):
+                course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
         courses = response.xpath("//div[@class='content']//td/a/@href").getall()
@@ -33,25 +67,40 @@ class UneSpiderSpider(scrapy.Spider):
             yield response.follow(course, callback=self.course_parse)
 
     def course_parse(self, response):
-
         course_item = Course()
 
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
+        course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h2/text()").get()
         if course_name is not None:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        course_item["teachingPeriod"] = 1
+        overview = response.xpath("//div[@id='overviewTab-leftColumn']//*[preceding-sibling::h4][following-sibling::h4]").getall()
+        if len(overview) == 0:
+            overview = response.xpath("//div[@id='overviewTab-leftColumn']//*[preceding-sibling::h4]["
+                                      "following-sibling::*[contains(text(), 'Need assistance')]]").getall()
+        if len(overview) > 0:
+            overview = "".join(overview)
+            course_item["overview"] = strip_tags(overview, False)
 
-        overview = response.xpath("//div[@id='overviewTab']/div[@id='overviewTab-leftColumn']").get()
-        course_item["overview"] = strip_tags(overview, False)
+        summary = response.xpath("//div[@id='overviewTab-leftColumn']//h4/following-sibling::p[1]//text()").get()
+        if summary is not None:
+            summary = re.split("(?<=\.)\s", summary)
+            if len(summary) == 1:
+                course_item["overviewSummary"] = summary[0]
+            if len(summary) >= 2:
+                course_item["overviewSummary"] = summary[0] + " " + summary[1]
 
-        course_item["domesticApplyURL"] = response.request.url
-        course_item["internationalApplyURL"] = response.request.url
+        career = response.xpath("//div[@id='overviewTab-leftColumn']//*[preceding-sibling::*[contains(text(), "
+                                "'Career Opportunities')]][following-sibling::*[contains(text(), "
+                                "'Need assistance')]]").getall()
+        if len(career) > 0:
+            career = "".join(career)
+            course_item["careerPathways"] = strip_tags(career, remove_all_tags=False)
 
         table_holder = []
         for title, description in zip(response.xpath("//table[@id='furtherInformationTable']/tr/td[1]").getall(),
@@ -80,16 +129,41 @@ class UneSpiderSpider(scrapy.Spider):
                         campus_holder.append(self.campuses[campus])
                 course_item["campusNID"] = "|".join(campus_holder)
             if re.search("duration", row[0], re.IGNORECASE | re.MULTILINE):
-                full_time = re.findall("[0-9]*?\.*?[0-9]+?(?=\s[Yyears]+?\s[Ff]ull.time)", row[1],
-                                       re.DOTALL | re.MULTILINE)
-                part_time = re.findall("[0-9]*?\.*?[0-9]+?(?=\s[Yyears]+?\s[Pp]art.time)", row[1],
-                                       re.DOTALL | re.MULTILINE)
-                if len(full_time) > 0:
-                    course_item["durationMinFull"] = float(full_time[0])
-                if len(part_time) > 0:
-                    course_item["durationMinPart"] = float(part_time[0])
-                if len(part_time) == 0 and len(full_time) > 0:
-                    course_item["durationMinPart"] = float(full_time[0]) * 2
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?full.time)",
+                                           row[1], re.I | re.M)
+                duration_part = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?part.time)",
+                                           row[1], re.I | re.M)
+                if duration_full is not None:
+                    if len(duration_full) == 0 and len(duration_part) > 0:
+                        if len(duration_part) == 1:
+                            self.get_period(duration_part[0][1], course_item)
+                        if len(duration_part) == 2:
+                            self.get_period(duration_part[1][1], course_item)
+                    else:
+                        if len(duration_full) == 1:
+                            course_item["durationMinFull"] = float(duration_full[0][0])
+                            self.get_period(duration_full[0][1], course_item)
+                        elif len(duration_full) == 2:
+                            course_item["durationMinFull"] = float(duration_full[0][0])
+                            course_item["durationMaxFull"] = float(duration_full[1][0])
+                            self.get_period(duration_full[1][1], course_item)
+                if duration_part is not None:
+                    if len(duration_part) == 1:
+                        if self.teaching_periods[duration_part[0][1]] == course_item["teachingPeriod"]:
+                            course_item["durationMinPart"] = float(duration_part[0][0])
+                        else:
+                            course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                             / self.teaching_periods[duration_part[0][1]]
+                    elif len(duration_part) == 2:
+                        if self.teaching_periods[duration_part[1][1]] == course_item["teachingPeriod"]:
+                            course_item["durationMinPart"] = float(duration_part[0][0])
+                            course_item["durationMaxPart"] = float(duration_part[1][0])
+                        else:
+                            course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                             / self.teaching_periods[duration_part[0][1]]
+                            course_item["durationMaxPart"] = float(duration_part[1][0]) * course_item["teachingPeriod"] \
+                                                             / self.teaching_periods[duration_part[1][1]]
+
             if re.search(r"Guaranteed ATAR", row[0], re.I | re.M):
                 course_item["guaranteedEntryScore"] = row[1]
             if re.search(r"Entry Requirements", row[0], re.I | re.M):

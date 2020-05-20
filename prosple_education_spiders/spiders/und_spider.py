@@ -116,6 +116,19 @@ class UndSpiderSpider(scrapy.Spider):
         if overview is not None:
             course_item["overview"] = strip_tags(overview, remove_all_tags=False)
 
+        summary = response.xpath("//h1/following-sibling::div[1]/*[2]//text()").getall()
+        second = response.xpath("//h1/following-sibling::div[1]/*[3]//text()").getall()
+        if len(summary) > 0:
+            summary = " ".join(summary)
+            if len(second) > 0:
+                second = " ".join(second)
+                summary = summary + "\r\n" + second
+            summary = re.split("(?<=[\.\?])\s", summary)
+            if len(summary) == 1:
+                course_item["overviewSummary"] = summary[0]
+            if len(summary) >= 2:
+                course_item["overviewSummary"] = summary[0] + " " + summary[1]
+
         duration = response.xpath("//*[contains(strong/text(), 'Duration')]/following-sibling::*").get()
         if duration is not None:
             duration = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration, re.M)
