@@ -119,10 +119,10 @@ class UndSpiderSpider(scrapy.Spider):
         summary = response.xpath("//h1/following-sibling::div[1]/*[2]//text()").getall()
         second = response.xpath("//h1/following-sibling::div[1]/*[3]//text()").getall()
         if len(summary) > 0:
-            summary = " ".join(summary)
+            summary = " ".join([x.strip() for x in summary])
             if len(second) > 0:
-                second = " ".join(second)
-                summary = summary + "\r\n" + second
+                second = " ".join([x.strip() for x in second])
+                summary = summary + " " + second
             summary = re.split("(?<=[\.\?])\s", summary)
             if len(summary) == 1:
                 course_item["overviewSummary"] = summary[0]
