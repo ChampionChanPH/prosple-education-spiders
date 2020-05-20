@@ -185,6 +185,8 @@ class UndSpiderSpider(scrapy.Spider):
             course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False)
 
         learn = response.xpath("//*[contains(text(), 'Why study this')]/following-sibling::*").getall()
+        if len(learn) == 0:
+            learn = response.xpath("//*[contains(text(), 'About this')]/following-sibling::*").getall()
         if len(learn) > 0:
             learn = "".join(learn)
             course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False)
@@ -192,6 +194,8 @@ class UndSpiderSpider(scrapy.Spider):
         structure = response.xpath("//*[contains(text(), 'Program summary')]/following-sibling::*").getall()
         if len(structure) == 0:
             structure = response.xpath("//*[contains(text(), 'Program structure')]/following-sibling::*").getall()
+        if len(structure) == 0:
+            structure = response.xpath("//*[contains(text(), 'Program outline')]/following-sibling::*").getall()
         if len(structure) > 0:
             structure = "".join(structure)
             course_item["courseStructure"] = strip_tags(structure, remove_all_tags=False)
