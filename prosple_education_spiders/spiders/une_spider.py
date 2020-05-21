@@ -183,7 +183,7 @@ class UneSpiderSpider(scrapy.Spider):
             if re.search("learning", row[0], re.I | re.M):
                 course_item["whatLearn"] = strip_tags(row[1], False)
 
-        course_item.set_sf_dt(self.degrees)
+        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"])
 
         if re.search("This course is not offered in 2020", course_item["overview"], re.M | re.I) or \
                 re.search("Exit Award", course_item["overview"], re.M | re.I) or \
