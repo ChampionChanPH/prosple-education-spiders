@@ -92,14 +92,14 @@ class UneSpiderSpider(scrapy.Spider):
             overview = "".join(overview)
             course_item["overview"] = strip_tags(overview, False)
 
-        summary = response.xpath("//div[@id='overviewTab-leftColumn']//h4/following-sibling::p[1]//text()").getall()
+        summary = response.xpath("//div[@id='overviewTab-leftColumn']//*[preceding-sibling::h4]["
+                                 "following-sibling::h4]//text()").getall()
+        if len(summary) == 0:
+            summary = response.xpath("//div[@id='overviewTab-leftColumn']//*[preceding-sibling::h4]["
+                                     "following-sibling::*[contains(text(), 'Need assistance')]]//text()").getall()
         if len(summary) > 0:
             summary = " ".join([x.strip() for x in summary])
-            summary = re.split("(?<=[\.\?])\s", summary)
-            if len(summary) == 1:
-                course_item["overviewSummary"] = summary[0]
-            if len(summary) >= 2:
-                course_item["overviewSummary"] = summary[0] + " " + summary[1]
+            course_item.set_summary(summary)
 
         career = response.xpath("//div[@id='overviewTab-leftColumn']//*[preceding-sibling::*[contains(text(), "
                                 "'Career Opportunities')]][following-sibling::*[contains(text(), "
@@ -180,8 +180,6 @@ class UneSpiderSpider(scrapy.Spider):
             table_holder.append(holder)
 
         for row in table_holder:
-            if re.search(r"Course Aims", row[0], re.I | re.M):
-                course_item["overviewSummary"] = strip_tags(row[1])
             if re.search("learning", row[0], re.I | re.M):
                 course_item["whatLearn"] = strip_tags(row[1], False)
 
