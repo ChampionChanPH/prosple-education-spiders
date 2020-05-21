@@ -120,9 +120,11 @@ class UneSpiderSpider(scrapy.Spider):
             if re.search("abbreviation", row[0], re.IGNORECASE | re.MULTILINE):
                 course_item["courseCode"] = row[1]
             if re.search("cricos", row[0], re.IGNORECASE | re.MULTILINE):
-                course_item["cricosCode"] = row[1]
-                course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.request.url
+                cricos = re.findall("\d{6}[0-9a-zA-Z]", row[1], re.M)
+                if len(cricos) > 0:
+                    course_item["cricosCode"] = ", ".join(cricos)
+                    course_item["internationalApps"] = 1
+                    course_item["internationalApplyURL"] = response.request.url
             if re.search("commencing", row[0], re.IGNORECASE | re.MULTILINE):
                 study_holder = []
                 campus_holder = []
