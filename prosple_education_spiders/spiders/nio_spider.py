@@ -146,6 +146,10 @@ class NioSpiderSpider(scrapy.Spider):
             if study_holder:
                 course_item["modeOfStudy"] = "|".join(study_holder)
 
+        course_code = response.xpath("//p[contains(strong/text(), 'Program code')]/text()").get()
+        if course_code:
+            course_item["courseCode"] = course_code.strip()
+
         course_item.set_sf_dt(self.degrees)
 
         yield course_item
