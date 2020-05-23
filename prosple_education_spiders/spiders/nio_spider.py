@@ -80,31 +80,31 @@ class NioSpiderSpider(scrapy.Spider):
                                   "'OVERVIEW')]/following-sibling::*").getall()
         if overview:
             overview = "".join(overview)
-            course_item["overview"] = overview
+            course_item["overview"] = strip_tags(overview, False)
 
         entry = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'ADMISSION "
                                "REQUIREMENTS')]/following-sibling::*").getall()
         if entry:
             entry = "".join(entry)
-            course_item["entryRequirements"] = entry
+            course_item["entryRequirements"] = strip_tags(entry, False)
 
         learn = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'COURSE "
                                "CONTENT')]/following-sibling::*").getall()
         if learn:
             learn = "".join(learn)
-            course_item["whatLearn"] = learn
+            course_item["whatLearn"] = strip_tags(learn, False)
 
         structure = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'COURSE "
                                    "STRUCTURE')]/following-sibling::*").getall()
         if structure:
             structure = "".join(structure)
-            course_item["courseStructure"] = structure
+            course_item["courseStructure"] = strip_tags(structure, False)
 
         apply = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'HOW TO "
                                "APPLY')]/following-sibling::*").getall()
         if apply:
             apply = "".join(apply)
-            course_item["howToApply"] = apply
+            course_item["howToApply"] = strip_tags(apply, False)
 
         fee = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'FEES AND "
                              "COSTS')]/following-sibling::*").getall() 
