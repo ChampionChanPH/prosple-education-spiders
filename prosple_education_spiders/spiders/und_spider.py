@@ -123,11 +123,8 @@ class UndSpiderSpider(scrapy.Spider):
             if len(second) > 0:
                 second = " ".join([x.strip() for x in second])
                 summary = summary + " " + second
-            summary = re.split("(?<=[\.\?])\s", summary)
-            if len(summary) == 1:
-                course_item["overviewSummary"] = summary[0]
-            if len(summary) >= 2:
-                course_item["overviewSummary"] = summary[0] + " " + summary[1]
+        if summary:
+            course_item.set_summary(summary)
 
         duration = response.xpath("//*[contains(strong/text(), 'Duration')]/following-sibling::*").get()
         if duration is not None:

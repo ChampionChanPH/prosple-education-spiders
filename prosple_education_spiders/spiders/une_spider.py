@@ -27,6 +27,7 @@ class UneSpiderSpider(scrapy.Spider):
                    'https://my.une.edu.au/courses/2020/courses/MHMI']
     institution = "University of New England (UNE)"
     uidPrefix = "AU-UNE-"
+
     campuses = {
         "Sydney": "765",
         "Armidale": "764"
