@@ -13,7 +13,7 @@ class ApeSpiderSpider(scrapy.Spider):
     uidPrefix = "AU-APE-"
 
     degrees = {
-        "advance diploma": "5",
+        "advanced diploma": "5",
         "certificate iii": "4",
         "certificate iv": "4"
     }
