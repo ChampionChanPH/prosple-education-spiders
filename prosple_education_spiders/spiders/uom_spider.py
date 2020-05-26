@@ -97,6 +97,8 @@ class UomSpiderSpider(scrapy.Spider):
     def sub_parse(self, response):
         courses = response.xpath("//ul[@data-test='course-list']//a/@href").getall()
 
+        courses = ["https://study.unimelb.edu.au/find/courses/graduate/master-of-laws/",
+                   "https://study.unimelb.edu.au/find/courses/undergraduate/bachelor-of-arts/"]
         for item in courses:
             if item not in self.banned_urls and \
                     not re.search("/major/", item):
@@ -199,6 +201,10 @@ class UomSpiderSpider(scrapy.Spider):
                     campus_holder.append(self.campuses[campus])
             course_item["campusNID"] = "|".join(campus_holder)
 
+        entry = response.xpath("//*[contains(text(), 'Prerequisites')]/following-sibling::*").get()
+        if entry:
+            course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False)
+
         period = response.xpath("//li[@id='course-overview-entryPeriods']/text()").get()
         if period:
             start_holder = []
@@ -208,12 +214,12 @@ class UomSpiderSpider(scrapy.Spider):
             if start_holder:
                 course_item["startMonths"] = "|".join(start_holder)
 
-        learn = response.xpath("//a[contains(text(), 'What will I study')]/@href").get()
+        learn = response.xpath("//a[@data-test='nav-link-what-will-i-study']/@href").get()
 
         if learn:
             yield response.follow(learn, callback=self.learn_parse, meta={'item': course_item})
-
-        yield course_item
+        else:
+            yield course_item
 
     def learn_parse(self, response):
         course_item = response.meta['item']
@@ -222,10 +228,12 @@ class UomSpiderSpider(scrapy.Spider):
         if learn:
             course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False)
 
-        career = response.xpath("//a[contains(text(), 'Where will this take me')]/@href").get()
+        career = response.xpath("//a[@data-test='nav-link-where-will-this-take-me']/@href").get()
 
         if career:
             yield response.follow(career, callback=self.career_parse, meta={'item': course_item})
+        else:
+            yield course_item
 
     def career_parse(self, response):
         course_item = response.meta['item']
@@ -234,10 +242,12 @@ class UomSpiderSpider(scrapy.Spider):
         if career:
             course_item["careerPathways"] = strip_tags(career, remove_all_tags=False)
 
-        apply = response.xpath("//a[contains(text(), 'How to apply')]/@href").get()
+        apply = response.xpath("//a[@data-test='nav-link-how-to-apply']/@href").get()
 
         if apply:
             yield response.follow(apply, callback=self.apply_parse, meta={'item': course_item})
+        else:
+            yield course_item
 
     def apply_parse(self, response):
         course_item = response.meta['item']
@@ -246,3 +256,5 @@ class UomSpiderSpider(scrapy.Spider):
 
         if apply:
             course_item["howToApply"] = strip_tags(apply, remove_all_tags=False)
+
+        yield course_item
