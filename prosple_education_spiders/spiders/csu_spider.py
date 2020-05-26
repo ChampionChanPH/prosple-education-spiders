@@ -93,10 +93,10 @@ class CsuSpiderSpider(scrapy.Spider):
     def parse(self, response):
         courses = response.xpath("//div[@id='all-courses-list']//a/@href").getall()
 
-        courses = [
-            "https://study.csu.edu.au/courses/business/bachelor-communication-advertising-bachelor-business-marketing",
-            "https://study.csu.edu.au/courses/psychology/bachelor-psychology",
-            "https://study.csu.edu.au/courses/teaching-education/master-adult-vocational-education"]
+        # courses = [
+        #     "https://study.csu.edu.au/courses/business/bachelor-communication-advertising-bachelor-business-marketing",
+        #     "https://study.csu.edu.au/courses/psychology/bachelor-psychology",
+        #     "https://study.csu.edu.au/courses/teaching-education/master-adult-vocational-education"]
         for course in courses:
             yield SplashRequest(course, callback=self.course_parse, args={"wait": 20}, meta={'url': course})
 
