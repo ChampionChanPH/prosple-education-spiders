@@ -179,6 +179,6 @@ class CsuSpiderSpider(scrapy.Spider):
                     if re.search(period, duration_full[0][1], re.I):
                         course_item["teachingPeriod"] = self.teaching_periods[period]
 
-        course_item.set_sf_dt(self.degrees)
+        course_item.set_sf_dt(self.degrees, ["/", "-"])
 
         yield course_item
