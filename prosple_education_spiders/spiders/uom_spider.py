@@ -99,7 +99,9 @@ class UomSpiderSpider(scrapy.Spider):
 
         for item in courses:
             if item not in self.banned_urls and \
-                    not re.search("/major/", item):
+                    not re.search("/major/", item) and \
+                    not re.search("/specialisation/", item) and \
+                    not re.search("/minor/", item):
                 yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 10},
                                     meta={'url': response.urljoin(item)})
 
@@ -127,11 +129,16 @@ class UomSpiderSpider(scrapy.Spider):
             course_item["overview"] = strip_tags("".join(overview_list), remove_all_tags=False)
 
         summary = []
-        first_p = response.xpath("//div[@data-test='course-overview-content']/*[1]/text()").getall()
+        first_p = response.xpath("//div[@data-test='course-overview-content']/p[1]//text()").getall()
         if first_p:
             first_p = "".join(first_p)
+            if first_p in ["Overview", "Course Description",
+                           "This offering is not available to international students.",
+                           "Tobias Manderson-Galvin from VCA on Vimeo.",
+                           "PLEASE NOTE: MID-YEAR INTAKE TO THIS COURSE IS NOT AVAILABLE FOR INTERNATIONAL STUDENTS"]:
+                first_p = ""
             summary.append(first_p)
-        second_p = response.xpath("//div[@data-test='course-overview-content']/*[2]/text()").getall()
+        second_p = response.xpath("//div[@data-test='course-overview-content']/p[2]//text()").getall()
         if second_p:
             second_p = "".join(second_p)
             summary.append(second_p)
@@ -211,6 +218,8 @@ class UomSpiderSpider(scrapy.Spider):
                     start_holder.append(self.months[month])
             if start_holder:
                 course_item["startMonths"] = "|".join(start_holder)
+
+        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"])
 
         learn = response.xpath("//a[@data-test='nav-link-what-will-i-study']/@href").get()
 
