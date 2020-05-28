@@ -133,7 +133,7 @@ class UomSpiderSpider(scrapy.Spider):
             course_item["overview"] = strip_tags("".join(overview_list), remove_all_tags=False)
 
         summary = []
-        first_p = response.xpath("//div[@data-test='course-overview-content']/p[1]//text()").getall()
+        first_p = response.xpath("//div[@data-test='course-overview-content']//p[1]//text()").getall()
         if first_p:
             first_p = "".join(first_p)
             if first_p in ["Overview", "Course Description",
@@ -142,7 +142,7 @@ class UomSpiderSpider(scrapy.Spider):
                            "PLEASE NOTE: MID-YEAR INTAKE TO THIS COURSE IS NOT AVAILABLE FOR INTERNATIONAL STUDENTS"]:
                 first_p = ""
             summary.append(first_p)
-        second_p = response.xpath("//div[@data-test='course-overview-content']/p[2]//text()").getall()
+        second_p = response.xpath("//div[@data-test='course-overview-content']//p[2]//text()").getall()
         if second_p:
             second_p = "".join(second_p)
             summary.append(second_p)
