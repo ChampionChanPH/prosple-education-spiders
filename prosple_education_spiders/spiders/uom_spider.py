@@ -102,8 +102,6 @@ class UomSpiderSpider(scrapy.Spider):
     def sub_parse(self, response):
         courses = response.xpath("//ul[@data-test='course-list']//a/@href").getall()
 
-        courses = ["https://study.unimelb.edu.au/find/courses/undergraduate/bachelor-of-music-performance-composition-musicology-ethnomusicology-specialisation",
-                   "https://study.unimelb.edu.au/find/courses/undergraduate/bachelor-of-oral-health"]
         for item in courses:
             if item not in self.banned_urls and \
                     not re.search("/major/", item) and \
