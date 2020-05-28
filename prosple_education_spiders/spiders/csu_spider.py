@@ -25,7 +25,7 @@ class CsuSpiderSpider(scrapy.Spider):
     allowed_domains = ['study.csu.edu.au']
     start_urls = ['https://study.csu.edu.au/courses/all']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
-    institution = "Charles Sturt University (CSU)"
+    institution = "Charles Sturt University"
     uidPrefix = "AU-CSU-"
 
     degrees = {
@@ -114,6 +114,11 @@ class CsuSpiderSpider(scrapy.Spider):
         course_name = response.xpath("//div[@id='banner-heading']/text()").get()
         if course_name is not None:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
+
+        overview = response.css(".overview-text .row p.intro-blurb::text").get()
+        if overview:
+            course_item["overview"] = cleanspace(overview)
+            course_item.set_summary(course_item["overview"])
 
         study = response.xpath("//*[text()='Study mode']/following-sibling::*").get()
         study_holder = []
