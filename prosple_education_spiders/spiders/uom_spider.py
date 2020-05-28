@@ -73,6 +73,7 @@ class UomSpiderSpider(scrapy.Spider):
         "advanced diploma": "5",
         "diploma": "5",
         "associate degree": "1",
+        "juris doctor": "10",
         "non-award": "13",
         "no match": "15"
     }
