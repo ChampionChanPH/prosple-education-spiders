@@ -60,6 +60,7 @@ class UomSpiderSpider(scrapy.Spider):
         "graduate diploma": "8",
         "master": research_coursework,
         "executive master": research_coursework,
+        "senior executive master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
         "doctoral program": "6",
