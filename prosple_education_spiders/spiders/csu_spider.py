@@ -31,6 +31,7 @@ class CsuSpiderSpider(scrapy.Spider):
     degrees = {
         "graduate certificate": "7",
         "graduate diploma": "8",
+        "postgraduate diploma": "8",
         "master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
