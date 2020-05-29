@@ -139,8 +139,8 @@ class UomSpiderSpider(scrapy.Spider):
             first_p = "".join(first_p)
             if first_p in ["Overview", "Course Description",
                            "This offering is not available to international students.",
-                           "Tobias Manderson-Galvin from VCA on Vimeo.",
-                           "PLEASE NOTE: MID-YEAR INTAKE TO THIS COURSE IS NOT AVAILABLE FOR INTERNATIONAL STUDENTS"]:
+                           "Tobias Manderson-Galvin from VCA on Vimeo."] or \
+                    re.search("note:\s", first_p, re.I | re.M):
                 first_p = ""
             summary.append(first_p)
         second_p = response.xpath("//div[@data-test='course-overview-content']//p[2]//text()").getall()
@@ -162,7 +162,10 @@ class UomSpiderSpider(scrapy.Spider):
         atar = response.xpath("//dt[contains(*/text(), 'Lowest Selection Rank')]/following-sibling::dd/*[contains("
                               "@class, 'score-panel__value-heading')]/text()").get()
         if atar:
-            course_item["lowestScore"] = atar.strip()
+            try:
+                course_item["lowestScore"] = float(atar.strip())
+            except:
+                pass
 
         fee = response.xpath("//*[contains(text(), 'Indicative total course fee')]/preceding-sibling::*/text()").get()
         if fee:
