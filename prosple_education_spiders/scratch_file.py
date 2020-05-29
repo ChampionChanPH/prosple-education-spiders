@@ -14,7 +14,9 @@ def strip_tags(phrase, remove_all_tags=True):
         phrase = re.sub("</?.*?>", "", phrase)
         return phrase.strip()
     else:
-        phrase = re.sub("</[h]{1}[1-6]{1}.*?>", "</strong>", phrase)
-        phrase = re.sub("<[h]{1}[1-6]{1}.*?>", "<strong>", phrase)
+        phrase = re.sub("</[h]{1}[1-4]{1}.*?>", "</strong>", phrase)
+        phrase = re.sub("<[h]{1}[1-4]{1}.*?>", "<strong>", phrase)
+        phrase = re.sub("</[h]{1}[5-6]{1}.*?>", "</p>", phrase)
+        phrase = re.sub("<[h]{1}[5-6]{1}.*?>", "<p>", phrase)
         phrase = clean_html(phrase)
         return phrase.strip()
