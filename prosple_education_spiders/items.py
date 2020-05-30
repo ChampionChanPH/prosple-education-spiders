@@ -89,7 +89,7 @@ class Course(scrapy.Item):
     sourceURL = scrapy.Field()  # Record Source URL
     campusNID = scrapy.Field()  # Campus NID : Pipe separated string of ids of campuses e.g. "154|345|454"
 
-    # Important Fields (Fill as much as you can. Can be blank if info is not availablem#
+    # Important Fields (Fill as much as you can. Can be blank if info is not available #
     courseCode = scrapy.Field()  # Course code
     cricosCode = scrapy.Field()  # CRICOS code
     internationalApps = scrapy.Field()  # Accept International Applications : 1 or 0
