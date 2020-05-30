@@ -124,7 +124,7 @@ class EccSpiderSpider(scrapy.Spider):
         duration = response.xpath("//div[@class='grayback']/*[contains(text(), 'Duration')]/following-sibling::*").get()
         if duration:
             duration_full = re.findall("(\d*\.?\d*)\s?o?r?\s?(\d*\.?\d+)(?=\s("
-                                       "year|month|semester|trimester|quarter|week|day))", phrase, re.I | re.M)
+                                       "year|month|semester|trimester|quarter|week|day))", duration, re.I | re.M)
             if duration_full:
                 if duration_full[0][0] == "":
                     course_item["durationMinFull"] = float(duration_full[0][1])
