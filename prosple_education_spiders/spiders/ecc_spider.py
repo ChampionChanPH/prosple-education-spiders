@@ -28,8 +28,8 @@ class EccSpiderSpider(scrapy.Spider):
     uidPrefix = "AU-ECC-"
 
     campuses = {
-        "Sydney": "765",
-        "Armidale": "764"
+        "ECU Mt Lawley": "30907",
+        "ECU Joondalup": "30908"
     }
 
     degrees = {
@@ -54,6 +54,21 @@ class EccSpiderSpider(scrapy.Spider):
         "month": 12,
         "week": 52,
         "day": 365
+    }
+
+    months = {
+        "January": "01",
+        "February": "02",
+        "March": "03",
+        "April": "04",
+        "May": "05",
+        "June": "06",
+        "July": "07",
+        "August": "08",
+        "September": "09",
+        "October": "10",
+        "November": "11",
+        "December": "12"
     }
 
     def get_period(self, string_to_use, course_item):
@@ -86,9 +101,41 @@ class EccSpiderSpider(scrapy.Spider):
             course_item["overview"] = strip_tags("".join(overview), remove_all_tags=False)
             course_item.set_summary("".join(overview))
 
+        table = response.xpath("//table[@id='coursePrices']").get()
+        if table:
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", table, re.M)
+            if cricos:
+                cricos = set(cricos)
+                course_item["cricosCode"] = ", ".join(cricos)
+                course_item["internationalApps"] = 1
+                course_item["internationalApplyURL"] = response.request.url
+
+        course_item["campusNID"] = "30907|30908"
+
+        start = response.xpath("//div[@class='grayback']/*[contains(text(), 'Intakes')]/following-sibling::*").get()
+        if start:
+            start_holder = []
+            for item in self.months:
+                if re.search(item, start, re.M):
+                    start_holder.append(self.months[item])
+            if start_holder:
+                course_item["startMonths"] = "|".join(start_holder)
+
+        duration = response.xpath("//div[@class='grayback']/*[contains(text(), 'Duration')]/following-sibling::*").get()
+        if duration:
+            duration_full = re.findall("(\d*\.?\d*)\s?o?r?\s?(\d*\.?\d+)(?=\s("
+                                       "year|month|semester|trimester|quarter|week|day))", phrase, re.I | re.M)
+            if duration_full:
+                if duration_full[0][0] == "":
+                    course_item["durationMinFull"] = float(duration_full[0][1])
+                else:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    course_item["durationMaxFull"] = float(duration_full[0][1])
+                self.get_period(duration_full[0][2].lower(), course_item)
+
         course_item.set_sf_dt(self.degrees)
 
-        if re.search("post.?graduate", course_name["courseName"], re.I | re.DOTALL):
+        if re.search("post.?graduate", course_item["courseName"], re.I | re.DOTALL):
             course_item["courseLevel"] = "Postgraduate"
             course_item["group"] = 4
 
