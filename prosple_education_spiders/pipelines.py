@@ -24,7 +24,8 @@ class CoursesPipeline(object):
             "entryRequirements",
             "courseStructure",
             "creditTransfer",
-            "courseName"
+            "courseName",
+            "uid"
         ]
 
         for field in [x for x in fields_to_clean if x in item]:
