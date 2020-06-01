@@ -289,5 +289,5 @@ class QutSpiderSpider(scrapy.Spider):
             course_item["canonicalGroup"] = "PostgradAustralia"
 
         if response.request.url not in self.banned_urls and \
-                re.search("last offered 2019", course_item["courseName"], re.I):
+                not re.search("last offered 2019", course_item["courseName"], re.I):
             yield course_item
