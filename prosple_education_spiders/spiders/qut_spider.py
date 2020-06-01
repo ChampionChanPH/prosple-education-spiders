@@ -60,6 +60,7 @@ class QutSpiderSpider(scrapy.Spider):
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
+        "undergraduate certificate": "4",
         "university certificate": "4",
         "advanced diploma": "5",
         "diploma": "5",
