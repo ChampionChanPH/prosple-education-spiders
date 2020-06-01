@@ -53,7 +53,8 @@ class EcuSpiderSpider(scrapy.Spider):
         "master": master,
         "bachelor": bachelor,
         "advanced diploma": "5",
-        "certificate iv": "4"
+        "certificate iv": "4",
+        "undergraduate certificate": "4"
     }
 
     campus = {
@@ -166,6 +167,6 @@ class EcuSpiderSpider(scrapy.Spider):
 
         what_learn = response.xpath("//ol[@class='learning-outcome-list']/li/text()").getall()
         if what_learn:
-            course_item["whatLearn"] = "<br>".join(["- " + x for x in what_learn])
+            course_item["whatLearn"] = "<br>".join(["* " + x for x in what_learn])
         # if "flag" in course_item:
         yield course_item
