@@ -142,7 +142,7 @@ class QutSpiderSpider(scrapy.Spider):
             if overview_summary.strip() == "":
                 overview_summary = response.xpath("//div[contains(@class, 'hero__header__blurb')]/p/text()").get()
         if overview_summary is not None:
-            course_item.set_summary(overview_summary))
+            course_item.set_summary(overview_summary)
 
         overview = response.xpath("//*[contains(text(), 'Highlights')]/following-sibling::ul").get()
         if overview is not None:
