@@ -233,8 +233,8 @@ class QutSpiderSpider(scrapy.Spider):
         if len(start_holder) > 0:
             course_item["startMonths"] = "|".join(start_holder)
 
-        career = response.xpath("//*[contains(text(), 'Careers and outcomes')]/following-sibling::*").getall()
-        if len(career) > 0:
+        career = response.xpath("//*[@id='career-outcomes-tab']//div[contains(@class, 'panel-content')]/*").getall()
+        if career:
             course_item["careerPathways"] = strip_tags("".join(career), False)
 
         fee = response.xpath("//div[contains(@data-course-audience, 'DOM')]//div[contains(h3, "
