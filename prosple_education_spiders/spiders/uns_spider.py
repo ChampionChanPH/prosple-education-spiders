@@ -134,13 +134,11 @@ class UnsSpiderSpider(scrapy.Spider):
 
             course_item["modeOfStudy"] = "|".join(list(set(course_item["modeOfStudy"])))
 
-        faculty = response.xpath("//dd[preceding-sibling::dt/text()='Faculty']/div/p/text()").get()
-        if faculty:
-            course_item["faculty"] = faculty
-
         code = response.xpath("//dd[preceding-sibling::dt/text()='Program Code']/div/p/text()").get()
         if code:
             course_item["courseCode"] = code
+
+        course_item["uid"] = course_item["uid"] + "-" + course_item["courseCode"]
 
         cricos = response.xpath("//dd[preceding-sibling::dt/text()='CRICOS Code']/div/p/text()").get()
         if cricos and cricos != "N/A^":
