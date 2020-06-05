@@ -32,7 +32,8 @@ class UsaSpiderSpider(scrapy.Spider):
     name = 'usa_spider'
     allowed_domains = ['study.unisa.edu.au', 'online.unisa.edu.au']
     start_urls = ['https://study.unisa.edu.au/']
-    banned_urls = []
+    banned_urls = ['https://study.unisa.edu.au/careers/31/',
+                   'https://online.unisa.edu.au/']
     institution = "University of South Australia"
     uidPrefix = "AU-USA-"
 
@@ -50,6 +51,7 @@ class UsaSpiderSpider(scrapy.Spider):
         "graduate certificate": "7",
         "graduate diploma": "8",
         "master": research_coursework,
+        "international master": research_coursework,
         "masters": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
@@ -188,7 +190,7 @@ class UsaSpiderSpider(scrapy.Spider):
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
                                                      / self.teaching_periods[duration_part[0][1].lower()]
 
-        entry = response.xpath("//span[contains(@id, 'entry-requirements-info')]/following-sibling::div/*[contains("
+        entry = response.xpath("//span[contains(@id, 'entry-requirements-info')]/following-sibling::div[contains("
                                "text(), 'Entry requirements')]/following-sibling::*").getall()
         holder = []
         for item in entry:
@@ -233,7 +235,8 @@ class UsaSpiderSpider(scrapy.Spider):
 
         check_int = response.xpath("//span[@class='altis-regular']/text()").get()
         if not check_int or check_int == "Australian students only":
-            yield course_item
+            if response.request.url not in self.banned_urls:
+                yield course_item
         else:
             int_link = response.request.url + "/int"
 
@@ -249,8 +252,9 @@ class UsaSpiderSpider(scrapy.Spider):
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
-                course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.request.url
+
+        course_item["internationalApps"] = 1
+        course_item["internationalApplyURL"] = response.request.url
 
         fee = response.xpath("//p[contains(span/text(), 'Fees')]//text()").getall()
         if fee:
