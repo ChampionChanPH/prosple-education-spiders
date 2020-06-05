@@ -128,7 +128,7 @@ class UsaSpiderSpider(scrapy.Spider):
 
         learn = response.xpath("//*[contains(text(), 'What you') and contains(text(), 'learn')]/following-sibling::div").getall()
         if learn:
-            course_item["whatLearn"] = strip_tags(learn.strip(), False)
+            course_item["whatLearn"] = strip_tags("".join(learn), False)
 
         career = response.xpath("//div[contains(div/span/@id, 'yourcareer')]/following-sibling::div/div/div/div/*").getall()
         if career:
