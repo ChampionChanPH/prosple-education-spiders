@@ -32,8 +32,8 @@ class UsaSpiderSpider(scrapy.Spider):
     name = 'usa_spider'
     allowed_domains = ['study.unisa.edu.au', 'online.unisa.edu.au']
     start_urls = ['https://study.unisa.edu.au/']
-    banned_urls = ['https://study.unisa.edu.au/careers/31',
-                   'https://online.unisa.edu.au']
+    banned_urls = ['https://study.unisa.edu.au/careers/31/',
+                   'https://online.unisa.edu.au/']
     institution = "University of South Australia"
     uidPrefix = "AU-USA-"
 
@@ -239,7 +239,7 @@ class UsaSpiderSpider(scrapy.Spider):
 
         check_int = response.xpath("//span[@class='altis-regular']/text()").get()
         if not check_int or check_int == "Australian students only":
-            if response.request.url not in self.banned_urls:
+            if course_item["sourceURL"] not in self.banned_urls:
                 yield course_item
         else:
             int_link = response.request.url + "/int"
