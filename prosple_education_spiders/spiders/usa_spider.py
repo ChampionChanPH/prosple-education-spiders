@@ -234,6 +234,8 @@ class UsaSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, type_delims=["of", "in", "by"], degree_delims=["/", "and", ","])
 
+        course_item["uid"] = course_item["uid"] + "-" + course_item["courseCode"]
+
         check_int = response.xpath("//span[@class='altis-regular']/text()").get()
         if not check_int or check_int == "Australian students only":
             if response.request.url not in self.banned_urls:
