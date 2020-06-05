@@ -104,6 +104,7 @@ class UsaSpiderSpider(scrapy.Spider):
 
         for item in courses:
             item = re.sub("\?audience.*", "", item, re.DOTALL | re.I)
+            item = re.sub("/$", "", item)
             yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
