@@ -115,12 +115,12 @@ class SwionSpiderSpider(scrapy.Spider):
         course_item["modeOfStudy"] = "Online"
         course_item["campusNID"] = "709"
 
-        overview = response.xpath("//div[@id='overview']//div[@class='the_copy']/*").getall()
+        overview = response.xpath("//div[contains(@id, 'overview')]//div[@class='the_copy']/*").getall()
         if overview:
             overview = "".join(overview)
             course_item["overview"] = strip_tags(overview, False)
 
-        summary = response.xpath("//div[@id='overview']//div[@class='the_copy']/*[1]/text()").getall()
+        summary = response.xpath("//div[contains(@id, 'overview')]//div[@class='the_copy']/*[1]/text()").getall()
         if summary:
             summary = "".join(summary)
             course_item.set_summary(summary)
@@ -138,6 +138,8 @@ class SwionSpiderSpider(scrapy.Spider):
                     start_holder.append(self.months[month])
             if start_holder:
                 course_item["startMonths"] = "|".join(start_holder)
+            if re.search("fortnight", start, re.I | re.M):
+                course_item["startMonths"] = "01|02|03|04|05|06|07|08|09|10|11|12"
 
         duration = response.xpath("//li[@class='duration']/*[contains(text(), 'Duration')]/following-sibling::*").get()
         if duration:
