@@ -78,7 +78,9 @@ class SwionSpiderSpider(scrapy.Spider):
             yield response.follow(item, callback=self.sub_parse)
 
     def sub_parse(self, response):
-        courses = []
+        courses = ['https://www.swinburneonline.edu.au/online-courses/health/diploma-of-nursing',
+                   'https://www.swinburneonline.edu.au/online-courses/technology/bachelor-of-information-and'
+                   '-communication-technology']
 
         ug = response.xpath("//div[@id='undergraduate']//a/@href").getall()
         if ug:
