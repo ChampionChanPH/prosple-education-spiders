@@ -96,7 +96,7 @@ class UcSpiderSpider(scrapy.Spider):
         career = response.xpath("//div[preceding-sibling::div/h4/a/text()='Career Opportunities']").get()
         if career:
             career = re.sub("</?div.*?>", "", career)
-            course_item["careerPathways"]
+            course_item["careerPathways"] = career
 
         duration = response.xpath("//p[preceding-sibling::h3/text()='Duration']/text()").get()
         if duration:
