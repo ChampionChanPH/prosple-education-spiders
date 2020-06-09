@@ -156,5 +156,5 @@ class UcSpiderSpider(scrapy.Spider):
                 course_item["internationalApps"] = 1
 
         # if "flag" in course_item:
-        # yield course_item
+        yield course_item
 
