@@ -44,7 +44,8 @@ class UoqSpiderSpider(scrapy.Spider):
         "Pharmacy Aust Cntr Excellence": "717",
         "Herston": "714",
         "Gatton": "713",
-        "St Lucia": "711"
+        "St Lucia": "711",
+        "External": "712"
     }
 
     degrees = {
@@ -139,9 +140,11 @@ class UoqSpiderSpider(scrapy.Spider):
 
         cricos = response.xpath("//dt[contains(text(), 'CRICOS Code')]/following-sibling::dd/text()").get()
         if cricos:
-            course_item["cricosCode"] = cricos.strip()
-            course_item["internationalApps"] = 1
-            course_item["internationalApplyURL"] = response.request.url
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if cricos:
+                course_item["cricosCode"] = ", ".join(cricos)
+                course_item["internationalApps"] = 1
+                course_item["internationalApplyURL"] = response.request.url
 
         course_code = response.xpath("//dt[contains(text(), 'Program Code')]/following-sibling::dd/text()").get()
         if course_code:
