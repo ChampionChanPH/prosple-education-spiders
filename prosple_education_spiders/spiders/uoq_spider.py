@@ -163,6 +163,9 @@ class UoqSpiderSpider(scrapy.Spider):
             if duration_full:
                 course_item["durationMinFull"] = float(duration_full[0][0])
                 self.get_period(duration_full[0][1].lower(), course_item)
+            if re.search("half year", duration, re.I):
+                course_item["durationMinFull"] = 0.5
+                course_item["teachingPeriod"] = 1
 
         fee = response.xpath("//dt[contains(text(), 'Fees')]/following-sibling::dd").get()
         if fee:
