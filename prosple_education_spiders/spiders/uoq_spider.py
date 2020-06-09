@@ -190,8 +190,9 @@ class UoqSpiderSpider(scrapy.Spider):
             if campus_holder:
                 course_item["campusNID"] = "|".join(campus_holder)
 
-        career = response.xpath("//div[contains(*/text(), 'Career possibilities')]/following-sibling::*").get()
+        career = response.xpath("//div[contains(*/text(), 'Career possibilities')]/following-sibling::*/*").getall()
         if career:
+            career = "".join(career)
             course_item["careerPathways"] = strip_tags(career, False)
 
         learn = response.xpath("//div[contains(*/text(), 'Program highlights')]/following-sibling::div").get()
