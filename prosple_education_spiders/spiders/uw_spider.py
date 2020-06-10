@@ -100,7 +100,7 @@ class UwSpiderSpider(scrapy.Spider):
         duration = response.xpath("//td[preceding-sibling::th/text()='Years:']/text()").get()
         if duration:
             course_item["teachingPeriod"] = 1
-            duration = re.findall("[\d\.]+")
+            duration = re.findall("[\d\.]+", duration)
             try:
                 duration = [float(x) for x in duration]
                 course_item["durationMinFull"] = min(duration)
