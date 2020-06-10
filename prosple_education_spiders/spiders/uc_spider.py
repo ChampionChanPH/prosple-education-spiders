@@ -79,14 +79,18 @@ class UcSpiderSpider(scrapy.Spider):
         course_item["group"] = 2
         course_item["canonicalGroup"] = "GradNewZealand"
 
-        summary = response.css(".Lead_paragraph::text").get()
-        if summary:
-            course_item.set_summary(cleanspace(summary))
-
         overview = response.css("#overview").get()
         if overview:
             overview = re.sub("<.*?>", "", overview)
             course_item["overview"] = overview
+
+        summary = response.css(".Lead_paragraph::text").get()
+        if summary:
+            course_item.set_summary(cleanspace(summary))
+        else:
+            if overview:
+                course_item.set_summary(cleanspace(course_item["overview"]))
+
         #
         # entry = response.xpath("//div[preceding-sibling::div/h4/a/text()='Entry requirements']/div[1]").get()
         # if entry:
