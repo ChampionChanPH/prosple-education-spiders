@@ -207,128 +207,133 @@ class Course(scrapy.Item):
         rank = 999
         ranges = []
         final_ranges = []
-
-        degree_matches = [re.finditer(x + " ", self["courseName"].lower()) for x in list(degrees_map.keys()) if re.search(x + " ", self["courseName"].lower())]
-        if degree_matches:
-            for match in degree_matches:
-                for r in match:
-                    ranges += list(range(r.start(), r.end()))
-            ranges = sorted(list(set(ranges)))
-
-            # print(ranges)
-            for i in ranges:
-                if ranges.index(i) == 0:
-                    lower = i
-                    upper = i
-                elif ranges[-1] == i:
-                    final_ranges.append([lower, i])
-                else:
-                    if i == upper + 1:
-                        upper = i
-                    else:
-                        final_ranges.append([lower, upper])
-                        lower = i
-                        upper = i
-            # print(final_ranges)
-            degree_matches = [self["courseName"].lower()[x[0]:x[1]] for x in final_ranges]
+        if self["courseName"].lower() in list(degrees_map.keys()):
+            self["degreeType"] = degrees_map[self["courseName"].lower()]
+            self["rawStudyfield"] = self["courseName"].lower()
+            self["specificStudyField"] = self["courseName"]
 
         else:
-            degree_matches = ["non-award"]
-            self.add_flag("degreeType", "There was no degree type match found for: " + self["courseName"])
+            degree_matches = [re.finditer(x + " ", self["courseName"].lower()) for x in list(degrees_map.keys()) if re.search(x + " ", self["courseName"].lower())]
+            if degree_matches:
+                for match in degree_matches:
+                    for r in match:
+                        ranges += list(range(r.start(), r.end()))
+                ranges = sorted(list(set(ranges)))
 
-        # print(degree_matches)
-        names = []
-        if len(degree_matches) > 2:
-            print(str(len(degree_matches)) + " degrees were found.")
-            self.add_flag("degreeType", str(len(degree_matches)) + " degree types were found for: " + self["courseName"])
-            degree_matches = degree_matches[:2]
+                # print(ranges)
+                for i in ranges:
+                    if ranges.index(i) == 0:
+                        lower = i
+                        upper = i
+                    elif ranges[-1] == i:
+                        final_ranges.append([lower, i])
+                    else:
+                        if i == upper + 1:
+                            upper = i
+                        else:
+                            final_ranges.append([lower, upper])
+                            lower = i
+                            upper = i
+                # print(final_ranges)
+                degree_matches = [self["courseName"].lower()[x[0]:x[1]] for x in final_ranges]
 
-        if len(degree_matches) == 2:
-            self["doubleDegree"] = 1
-            for delim in degree_delims:
-                pattern = "\s?"+delim+"\s?(?="+degree_matches[1]+")"
-                holder = re.split(pattern, self["courseName"], flags=re.IGNORECASE)
-                if len(holder) == 2:
-                    names = holder[:]
-                    break
-        elif len(degree_matches) == 1:
-            names = [self["courseName"]]
-
-        # print(names)
-        # print(names)
-
-        # delim =
-        # single_chars = [x for x in degree_delims if len(x) == 1 or (len(x) == 2 and "\\" in x)]  # Isolate single character delimiter like "/", "-"
-        # words = [x for x in degree_delims if len(x) != 1 and "\\" not in x]  # Isolate word delimiters like "and"
-        # words = [x for x in words if re.search(x + "\s(?=" + "|".join(list(degrees_map.keys()))+")", self["courseName"].lower(), flags=re.IGNORECASE)]  #get word followed by degree that has a match in the course name
-        #
-        # if len(words) == 1:
-        #     pattern = "\s"+words[0]+"\s(?="+"|".join(list(degrees_map.keys()))+")"  # set pattern for word case
-        #
-        # elif len(words) > 1:
-        #     self.add_flag("doubleDegree", "Matched multiple degree delims "+", ".join(words))  # matching on two delimiters is odd. need to flag
-        #
-        # elif len(single_chars) > 0:
-        #     pattern = "(?<!graduate)\s?["+"".join(single_chars)+"]\s?(?="+"|".join(list(degrees_map.keys()))+")"  # if no match on the word delims and single char delims not empty
-        #
-        # else:
-        #     pattern = None  # if no word delim or single character delim match
-        #
-        # if pattern:
-        #     names = re.split(pattern, self["courseName"], flags=re.IGNORECASE)
-        #     names = [x for x in names if x]  # Remove None values when using space as delimiter
-        # else:
-        #     names = [self["courseName"]]
-
-        # if len(names) == 2:
-        #     self["doubleDegree"] = 1
-        #
-        # elif len(names) > 2:
-        #     self.add_flag("doubleDegree", "Course name was split into 3 or more degrees: "+self["courseName"])
-        #
-        # # Master of Engineering in Biotech
-        # delims = [x for x in type_delims if re.search("^(?=" + "|".join(list(degrees_map.keys())) + ")\s" + x + "\s", self["courseName"].lower(), flags=re.IGNORECASE)]  # get word followed by degree that has a match in the course name
-        #
-        for i in range(len(names)):
-            if degree_matches[i] == "non-award":
-                study_field = names[i]
             else:
-                name = names[i][len(degree_matches[i]):]
-                delims = [x for x in type_delims if re.search("^" + x, name.lower())]
-                if len(delims) == 1:
-                    study_field = name[len(delims[0]):]
+                degree_matches = ["non-award"]
+                self.add_flag("degreeType", "There was no degree type match found for: " + self["courseName"])
 
-                else:
-                    self.add_flag("studyField", "No type delimiter match: " + self["courseName"])
-                    study_field = cleanspace(name)
+            # print(degree_matches)
+            names = []
+            if len(degree_matches) > 2:
+                print(str(len(degree_matches)) + " degrees were found.")
+                self.add_flag("degreeType", str(len(degree_matches)) + " degree types were found for: " + self["courseName"])
+                degree_matches = degree_matches[:2]
 
-            study_fields.append(study_field)
+            if len(degree_matches) == 2:
+                self["doubleDegree"] = 1
+                for delim in degree_delims:
+                    pattern = "\s?"+delim+"\s?(?="+degree_matches[1]+")"
+                    holder = re.split(pattern, self["courseName"], flags=re.IGNORECASE)
+                    if len(holder) == 2:
+                        names = holder[:]
+                        break
+            elif len(degree_matches) == 1:
+                names = [self["courseName"]]
 
-        if len(study_fields) > 0:
-            self["rawStudyfield"] = [x.lower() for x in study_fields]
-            self["specificStudyField"] = "/".join(study_fields)
+            # print(names)
+            # print(names)
 
-        for index in range(len(degree_matches)):
-        # for index in range(len(raw_degree_types)):
-            # try:
-            #     degree_match = max([x for x in list(dict.fromkeys(degrees_map)) if x in raw_degree_types[index]], key=len)  # match degree type and get longest match
-            # except ValueError:
-            #     if raw_degree_types[index] == "non-award":
-            #         degree_match = "non-award"
+            # delim =
+            # single_chars = [x for x in degree_delims if len(x) == 1 or (len(x) == 2 and "\\" in x)]  # Isolate single character delimiter like "/", "-"
+            # words = [x for x in degree_delims if len(x) != 1 and "\\" not in x]  # Isolate word delimiters like "and"
+            # words = [x for x in words if re.search(x + "\s(?=" + "|".join(list(degrees_map.keys()))+")", self["courseName"].lower(), flags=re.IGNORECASE)]  #get word followed by degree that has a match in the course name
             #
-            #     else:
-            #         degree_match = "no match"
-            #         self.add_flag("degreeType", "no degree type match for "+raw_degree_types[index])
+            # if len(words) == 1:
+            #     pattern = "\s"+words[0]+"\s(?="+"|".join(list(degrees_map.keys()))+")"  # set pattern for word case
+            #
+            # elif len(words) > 1:
+            #     self.add_flag("doubleDegree", "Matched multiple degree delims "+", ".join(words))  # matching on two delimiters is odd. need to flag
+            #
+            # elif len(single_chars) > 0:
+            #     pattern = "(?<!graduate)\s?["+"".join(single_chars)+"]\s?(?="+"|".join(list(degrees_map.keys()))+")"  # if no match on the word delims and single char delims not empty
+            #
+            # else:
+            #     pattern = None  # if no word delim or single character delim match
+            #
+            # if pattern:
+            #     names = re.split(pattern, self["courseName"], flags=re.IGNORECASE)
+            #     names = [x for x in names if x]  # Remove None values when using space as delimiter
+            # else:
+            #     names = [self["courseName"]]
 
-            degree_match = degrees_map[degree_matches[index]]
-            if callable(degree_match):
-                degree_match = degree_match(self)
+            # if len(names) == 2:
+            #     self["doubleDegree"] = 1
+            #
+            # elif len(names) > 2:
+            #     self.add_flag("doubleDegree", "Course name was split into 3 or more degrees: "+self["courseName"])
+            #
+            # # Master of Engineering in Biotech
+            # delims = [x for x in type_delims if re.search("^(?=" + "|".join(list(degrees_map.keys())) + ")\s" + x + "\s", self["courseName"].lower(), flags=re.IGNORECASE)]  # get word followed by degree that has a match in the course name
+            #
+            for i in range(len(names)):
+                if degree_matches[i] == "non-award":
+                    study_field = names[i]
+                else:
+                    name = names[i][len(degree_matches[i]):]
+                    delims = [x for x in type_delims if re.search("^" + x, name.lower())]
+                    if len(delims) == 1:
+                        study_field = name[len(delims[0]):]
 
-            if rank > self.degrees[degree_match]["rank"]:
-                self["degreeType"] = degree_match
-                rank = self.degrees[degree_match]["rank"]
-                if "honour" in names[index].lower() and self["degreeType"] != "3" and "doubleDegree" not in self:
-                    self.add_flag("degreeType", "This could be an honours degree: "+self["courseName"])
+                    else:
+                        self.add_flag("studyField", "No type delimiter match: " + self["courseName"])
+                        study_field = cleanspace(name)
+
+                study_fields.append(study_field)
+
+            if len(study_fields) > 0:
+                self["rawStudyfield"] = [x.lower() for x in study_fields]
+                self["specificStudyField"] = "/".join(study_fields)
+
+            for index in range(len(degree_matches)):
+            # for index in range(len(raw_degree_types)):
+                # try:
+                #     degree_match = max([x for x in list(dict.fromkeys(degrees_map)) if x in raw_degree_types[index]], key=len)  # match degree type and get longest match
+                # except ValueError:
+                #     if raw_degree_types[index] == "non-award":
+                #         degree_match = "non-award"
+                #
+                #     else:
+                #         degree_match = "no match"
+                #         self.add_flag("degreeType", "no degree type match for "+raw_degree_types[index])
+
+                degree_match = degrees_map[degree_matches[index]]
+                if callable(degree_match):
+                    degree_match = degree_match(self)
+
+                if rank > self.degrees[degree_match]["rank"]:
+                    self["degreeType"] = degree_match
+                    rank = self.degrees[degree_match]["rank"]
+                    if "honour" in names[index].lower() and self["degreeType"] != "3" and "doubleDegree" not in self:
+                        self.add_flag("degreeType", "This could be an honours degree: "+self["courseName"])
 
         self["courseLevel"] = self.degrees[self["degreeType"]]["level"]
         self["group"] = self.groups[self["courseLevel"]]["num"]
