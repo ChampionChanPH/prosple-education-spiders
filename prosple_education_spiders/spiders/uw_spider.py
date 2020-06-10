@@ -45,7 +45,7 @@ class UwSpiderSpider(scrapy.Spider):
 
     campus_map = {
         "Tauranga": "49145",
-        "Hamilton": "49144"
+        "Hamilton": "49144",
     }
 
     holder = []
@@ -85,16 +85,66 @@ class UwSpiderSpider(scrapy.Spider):
         if summary:
             course_item.set_summary(cleanspace(summary))
 
-        # if response.request.url == "https://www.waikato.ac.nz/study/qualifications/certificate":
-        #     course_item["degreeType"] = "4"
-        #     course_item["courseLevel"] = "1"
-        #     course_item["rawStudyfield"] = "certificate generic"
-        #     course_item["specificStudyField"] = "Certificate"
-        # else:
         course_item.set_sf_dt(self.degrees, ["&", "/"])
 
-        if "flag" in course_item:
-            yield course_item
+        # Overide canonical group
+        course_item["group"] = 2
+        course_item["canonicalGroup"] = "GradNewZealand"
+
+        overview = response.xpath("//*[preceding-sibling::div[@class='lead']]").getall()
+        if overview:
+            overview = "\n".join([cleanspace(x) for x in overview])
+            overview = re.sub("</?div.*?>", "", overview)
+            course_item["overview"] = overview
+
+        duration = response.xpath("//td[preceding-sibling::th/text()='Years:']/text()").get()
+        if duration:
+            course_item["teachingPeriod"] = 1
+            try:
+                course_item["durationMinFull"] = float(duration)
+
+            except ValueError:
+                course_item.add_flag("duration", "Invalid duration value: " + duration)
+
+        locations = response.xpath("//td[preceding-sibling::th[contains(text(),'Study Locations:')]]").get()
+        if locations:
+            campus_holder = []
+            mode_holder = []
+            if "online" in locations.lower():
+                mode_holder.append("Online")
+
+            for campus in list(self.campus_map.keys()):
+                if campus.lower() in locations.lower():
+                    campus_holder.append(self.campus_map[campus])
+                    mode_holder.append("In person")
+
+            course_item["campusNID"] = "|".join(campus_holder)
+            course_item["modeOfStudy"] = "|".join(list(set(mode_holder)))
+
+        starts = response.xpath("//td[preceding-sibling::th[contains(text(),'Start Dates:')]]/text()").get()
+        if starts:
+            months = re.findall("\w+", starts)
+            if months:
+                course_item["startMonths"] = "|".join(convert_months(months))
+
+        fees_dom = response.css("tr.domestic").get()
+        if fees_dom:
+            if "fees" in fees_dom.lower():
+                fee = re.findall("\$([\d,]+)", fees_dom)
+                if fee:
+                    fee = [int(x.replace(",", "")) for x in fee]
+                    course_item["domesticFeeAnnual"] = max(fee)
+
+        fees_int = response.css("tr.international").get()
+        if fees_int:
+            if "fees" in fees_int.lower():
+                fee = re.findall("\$([\d,]+)", fees_int)
+                if fee:
+                    fee = [int(x.replace(",", "")) for x in fee]
+                    course_item["internationalFeeAnnual"] = max(fee)
+
+        # if "flag" in course_item:
+        yield course_item
 
 
 
