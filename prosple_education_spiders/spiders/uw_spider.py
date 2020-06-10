@@ -100,8 +100,12 @@ class UwSpiderSpider(scrapy.Spider):
         duration = response.xpath("//td[preceding-sibling::th/text()='Years:']/text()").get()
         if duration:
             course_item["teachingPeriod"] = 1
+            duration = re.findall("[\d\.]+")
             try:
-                course_item["durationMinFull"] = float(duration)
+                duration = [float(x) for x in duration]
+                course_item["durationMinFull"] = min(duration)
+                if len(duration) > 1:
+                    course_item["durationMaxFull"] = max(duration)
 
             except ValueError:
                 course_item.add_flag("duration", "Invalid duration value: " + duration)
