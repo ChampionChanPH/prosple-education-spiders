@@ -110,9 +110,6 @@ class AcuSpiderSpider(scrapy.Spider):
         courses = response.xpath("//section[contains(@class, 'search-results-scholarships')]//input["
                                  "@type='hidden']/@value").getall()
 
-        courses = ["https://courses.acu.edu.au/undergraduate/bachelor_of_business_administration_away_from_base",
-                   "https://courses.acu.edu.au/undergraduate/bachelor_of_commerce",
-                   "https://courses.acu.edu.au/undergraduate/bachelor_of_education_fourth_year_upgrade"]
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
 
