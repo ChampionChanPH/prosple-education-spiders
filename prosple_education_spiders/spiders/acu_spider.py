@@ -110,6 +110,7 @@ class AcuSpiderSpider(scrapy.Spider):
         courses = response.xpath("//section[contains(@class, 'search-results-scholarships')]//input["
                                  "@type='hidden']/@value").getall()
 
+        courses = ["https://courses.acu.edu.au/other_courses/certificate_iii_in_individual_support"]
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
 
@@ -133,7 +134,7 @@ class AcuSpiderSpider(scrapy.Spider):
             course_item.set_summary(strip_tags(overview[0]))
             holder = []
             for item in overview:
-                if not re.search("^<p", item) or not re.search("^<div", item):
+                if not re.search("^<p", item) and not re.search("^<div", item) and not re.search("^<ul", item):
                     break
                 else:
                     holder.append(item)
@@ -152,7 +153,7 @@ class AcuSpiderSpider(scrapy.Spider):
 
         location = response.xpath("//dt[contains(text(), 'Location:')]/following-sibling::dd").get()
         if not location:
-            location = response.xpath("//div[contains(*/text(), 'Location:')]/following-sibling::div").get()
+            location = response.xpath("//div[contains(*/*/text(), 'Location:')]/following-sibling::div").get()
         if location:
             campus_holder = []
             for campus in self.campuses:
@@ -163,7 +164,7 @@ class AcuSpiderSpider(scrapy.Spider):
 
         start = response.xpath("//dt[contains(text(), 'Intakes:')]/following-sibling::dd").get()
         if not start:
-            start = response.xpath("//div[contains(*/text(), 'Intakes:')]/following-sibling::div").get()
+            start = response.xpath("//div[contains(*/*/text(), 'Intakes:')]/following-sibling::div").get()
         if start:
             start_holder = []
             for month in self.months:
@@ -174,7 +175,7 @@ class AcuSpiderSpider(scrapy.Spider):
 
         cricos = response.xpath("//dt[contains(text(), 'CRICOS:')]/following-sibling::dd").get()
         if not cricos:
-            cricos = response.xpath("//div[contains(*/text(), 'CRICOS:')]/following-sibling::div").get()
+            cricos = response.xpath("//div[contains(*/*/text(), 'CRICOS:')]/following-sibling::div").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
@@ -183,7 +184,7 @@ class AcuSpiderSpider(scrapy.Spider):
 
         course_code = response.xpath("//dt[contains(text(), 'Course code:')]/following-sibling::dd").get()
         if not course_code:
-            course_code = response.xpath("//div[contains(*/text(), 'Course code:')]/following-sibling::div").get()
+            course_code = response.xpath("//div[contains(*/*/text(), 'Course code:')]/following-sibling::div").get()
         if course_code:
             course_code = re.findall("[0-9a-zA-Z]+?", course_code, re.M)
             if course_code:
@@ -191,7 +192,7 @@ class AcuSpiderSpider(scrapy.Spider):
 
         duration = response.xpath("//dt[contains(text(), 'Duration:')]/following-sibling::dd").get()
         if not duration:
-            duration = response.xpath("//div[contains(*/text(), 'Duration:')]/following-sibling::div").get()
+            duration = response.xpath("//div[contains(*/*/text(), 'Duration:')]/following-sibling::div").get()
         if duration:
             duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration,
                                        re.I | re.M | re.DOTALL)
