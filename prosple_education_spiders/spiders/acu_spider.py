@@ -84,18 +84,18 @@ class AcuSpiderSpider(scrapy.Spider):
     }
 
     months = {
-        "Jan": "01",
-        "Feb": "02",
-        "Mar": "03",
-        "Apr": "04",
+        "January": "01",
+        "February": "02",
+        "March": "03",
+        "April": "04",
         "May": "05",
-        "Jun": "06",
-        "Jul": "07",
-        "Aug": "08",
-        "Sep": "09",
-        "Oct": "10",
-        "Nov": "11",
-        "Dec": "12"
+        "June": "06",
+        "July": "07",
+        "August": "08",
+        "September": "09",
+        "October": "10",
+        "November": "11",
+        "December": "12"
     }
 
     def get_period(self, string_to_use, course_item):
@@ -120,7 +120,6 @@ class AcuSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
@@ -128,11 +127,13 @@ class AcuSpiderSpider(scrapy.Spider):
 
         overview = response.xpath("//div[@id='course--description--domestic']/*[contains(*/text(), "
                                   "'Description')]/following-sibling::*[1]/*").getall()
+        if not overview:
+            overview = response.xpath("//h2[contains(text(), 'Key features of the course')]/preceding-sibling::*").getall()
         if overview:
             course_item.set_summary(strip_tags(overview[0]))
             holder = []
             for item in overview:
-                if not re.search("^<p", item):
+                if not re.search("^<p", item) or not re.search("^<div", item):
                     break
                 else:
                     holder.append(item)
@@ -150,6 +151,8 @@ class AcuSpiderSpider(scrapy.Spider):
             course_item["careerPathways"] = strip_tags("".join(career), False)
 
         location = response.xpath("//dt[contains(text(), 'Location:')]/following-sibling::dd").get()
+        if not location:
+            location = response.xpath("//div[contains(*/text(), 'Location:')]/following-sibling::div").get()
         if location:
             campus_holder = []
             for campus in self.campuses:
@@ -158,15 +161,37 @@ class AcuSpiderSpider(scrapy.Spider):
             if campus_holder:
                 course_item["campusNID"] = "|".join(campus_holder)
 
+        start = response.xpath("//dt[contains(text(), 'Intakes:')]/following-sibling::dd").get()
+        if not start:
+            start = response.xpath("//div[contains(*/text(), 'Intakes:')]/following-sibling::div").get()
+        if start:
+            start_holder = []
+            for month in self.months:
+                if re.search(month, start, re.M):
+                    start_holder.append(self.months[month])
+            if start_holder:
+                course_item["startMonths"] = "|".join(start_holder)
+
         cricos = response.xpath("//dt[contains(text(), 'CRICOS:')]/following-sibling::dd").get()
+        if not cricos:
+            cricos = response.xpath("//div[contains(*/text(), 'CRICOS:')]/following-sibling::div").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.request.url
+
+        course_code = response.xpath("//dt[contains(text(), 'Course code:')]/following-sibling::dd").get()
+        if not course_code:
+            course_code = response.xpath("//div[contains(*/text(), 'Course code:')]/following-sibling::div").get()
+        if course_code:
+            course_code = re.findall("[0-9a-zA-Z]+?", course_code, re.M)
+            if course_code:
+                course_item["courseCode"] = ", ".join(course_code)
 
         duration = response.xpath("//dt[contains(text(), 'Duration:')]/following-sibling::dd").get()
+        if not duration:
+            duration = response.xpath("//div[contains(*/text(), 'Duration:')]/following-sibling::div").get()
         if duration:
             duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration,
                                        re.I | re.M | re.DOTALL)
