@@ -158,6 +158,7 @@ class BonSpiderSpider(scrapy.Spider):
                     course_item["durationMaxFull"] = float(duration_full[1][0])
                     self.get_period(duration_full[1][1].lower(), course_item)
 
+
         course_code = response.xpath("//td[contains(*/text(), 'Program code')]/following-sibling::*/text()").get()
         if course_code:
             course_item["courseCode"] = course_code.strip()
