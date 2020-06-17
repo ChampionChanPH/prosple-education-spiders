@@ -97,7 +97,6 @@ class BonSpiderSpider(scrapy.Spider):
         course_item["institution"] = self.institution
         course_item["domesticApplyURL"] = response.request.url
 
-
         course_name = response.xpath("//h1[@class='page-title']/text()").get()
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
