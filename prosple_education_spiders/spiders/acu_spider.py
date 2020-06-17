@@ -110,7 +110,6 @@ class AcuSpiderSpider(scrapy.Spider):
         courses = response.xpath("//section[contains(@class, 'search-results-scholarships')]//input["
                                  "@type='hidden']/@value").getall()
 
-        courses = ["https://courses.acu.edu.au/other_courses/certificate_iii_in_individual_support"]
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
 
@@ -121,6 +120,7 @@ class AcuSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
+        course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
@@ -181,6 +181,7 @@ class AcuSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
+                course_item["internationalApplyURL"] = response.request.url
 
         course_code = response.xpath("//dt[contains(text(), 'Course code:')]/following-sibling::dd").get()
         if not course_code:
