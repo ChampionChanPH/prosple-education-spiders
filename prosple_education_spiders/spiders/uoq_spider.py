@@ -113,7 +113,6 @@ class UoqSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.request.url
 
         degree = response.xpath("//h1/span/text()").get()
         if degree:
@@ -144,7 +143,6 @@ class UoqSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.request.url
 
         course_code = response.xpath("//dt[contains(text(), 'Program Code')]/following-sibling::dd/text()").get()
         if course_code:
