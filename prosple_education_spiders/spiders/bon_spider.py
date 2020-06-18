@@ -84,6 +84,7 @@ class BonSpiderSpider(scrapy.Spider):
     def parse(self, response):
         courses = response.xpath("//div[@class='tab-content']//a/@href").getall()
 
+        courses = ["https://bond.edu.au/program/bachelor-communication-bachelor-laws"]
         for item in courses:
             if item not in self.banned_urls:
                 yield response.follow(item, callback=self.course_parse)
@@ -146,14 +147,8 @@ class BonSpiderSpider(scrapy.Spider):
             duration_full = re.findall("[^\(](\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration,
                                        re.I | re.M | re.DOTALL)
             if duration_full:
-                if len(duration_full) == 1:
-                    course_item["durationMinFull"] = float(duration_full[0][0])
-                    self.get_period(duration_full[0][1].lower(), course_item)
-                if len(duration_full) == 2:
-                    duration_full.sort()
-                    course_item["durationMinFull"] = float(duration_full[0][0])
-                    course_item["durationMaxFull"] = float(duration_full[1][0])
-                    self.get_period(duration_full[1][1].lower(), course_item)
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
 
         course_code = response.xpath("//td[contains(*/text(), 'Program code')]/following-sibling::*/text()").get()
         if course_code:
