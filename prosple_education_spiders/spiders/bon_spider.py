@@ -84,7 +84,6 @@ class BonSpiderSpider(scrapy.Spider):
     def parse(self, response):
         courses = response.xpath("//div[@class='tab-content']//a/@href").getall()
 
-        courses = ["https://bond.edu.au/program/master-healthcare-innovations"]
         for item in courses:
             if item not in self.banned_urls:
                 yield response.follow(item, callback=self.course_parse)
