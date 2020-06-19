@@ -36,18 +36,6 @@ class CacSpiderSpider(scrapy.Spider):
     institution = "Canning College"
     uidPrefix = "AU-CAC-"
 
-    campuses = {
-        "Sydney": "509",
-        "Adelaide": "508",
-        "National": "510",
-        "Ballarat": "506",
-        "North Sydney": "504",
-        "Canberra": "505",
-        "Strathfield": "503",
-        "Melbourne": "501",
-        "Brisbane": "502"
-    }
-
     degrees = {
         "graduate certificate": "7",
         "graduate diploma": "8",
@@ -179,6 +167,8 @@ class CacSpiderSpider(scrapy.Spider):
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
+
+        course_item["campusNID"] = "30901"
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"])
 
