@@ -143,7 +143,7 @@ class CacSpiderSpider(scrapy.Spider):
         duration = response.xpath("//div[contains(@class, 'bodyContent_Course_Duration')]").getall()
         if duration:
             duration = "".join(duration)
-            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\s)",
+            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
                                        duration, re.I | re.M | re.DOTALL)
             if duration_full:
                 course_item["durationMinFull"] = float(duration_full[0][0])
@@ -162,12 +162,12 @@ class CacSpiderSpider(scrapy.Spider):
         #     start = "".join(start)
         #     start_holder = []
         #     for month in self.months:
-        #         if re.search("Classes:" + ".*?" + month, start, re.I | re.M | re.DOTALL):
+        #         if re.search("Classes:" + ".*?" + month + "\s-", start, re.I | re.M | re.DOTALL):
         #             start_holder.append(self.months[month])
         #     if start_holder:
         #         course_item["startMonths"] = "|".join(start_holder)
-
-        cricos = response.xpath("//div[contains(@class, 'bodyContent_Course_Code')]").getall()
+        #
+        # cricos = response.xpath("//div[contains(@class, 'bodyContent_Course_Code')]").getall()
         if cricos:
             cricos = "".join(cricos)
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
