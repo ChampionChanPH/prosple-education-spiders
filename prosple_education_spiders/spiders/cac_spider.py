@@ -166,8 +166,8 @@ class CacSpiderSpider(scrapy.Spider):
         #             start_holder.append(self.months[month])
         #     if start_holder:
         #         course_item["startMonths"] = "|".join(start_holder)
-        #
-        # cricos = response.xpath("//div[contains(@class, 'bodyContent_Course_Code')]").getall()
+
+        cricos = response.xpath("//div[contains(@class, 'bodyContent_Course_Code')]").getall()
         if cricos:
             cricos = "".join(cricos)
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
