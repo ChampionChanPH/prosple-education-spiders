@@ -167,6 +167,10 @@ class CacSpiderSpider(scrapy.Spider):
         #     if start_holder:
         #         course_item["startMonths"] = "|".join(start_holder)
 
+        course_structure = response.xpath("//div[contains(@class, 'bodyContent_Course_Outline')]/*").getall()
+        if course_structure:
+            course_item["courseStructure"] = strip_tags("".join(course_structure), False)
+
         cricos = response.xpath("//div[contains(@class, 'bodyContent_Course_Code')]").getall()
         if cricos:
             cricos = "".join(cricos)
