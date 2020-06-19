@@ -59,6 +59,8 @@ class CacSpiderSpider(scrapy.Spider):
         "certificate ii": "4",
         "certificate iii": "4",
         "certificate iv": "4",
+        "year 10": "9",
+        "year 11": "9",
         "year 12 - western australian certificate": "9",
         "advanced diploma": "5",
         "diploma": "5",
@@ -131,12 +133,17 @@ class CacSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[contains(@class, 'bodyContent_Body')]/*").getall()
         if overview:
             course_item.set_summary(strip_tags(overview[0]))
-            course_item["overview"] = strip_tags("".join(overview), False)
+            for item in overview:
+                holder = []
+                if not re.search("^<p><img", item):
+                    holder.append(item)
+                if holder:
+                    course_item["overview"] = strip_tags("".join(holder), False)
 
         duration = response.xpath("//div[contains(@class, 'bodyContent_Course_Duration')]").getall()
         if duration:
             duration = "".join(duration)
-            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\s)",
                                        duration, re.I | re.M | re.DOTALL)
             if duration_full:
                 course_item["durationMinFull"] = float(duration_full[0][0])
@@ -150,15 +157,15 @@ class CacSpiderSpider(scrapy.Spider):
         if apply:
             course_item["howToApply"] = strip_tags("".join(apply), False)
 
-        start = response.xpath("//div[contains(@class, 'bodyContent_Course_Dates')]").getall()
-        if start:
-            start = "".join(start)
-            start_holder = []
-            for month in self.months:
-                if re.search("Classes:" + ".*?" + month, start, re.I | re.M | re.DOTALL):
-                    start_holder.append(self.months[month])
-            if start_holder:
-                course_item["startMonths"] = "|".join(start_holder)
+        # start = response.xpath("//div[contains(@class, 'bodyContent_Course_Dates')]").getall()
+        # if start:
+        #     start = "".join(start)
+        #     start_holder = []
+        #     for month in self.months:
+        #         if re.search("Classes:" + ".*?" + month, start, re.I | re.M | re.DOTALL):
+        #             start_holder.append(self.months[month])
+        #     if start_holder:
+        #         course_item["startMonths"] = "|".join(start_holder)
 
         cricos = response.xpath("//div[contains(@class, 'bodyContent_Course_Code')]").getall()
         if cricos:
@@ -170,8 +177,5 @@ class CacSpiderSpider(scrapy.Spider):
                 course_item["internationalApplyURL"] = response.request.url
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"])
-
-        if re.search("Year 1", course_item["courseName"]):
-            course_item["degreeType"] = "High School Certificate"
 
         yield course_item
