@@ -59,6 +59,7 @@ class CacSpiderSpider(scrapy.Spider):
         "certificate ii": "4",
         "certificate iii": "4",
         "certificate iv": "4",
+        "year 12 - western australian certificate": "9",
         "advanced diploma": "5",
         "diploma": "5",
         "associate degree": "1",
