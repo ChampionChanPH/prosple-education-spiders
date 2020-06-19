@@ -121,12 +121,12 @@ class CacSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[contains(@class, 'bodyContent_Body')]/*").getall()
         if overview:
             course_item.set_summary(strip_tags(overview[0]))
+            holder = []
             for item in overview:
-                holder = []
                 if not re.search("^<p><img", item):
                     holder.append(item)
-                if holder:
-                    course_item["overview"] = strip_tags("".join(holder), False)
+            if holder:
+                course_item["overview"] = strip_tags("".join(holder), False)
 
         duration = response.xpath("//div[contains(@class, 'bodyContent_Course_Duration')]").getall()
         if duration:
