@@ -176,9 +176,9 @@ class CmuSpiderSpider(scrapy.Spider):
                     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                     self.get_period(duration_full[1][1].lower(), course_item)
 
-        course_structure = response.xpath("//h2[text()='Degree Structure']/following-sibling::*").getall()
+        course_structure = response.xpath("//*[contains(text(), 'Degree Structure')]/following-sibling::*").getall()
         if not course_structure:
-            course_structure = response.xpath("//h2[text()='Program Structure']/following-sibling::*").getall()
+            course_structure = response.xpath("//*[contains(text(), 'Program Structure')]/following-sibling::*").getall()
         if course_structure:
             holder = []
             for item in course_structure:
@@ -189,7 +189,9 @@ class CmuSpiderSpider(scrapy.Spider):
             if holder:
                 course_item["courseStructure"] = strip_tags("".join(holder), False)
 
-        learn = response.xpath("//h2[text()='Learning outcomes']/following-sibling::*").getall()
+        learn = response.xpath("//*[contains(text(), 'Learning outcomes')]/following-sibling::*").getall()
+        if not learn:
+            learn = response.xpath("//*[contains(text(), 'Learning Outcomes')]/following-sibling::*").getall()
         if learn:
             holder = []
             for item in learn:
@@ -200,7 +202,7 @@ class CmuSpiderSpider(scrapy.Spider):
             if holder:
                 course_item["whatLearn"] = strip_tags("".join(holder), False)
 
-        entry = response.xpath("//h2[text()='Entry Requirements']/following-sibling::*").getall()
+        entry = response.xpath("//*[contains(text(), 'Entry Requirements')]/following-sibling::*").getall()
         if entry:
             holder = []
             for item in entry:
@@ -211,7 +213,7 @@ class CmuSpiderSpider(scrapy.Spider):
             if holder:
                 course_item["entryRequirements"] = strip_tags("".join(holder), False)
 
-        career = response.xpath("//h2[text()='Internships and Career Outcomes']/following-sibling::*").getall()
+        career = response.xpath("//*[contains(text(), 'Internships and Career Outcomes')]/following-sibling::*").getall()
         if career:
             holder = []
             for item in career:
