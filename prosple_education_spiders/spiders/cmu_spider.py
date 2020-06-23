@@ -91,9 +91,6 @@ class CmuSpiderSpider(scrapy.Spider):
     def parse(self, response):
         courses = response.xpath("//div[@class='menuitem']//li/a/@href").getall()
 
-        courses = ["https://www.australia.cmu.edu/study/public-policy-and-management/msppm-12-month-program",
-                   "https://www.australia.cmu.edu/study/business-intelligence-data-analytics/graduate-cert-in-bida",
-                   "https://www.australia.cmu.edu/study/public-policy-and-management/msppm-public-private-partnerships"]
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
 
