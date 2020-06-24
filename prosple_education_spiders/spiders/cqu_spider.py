@@ -173,7 +173,7 @@ class CquSpiderSpider(scrapy.Spider):
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
                                                      / self.teaching_periods[duration_part[0][1].lower()]
         if "durationMinFull" not in course_item:
-            duration_full = re.findall("(\d*\.?\d+)(?=-(year|month|semester|trimester|quarter|week|day))", duration,
+            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration,
                                        re.I | re.M | re.DOTALL)
             if duration_full:
                 if len(duration_full) == 1:
