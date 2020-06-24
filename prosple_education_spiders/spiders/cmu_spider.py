@@ -49,7 +49,7 @@ class CmuSpiderSpider(scrapy.Spider):
         "master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
-        "advanced certificate": "4",
+        "advanced certificate": "7",
         "certificate": "4",
         "advanced diploma": "5",
         "diploma": "5",
