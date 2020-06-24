@@ -172,6 +172,17 @@ class CquSpiderSpider(scrapy.Spider):
                 else:
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
                                                      / self.teaching_periods[duration_part[0][1].lower()]
+        if "durationMinFull" not in course_item:
+            duration_full = re.findall("(\d*\.?\d+)(?=-(year|month|semester|trimester|quarter|week|day))", duration,
+                                       re.I | re.M | re.DOTALL)
+            if duration_full:
+                if len(duration_full) == 1:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                if len(duration_full) == 2:
+                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                    self.get_period(duration_full[1][1].lower(), course_item)
 
         study = response.xpath("//span[@class='course-info-highlight'][contains(text(), 'STUDY "
                                "MODES')]/following-sibling::*").get()
@@ -183,6 +194,32 @@ class CquSpiderSpider(scrapy.Spider):
                 study_holder.append("Online")
             if study_holder:
                 course_item["modeOfStudy"] = "|".join(study_holder)
+
+        location = response.xpath("//span[@class='course-info-highlight'][contains(text(), "
+                                  "'AVAILABILITY')]/following-sibling::*").get()
+        if location:
+            campus_holder = []
+            for campus in self.campuses:
+                if campus == "Rockhampton":
+                    if re.search("Rockhampton(?!\s(City|North))", location, re.I | re.M):
+                        campus_holder.append(self.campuses[campus])
+                elif campus == "Mackay":
+                    if re.search("Mackay(?!\sOoralea)", location, re.I | re.M):
+                        campus_holder.append(self.campuses[campus])
+                elif re.search(campus, location, re.I | re.M):
+                    campus_holder.append(self.campuses[campus])
+            if campus_holder:
+                course_item["campusNID"] = "|".join(campus_holder)
+
+        score = response.xpath("//span[@class='course-info-highlight'][contains(text(), 'RANK CUT "
+                               "OFF')]/following-sibling::*").get()
+        if score:
+            score = re.findall("ATAR:\s?(\d*\.?\d+)", score, re.I | re.M)
+            if score:
+                try:
+                    course_item["guaranteedEntryScore"] = float(score[0])
+                except ValueError:
+                    pass
 
         cricos = response.xpath("//span[@class='course-info-highlight'][contains(text(), "
                                 "'CRICOS')]/following-sibling::*").get()
