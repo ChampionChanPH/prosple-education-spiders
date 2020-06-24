@@ -188,9 +188,9 @@ class CquSpiderSpider(scrapy.Spider):
                                "MODES')]/following-sibling::*").get()
         if study:
             study_holder = []
-            if re.search(r"on campus", location, re.M | re.I):
+            if re.search(r"on campus", study, re.M | re.I):
                 study_holder.append("In Person")
-            if re.search(r"online", location, re.M | re.I):
+            if re.search(r"online", study, re.M | re.I):
                 study_holder.append("Online")
             if study_holder:
                 course_item["modeOfStudy"] = "|".join(study_holder)
