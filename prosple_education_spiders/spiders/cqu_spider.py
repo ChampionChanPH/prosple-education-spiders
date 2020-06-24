@@ -144,7 +144,7 @@ class CquSpiderSpider(scrapy.Spider):
         if "courseCode" in course_item and "courseName" in course_item:
             course_item["uid"] = course_item["uid"] + "-" + course_item["courseCode"]
 
-        overview = response.xpath("//label[contains(span/text(), 'Course Details')]/following-sibling::*/*").getall()
+        overview = response.xpath("//label[contains(span/text(), 'Course Details')]/following-sibling::*").getall()
         if overview:
             course_item.set_summary(strip_tags(overview[0]))
             course_item["overview"] = strip_tags("".join(overview), False)
@@ -184,17 +184,6 @@ class CquSpiderSpider(scrapy.Spider):
                     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                     self.get_period(duration_full[1][1].lower(), course_item)
 
-        study = response.xpath("//span[@class='course-info-highlight'][contains(text(), 'STUDY "
-                               "MODES')]/following-sibling::*").get()
-        if study:
-            study_holder = []
-            if re.search(r"on campus", study, re.M | re.I):
-                study_holder.append("In Person")
-            if re.search(r"online", study, re.M | re.I):
-                study_holder.append("Online")
-            if study_holder:
-                course_item["modeOfStudy"] = "|".join(study_holder)
-
         location = response.xpath("//span[@class='course-info-highlight'][contains(text(), "
                                   "'AVAILABILITY')]/following-sibling::*").get()
         if location:
@@ -210,6 +199,17 @@ class CquSpiderSpider(scrapy.Spider):
                     campus_holder.append(self.campuses[campus])
             if campus_holder:
                 course_item["campusNID"] = "|".join(campus_holder)
+
+        study = response.xpath("//span[@class='course-info-highlight'][contains(text(), 'STUDY "
+                               "MODES')]/following-sibling::*").get()
+        study_holder = []
+        if study:
+            if re.search(r"online", study, re.M | re.I):
+                study_holder.append("Online")
+        if "campusNID" in course_item:
+            study_holder.append("In Person")
+        if study_holder:
+            course_item["modeOfStudy"] = "|".join(study_holder)
 
         score = response.xpath("//span[@class='course-info-highlight'][contains(text(), 'RANK CUT "
                                "OFF')]/following-sibling::*").get()
@@ -230,12 +230,12 @@ class CquSpiderSpider(scrapy.Spider):
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
-        entry = response.xpath("//label[contains(span/text(), 'Entry Requirements')]/following-sibling::*/*").getall()
+        entry = response.xpath("//label[contains(span/text(), 'Entry Requirements')]/following-sibling::*").getall()
         if entry:
             course_item["entryRequirements"] = strip_tags("".join(entry), False)
 
         career = response.xpath("//label[contains(span/text(), 'Career Opportunities and "
-                                "Outcomes')]/following-sibling::*/*").getall()
+                                "Outcomes')]/following-sibling::*").getall()
         if career:
             course_item["careerPathways"] = strip_tags("".join(career), False)
 
