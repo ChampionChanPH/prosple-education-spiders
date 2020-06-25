@@ -41,7 +41,7 @@ class CquSpiderSpider(scrapy.Spider):
         "Bundaberg": "545",
         "Gladstone Marina": "568",
         "Rockhampton North": "566",
-        "Mackay": "543",
+        "Mackay City": "543",
         "Rockhampton": "547",
         "Noosa": "549",
         "Perth": "558",
@@ -53,7 +53,7 @@ class CquSpiderSpider(scrapy.Spider):
         "Brisbane": "551",
         "Adelaide": "553",
         "Rockhampton City": "544",
-        "Mackay Ooralea": "567"
+        "Mackay": "567"
     }
 
     degrees = {
@@ -193,7 +193,7 @@ class CquSpiderSpider(scrapy.Spider):
                     if re.search("Rockhampton(?!\s(City|North))", location, re.I | re.M):
                         campus_holder.append(self.campuses[campus])
                 elif campus == "Mackay":
-                    if re.search("Mackay(?!\sOoralea)", location, re.I | re.M):
+                    if re.search("Mackay(?!\sCity)", location, re.I | re.M):
                         campus_holder.append(self.campuses[campus])
                 elif re.search(campus, location, re.I | re.M):
                     campus_holder.append(self.campuses[campus])
