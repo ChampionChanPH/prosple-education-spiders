@@ -241,4 +241,11 @@ class CquSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
+        if "courseName" in course_item:
+            if course_item["courseName"] in ["BAS Agent Registration Skill Set",
+                                             "Team Leader Skill Set",
+                                             "Accounting Principles Skills Set",
+                                             "Enterprise Trainer (Presenting)"]:
+                course_item["degreeType"] = "4"
+
         yield course_item
