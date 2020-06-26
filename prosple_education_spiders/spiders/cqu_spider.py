@@ -34,8 +34,8 @@ class CquSpiderSpider(scrapy.Spider):
     start_urls = ['https://www.cqu.edu.au/courses/find-a-course']
     banned_urls = []
     courses = []
-    institution = "The University of Queensland (UQ)"
-    uidPrefix = "AU-UOQ-"
+    institution = "CQUniversity Australia (CQU)"
+    uidPrefix = "AU-CQU-"
 
     campuses = {
         "Bundaberg": "545",
