@@ -38,10 +38,33 @@ class CduSpiderSpider(scrapy.Spider):
         "certificate iii": "4",
         "certificate iv": "4",
         "bachelor": bachelor,
+        "undergradute certificate": "4",
         # "postgraduate certificate": "7",
         # "postgraduate diploma": "8",
         # "artist diploma": "5",
         # "foundation certificate": "4"
+    }
+
+    campuses = {
+        "casuarina": "519",
+        "casuarina campus": "519",
+        "batchelor": "520",
+        "alice springs": "521",
+        "alice springs campus": "521",
+        "dpc alice springs (desert peoples centre)": "521",
+        "melbourne": "11714",
+        "palmerston": "22177",
+        "tennant creek": "523",
+        "katherine": "522",
+        "sydney": "518",
+        "cdu sydney": "518",
+        "waterfront": "517",
+        "waterfront darwin": "517",
+        "cdu waterfront darwin": "517",
+        "darwin": "515",
+        "jabiru": "0",
+        "nhulunbuy": "0",
+        "yulara": "0",
     }
 
     def parse(self, response):
@@ -49,10 +72,17 @@ class CduSpiderSpider(scrapy.Spider):
 
         for row in course_rows:
             course = row.css("a::attr(href)").get()
+
+            campus = row.css(".course-list__locations span::text").getall()
+            campus = [cleanspace(x).lower() for x in campus]
+
+            durations = row.css(".flex-15 div[data-student-type='domestic'] div::text").getall()
+            durations = [cleanspace(x).lower() for x in durations]
+            # print(durations)
             if course not in self.blacklist_urls and course not in self.scraped_urls:
                 if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
                     self.scraped_urls.append(course)
-                    yield response.follow(course, callback=self.course_parse)
+                    yield response.follow(course, callback=self.course_parse, meta={"campus": campus, "durations": durations})
 
         next_page = response.css("a[rel='next']::attr(href)").get()
         if next_page:
@@ -76,7 +106,73 @@ class CduSpiderSpider(scrapy.Spider):
 
 
             course_item.set_course_name(name, self.uidPrefix)
-            course_item.set_sf_dt(self.degrees)
 
-        if "flag" in course_item:
-            yield course_item
+        # course_item.set_sf_dt(self.degrees)
+
+        campus = response.meta["campus"]
+        if campus:
+            holder = []
+            mode_holder = []
+            for i in campus:
+                if i in list(self.campuses.keys()):
+                    holder.append(self.campuses[i])
+                    mode_holder.append("In person")
+
+                elif i in ["online", "remote"]:
+                    mode_holder.append("Online")
+
+                else:
+                    course_item.add_flag("campusNID", "Unrecognized campus name: "+i)
+
+            if mode_holder:
+                course_item["modeOfStudy"] = "|".join(list(set(mode_holder)))
+
+            if holder:
+                course_item["campusNID"] = "|".join(list(set(holder)))
+
+        overview = response.css("div.field-course-overview .field-item p::text").getall()
+        if overview:
+            course_item["overview"] = cleanspace("\n".join(overview))
+            course_item.set_summary(cleanspace(" ".join(overview)))
+
+        durations = response.meta["durations"]
+        if durations:
+            for i in durations:
+                value = re.findall("[\d\.]+", i)
+                if value:
+                    if "part-time" in i:
+                        course_item["durationMinPart"] = value[0]
+                    else:
+                        course_item["durationMinFull"] = value[0]
+
+                    if "year" in i:
+                        course_item["teachingPeriod"] = 1
+                    else:
+                        course_item.add_flag("teachingPeriod", "No teaching period found: " + i)
+
+        domestic_fee = response.css(".field-vet-other-fees p").get()
+        if domestic_fee:
+            if "Domestic Full Fees" in domestic_fee:
+                fees = re.findall("Domestic Full Fees:</strong> \$(.*?)<", domestic_fee)
+                
+                if fees:
+                    fees = [float(x.replace(",", "")) for x in re.findall("[\d\.,]+", fees[0])]
+                    course_item["domesticFeeTotal"] = max(fees)
+
+        code = response.xpath("//div[preceding-sibling::div/text()='CDU Course Code']//p/text()").get()
+        if code:
+            course_item["courseCode"] = cleanspace(code)
+
+        entryRequirements = response.css("#course-entry-requirements p::text").getall()
+        if entryRequirements:
+            course_item["entryRequirements"] = "\n".join(entryRequirements)
+
+        international = response.css("span.shortlist__not-available::text").get()
+        if international:
+            if international != "Not available to international students.":
+                course_item["internationalApps"] = 1
+                course_item["internationalApplyURL"] = response.request.url
+
+
+        # if "flag" in course_item:
+        yield course_item
