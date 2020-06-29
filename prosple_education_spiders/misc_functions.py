@@ -13,7 +13,11 @@ def get_period(str_in):
     if str_in[-1] == "s":
         str_in = str_in[:-1]
 
-    return periods[str_in]
+    if str_in in list(periods.keys()):
+        return periods[str_in]
+
+    else:
+        return 0
 
 
 def convert_months(months):
