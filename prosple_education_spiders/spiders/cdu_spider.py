@@ -111,7 +111,7 @@ class CduSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees)
         if "(Postgraduate Studies)" in course_item["courseName"]:
-            course_item["courseLevel"] = 2
+            course_item["courseLevel"] = "2"
             course_item["group"] = 4
             course_item["canonicalGroup"] = "PostgradAustralia"
 
