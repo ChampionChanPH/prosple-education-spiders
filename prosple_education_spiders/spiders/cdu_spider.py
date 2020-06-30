@@ -23,7 +23,9 @@ class CduSpiderSpider(scrapy.Spider):
     # allowed_domains = ['https://www.cdu.edu.au/course-search']
     start_urls = ['https://www.cdu.edu.au/course-search/']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
-    blacklist_urls = []
+    blacklist_urls = [
+        "https://www.cdu.edu.au/study/ueess00092-restricted-attachment-cordscables-and-plugs-low-voltage-three-phase-electrical-0",
+    ]
     scraped_urls = []
     superlist_urls = []
 
@@ -38,7 +40,7 @@ class CduSpiderSpider(scrapy.Spider):
         "certificate iii": "4",
         "certificate iv": "4",
         "bachelor": bachelor,
-        "undergradute certificate": "4",
+        "undergraduate certificate": "4",
         # "postgraduate certificate": "7",
         # "postgraduate diploma": "8",
         # "artist diploma": "5",
@@ -108,6 +110,10 @@ class CduSpiderSpider(scrapy.Spider):
             course_item.set_course_name(name, self.uidPrefix)
 
         course_item.set_sf_dt(self.degrees)
+        if "(Postgraduate Studies)" in course_item["courseName"]:
+            course_item["courseLevel"] = 2
+            course_item["group"] = 4
+            course_item["canonicalGroup"] = "PostgradAustralia"
 
         campus = response.meta["campus"]
         if campus:
