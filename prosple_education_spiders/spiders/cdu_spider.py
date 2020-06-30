@@ -107,7 +107,7 @@ class CduSpiderSpider(scrapy.Spider):
 
             course_item.set_course_name(name, self.uidPrefix)
 
-        # course_item.set_sf_dt(self.degrees)
+        course_item.set_sf_dt(self.degrees)
 
         campus = response.meta["campus"]
         if campus:
