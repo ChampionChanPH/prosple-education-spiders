@@ -66,9 +66,8 @@ class EcuSpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         courses = response.css('.cardList__listItem')
-        next_page = response.css('.courseSearchResults__pagination li')[-1]
-        if next_page.css('a::attr(title)').extract_first() == "Next Page":
-            next_page = next_page.css("a::attr(href)").extract_first()
+        next_page = response.css("a[title='Next Page']::attr(href)").get()
+        if next_page:
             yield response.follow(next_page, callback=self.parse)
 
         for course in courses:
