@@ -229,7 +229,7 @@ class FuaSpiderSpider(scrapy.Spider):
         if career:
             course_item["careerPathways"] = strip_tags("".join(career), False)
 
-        code = re.findall(r"/([0-9A-Z.]+)\b", response.meta['url'])
+        code = re.findall(r"/([0-9A-Z.]+)\b", course_item["sourceURL"])
         if code:
             course_item["uid"] = course_item["uid"] + "-" + code[0]
 
