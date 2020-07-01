@@ -113,9 +113,6 @@ class FuaSpiderSpider(scrapy.Spider):
     def sub_parse(self, response):
         courses = response.xpath("//div[@class='programs-list']//a[text()='Read more']/@href").getall()
 
-        courses = ["https://study.federation.edu.au/#/course/DOT8",
-                   "https://study.federation.edu.au/#/course/DLLH",
-                   "https://study.federation.edu.au/#/course/DLKK"]
         for item in courses:
             yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 20},
                                 meta={'url': response.urljoin(item)})
