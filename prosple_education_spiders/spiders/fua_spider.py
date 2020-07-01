@@ -196,17 +196,17 @@ class FuaSpiderSpider(scrapy.Spider):
                 else:
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
                                                      / self.teaching_periods[duration_part[0][1].lower()]
-        if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
-            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration,
-                                       re.I | re.M | re.DOTALL)
-            if duration_full:
-                if len(duration_full) == 1:
-                    course_item["durationMinFull"] = float(duration_full[0][0])
-                    self.get_period(duration_full[0][1].lower(), course_item)
-                if len(duration_full) == 2:
-                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
-                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
-                    self.get_period(duration_full[1][1].lower(), course_item)
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration,
+                                           re.I | re.M | re.DOTALL)
+                if duration_full:
+                    if len(duration_full) == 1:
+                        course_item["durationMinFull"] = float(duration_full[0][0])
+                        self.get_period(duration_full[0][1].lower(), course_item)
+                    if len(duration_full) == 2:
+                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                        self.get_period(duration_full[1][1].lower(), course_item)
 
         cricos = response.xpath("//p[@ng-if='prg.program.cricos_code']").get()
         if cricos:
