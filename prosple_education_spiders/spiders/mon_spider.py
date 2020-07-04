@@ -107,12 +107,14 @@ class MonSpiderSpider(scrapy.Spider):
         "Doctorate": {'begin': 'Doctor of ', 'end': ''},
         "PhD": {'begin': 'Doctor of ', 'end': ''},
         "Research master degree": {'begin': 'Master of ', 'end': ' (Research)'},
-        "Graduate diploma": {'begin': 'Graduate Diploma in ', 'end': ''},
+        "Graduate diploma": {'begin': 'Graduate Diploma of ', 'end': ''},
         "Executive master degree": {'begin': 'Executive Master of ', 'end': ''},
         "Bachelor degree (honours)": {'begin': 'Bachelor of ', 'end': ' (Honours)'},
-        "Diploma": {'begin': 'Diploma in ', 'end': ''},
+        "Diploma": {'begin': 'Diploma of ', 'end': ''},
         "Bachelor degree (honours year)": {'begin': 'Bachelor of ', 'end': ' (Honours)'},
-        "Seminar": {'begin': '', 'end': ''}
+        "Seminar": {'begin': '', 'end': ''},
+        "Enabling course": {'begin': '', 'end': ''},
+        "Diploma (available for concurrent study alongside your degree)": {'begin': 'Diploma of ', 'end': ''}
     }
 
     teaching_periods = {
@@ -169,14 +171,18 @@ class MonSpiderSpider(scrapy.Spider):
         degree = str(response.meta['degree'])
         degree = degree.strip()
         degree = degree.split("/")
-        if response.meta['degree'] not in ["Short course", "Tailored program", "Single-day program", "Seminar"]:
+        if response.meta['degree'] not in ["Short course", "Tailored program", "Single-day program", "Seminar",
+                                           "Enabling course"]:
             name = name.split(" and ")
         else:
             name = [name]
 
         holder = []
         for name, degree in zip(name, degree):
-            holder.append(self.degree_split[degree]["begin"] + name + self.degree_split[degree]["end"])
+            if name == "Juris Doctor":
+                holder.append(name)
+            else:
+                holder.append(self.degree_split[degree]["begin"] + name + self.degree_split[degree]["end"])
         if holder:
             course_item.set_course_name(" / ".join(holder), self.uidPrefix)
 
