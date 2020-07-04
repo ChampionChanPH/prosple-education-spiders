@@ -167,16 +167,19 @@ class MonSpiderSpider(scrapy.Spider):
         course_item["domesticApplyURL"] = response.request.url
 
         name = response.xpath("//h1/text()").get()
-        name = name.strip()
+        if not name:
+            name = response.xpath("//strong[@class='h1']/text()").get()
+        if name:
+            name = name.strip()
         degree = str(response.meta['degree'])
-        degree = degree.strip()
-        degree = degree.split("/")
+        if degree:
+            degree = degree.strip()
+            degree = degree.split("/")
         if response.meta['degree'] not in ["Short course", "Tailored program", "Single-day program", "Seminar",
                                            "Enabling course"]:
             name = name.split(" and ")
         else:
             name = [name]
-
         holder = []
         for name, degree in zip(name, degree):
             if name == "Juris Doctor":
