@@ -361,6 +361,9 @@ class MonSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
 
+        if "cricosCode" in course_item:
+            course_item["uid"] = course_item["uid"] + "-" + course_item["cricosCode"]
+
         course_item["internationalApps"] = 1
         course_item["internationalApplyURL"] = course_item["sourceURL"]
 
