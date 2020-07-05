@@ -331,7 +331,6 @@ class Course(scrapy.Item):
                 if rank > self.degrees[degree_match]["rank"]:
                     self["degreeType"] = degree_match
                     rank = self.degrees[degree_match]["rank"]
-                    print(names)
                     if names:
                         if "honour" in names[index].lower() and self["degreeType"] != "3" and "doubleDegree" not in self:
                                 self.add_flag("degreeType", "This could be an honours degree: "+self["courseName"])
