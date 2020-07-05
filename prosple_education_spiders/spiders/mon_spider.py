@@ -78,6 +78,8 @@ class MonSpiderSpider(scrapy.Spider):
         "graduate certificate": "7",
         "graduate diploma": "8",
         "master": research_coursework,
+        "expert master": research_coursework,
+        "executive master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
         "phd": "6",
@@ -158,8 +160,6 @@ class MonSpiderSpider(scrapy.Spider):
                                 "'box-featured__level')]/text()").get()
             yield response.follow(url, callback=self.course_parse, meta={'degree': degree})
 
-        yield response.follow(url, callback=self.course_parse, meta={'degree': degree})
-
     def course_parse(self, response):
         course_item = Course()
 
@@ -173,10 +173,10 @@ class MonSpiderSpider(scrapy.Spider):
         if not name:
             name = response.xpath("//strong[@class='h1']/text()").get()
         if name:
-            split_name = name.split("-")
-            name = split_name[0]
-            if len(split_name) > 1:
-                code = split_name[1]
+            split_name = re.findall(r"(.*) - ([0-9A-Z]+)\b", name)
+            if split_name:
+                name = split_name[0][0]
+                code = split_name[0][1]
                 course_item["courseCode"] = code.strip()
             name = name.strip()
         degree = str(response.meta['degree'])
