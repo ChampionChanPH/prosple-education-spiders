@@ -197,6 +197,9 @@ class MonSpiderSpider(scrapy.Spider):
         if holder:
             course_item.set_course_name(" / ".join(holder), self.uidPrefix)
 
+        if "courseCode" in course_item:
+            course_item["uid"] = course_item["uid"] + "-" + course_item["courseCode"]
+
         overview = response.xpath(
             "//div[contains(@class, 'course-page__overview-panel')]//*[self::p or self::ul]").getall()
         if overview:
