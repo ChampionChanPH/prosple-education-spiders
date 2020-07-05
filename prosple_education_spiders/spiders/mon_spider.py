@@ -175,7 +175,11 @@ class MonSpiderSpider(scrapy.Spider):
         if not name:
             name = response.xpath("//strong[@class='h1']/text()").get()
         if name:
-            name = re.sub("-\s.*", "", name, re.DOTALL)
+            split_name = name.split("-")
+            name = split_name[0]
+            if len(split_name) > 1:
+                code = split_name[1]
+                course_item["courseCode"] = code.strip()
             name = name.strip()
         degree = str(response.meta['degree'])
         if degree:
