@@ -92,7 +92,8 @@ class MonSpiderSpider(scrapy.Spider):
         "associate degree": "1",
         "non-award": "13",
         "no match": "15",
-        "accam - australian certificate": "13"
+        "accam - australian certificate": "13",
+        "juris doctor": "10"
     }
 
     degree_split = {
@@ -150,12 +151,16 @@ class MonSpiderSpider(scrapy.Spider):
     def parse(self, response):
         boxes = response.xpath("//div[contains(@class, 'search-results')]/div[contains(@class, "
                                "'box-featured__wrapper')]")
-        for item in boxes:
-            url = item.xpath(".//div[contains(@class, 'box-featured__blurb')]//h2[contains(@class, "
-                             "'box-featured__heading')]/a/@href").get()
-            degree = item.xpath(".//div[contains(@class, 'box-featured__blurb')]//span[contains(@class, "
-                                "'box-featured__level')]/text()").get()
-            yield response.follow(url, callback=self.course_parse, meta={'degree': degree})
+        # for item in boxes:
+        #     url = item.xpath(".//div[contains(@class, 'box-featured__blurb')]//h2[contains(@class, "
+        #                      "'box-featured__heading')]/a/@href").get()
+        #     degree = item.xpath(".//div[contains(@class, 'box-featured__blurb')]//span[contains(@class, "
+        #                         "'box-featured__level')]/text()").get()
+        #     yield response.follow(url, callback=self.course_parse, meta={'degree': degree})
+
+        url = "https://www.monash.edu/study/courses/find-a-course/2020/juris-doctor-l6005?domestic=true"
+        degree = "Professional entry master degree"
+        yield response.follow(url, callback=self.course_parse, meta={'degree': degree})
 
     def course_parse(self, response):
         course_item = Course()
@@ -170,6 +175,7 @@ class MonSpiderSpider(scrapy.Spider):
         if not name:
             name = response.xpath("//strong[@class='h1']/text()").get()
         if name:
+            name = re.sub("-\s.*", "", name, re.DOTALL)
             name = name.strip()
         degree = str(response.meta['degree'])
         if degree:
