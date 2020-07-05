@@ -153,12 +153,16 @@ class MonSpiderSpider(scrapy.Spider):
     def parse(self, response):
         boxes = response.xpath("//div[contains(@class, 'search-results')]/div[contains(@class, "
                                "'box-featured__wrapper')]")
-        for item in boxes:
-            url = item.xpath(".//div[contains(@class, 'box-featured__blurb')]//h2[contains(@class, "
-                             "'box-featured__heading')]/a/@href").get()
-            degree = item.xpath(".//div[contains(@class, 'box-featured__blurb')]//span[contains(@class, "
-                                "'box-featured__level')]/text()").get()
-            yield response.follow(url, callback=self.course_parse, meta={'degree': degree})
+        # for item in boxes:
+        #     url = item.xpath(".//div[contains(@class, 'box-featured__blurb')]//h2[contains(@class, "
+        #                      "'box-featured__heading')]/a/@href").get()
+        #     degree = item.xpath(".//div[contains(@class, 'box-featured__blurb')]//span[contains(@class, "
+        #                         "'box-featured__level')]/text()").get()
+        #     yield response.follow(url, callback=self.course_parse, meta={'degree': degree})
+
+        url = "https://www.monash.edu/study/courses/find-a-course/2020/regulation-and-compliance-b6020?domestic=true"
+        degree = "Master degree"
+        yield response.follow(url, callback=self.course_parse, meta={'degree': degree})
 
     def course_parse(self, response):
         course_item = Course()
@@ -184,7 +188,7 @@ class MonSpiderSpider(scrapy.Spider):
             degree = degree.strip()
             degree = degree.split("/")
         if response.meta['degree'] not in ["Short course", "Tailored program", "Single-day program", "Seminar",
-                                           "Enabling course"]:
+                                           "Enabling course"] and len(degree) > 1:
             name = name.split(" and ")
         else:
             name = [name]
