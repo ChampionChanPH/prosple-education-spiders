@@ -310,7 +310,7 @@ class Course(scrapy.Item):
 
             if len(study_fields) > 0:
                 self["rawStudyfield"] = [x.lower() for x in study_fields]
-                self["specificStudyField"] = "/".join(study_fields)
+                self["specificStudyField"] = " / ".join(study_fields)
 
             for index in range(len(degree_matches)):
             # for index in range(len(raw_degree_types)):
