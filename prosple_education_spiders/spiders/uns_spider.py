@@ -186,7 +186,7 @@ class UnsSpiderSpider(scrapy.Spider):
             holder = re.findall("\$(\d*),?(\d+)", dom_fee)
             if not holder:
                 holder = re.findall("(\d*),?(\d+)", dom_fee)
-            if dom_fee:
+            if holder:
                 course_item["domesticFeeAnnual"] = holder[0][0] + holder[0][1]
         else:
             print("No Dom Fee")
