@@ -50,7 +50,7 @@ class MurSpiderSpider(scrapy.Spider):
         "graduate diploma": "8",
         "master": research_coursework,
         "executive master": research_coursework,
-        "research masters with training": research_coursework,
+        "research masters with training": "12",
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
@@ -109,8 +109,9 @@ class MurSpiderSpider(scrapy.Spider):
         for item in overview:
             if (not re.search("^<p", item, re.M) and not re.search("^<ul", item, re.M)) or \
                     re.search("class=", item, re.M):
-                break
-            else:
+                if not re.search("About this course", item, re.M):
+                    break
+            elif strip_tags(item).strip() != '':
                 holder.append(item)
         if len(holder) == 1:
             course_item.set_summary(strip_tags(holder[0]))
@@ -212,6 +213,6 @@ class MurSpiderSpider(scrapy.Spider):
                         course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                         self.get_period(duration_full[1][1].lower(), course_item)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/", "\+"], type_delims=["of", "in", "by", "with"])
+        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/", "\+"], type_delims=["of", "in", "by"])
 
         yield course_item
