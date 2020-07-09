@@ -183,11 +183,11 @@ class UnsSpiderSpider(scrapy.Spider):
 
         dom_fee = response.xpath("//dd[preceding-sibling::dt/text()='2020 Indicative First Year Fee']/div/p/text()").get()
         if dom_fee and dom_fee != "$TBC":
-            dom_fee = re.findall("\$(\d*),?(\d+)", dom_fee)
-            if not dom_fee:
-                dom_fee = re.findall("(\d*),?(\d+)", dom_fee)
+            holder = re.findall("\$(\d*),?(\d+)", dom_fee)
+            if not holder:
+                holder = re.findall("(\d*),?(\d+)", dom_fee)
             if dom_fee:
-                course_item["domesticFeeAnnual"] = dom_fee[0][0] + dom_fee[0][1]
+                course_item["domesticFeeAnnual"] = holder[0][0] + holder[0][1]
         else:
             print("No Dom Fee")
 
