@@ -31,7 +31,8 @@ def get_total(field_to_use, field_to_update, course_item):
 class UonSpider(scrapy.Spider):
     name = 'uon_spider'
     allowed_domains = ['www.newcastle.edu.au', 'newcastle.edu.au']
-    start_urls = ['http://www.newcastle.edu.au/degrees/']
+    start_urls = ['https://www.newcastle.edu.au/degrees#filter=level_undergraduate,level_undergraduate_honours,'
+                  'level_postgraduate,level_enabling']
     banned_urls = []
     institution = "University of Newcastle"
     uidPrefix = "AU-UON-"
@@ -116,9 +117,9 @@ class UonSpider(scrapy.Spider):
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//div[@class='grid-block']/*").getall()
+        overview = response.xpath("//h3[@id='description']/following-sibling::*").getall()
         if not overview:
-            overview = response.xpath("//h3[@id='description']/following-sibling::*").getall()
+            overview = response.xpath("//div[@class='grid-block']/*").getall()
         if not overview:
             overview = response.xpath("//h1/following-sibling::*").getall()
         holder = []
@@ -258,6 +259,9 @@ class UonSpider(scrapy.Spider):
                 course_item['lowestScore'] = float(lowest_atar[0])
             if len(median_atar) > 0:
                 course_item['medianScore'] = float(median_atar[0])
+
+        if 'uid' in course_item and 'courseCode' in course_item:
+            course_item["uid"] = course_item["uid"] + '-' + course_item['courseCode']
 
         if "courseName" in course_item:
             course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
