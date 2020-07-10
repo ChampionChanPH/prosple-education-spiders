@@ -113,18 +113,20 @@ class UonSpider(scrapy.Spider):
             course_name = response.xpath("//h1/text()").getall()
         course_name = [x.strip() for x in course_name if x != '']
         course_name = ' '.join(course_name)
-        course_name = re.sub("<img.*?>", "", course_name, re.DOTALL)
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@class='grid-block']/*").getall()
         if not overview:
             overview = response.xpath("//h3[@id='description']/following-sibling::*").getall()
+        if not overview:
+            overview = response.xpath("//h1/following-sibling::*").getall()
         holder = []
         for item in overview:
             if not re.search("^<p", item, re.M) and not re.search("^<ul", item, re.M):
                 break
             elif strip_tags(item).strip() != '':
+                item = re.sub("<img.*?>", "", item, re.DOTALL)
                 holder.append(item)
         if len(holder) == 1:
             course_item.set_summary(strip_tags(holder[0]))
