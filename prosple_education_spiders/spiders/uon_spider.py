@@ -91,7 +91,7 @@ class UonSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        boxes = response.xpath("//table[@class='handbook-degree-listing']/tbody/tr[@data-degreeid]").getall()
+        boxes = response.xpath("//table[@class='handbook-degree-listing']/tbody/tr[@data-degreeid]")
 
         for item in boxes:
             url = item.xpath(".//a[@class='degree-link']/@href").get()
