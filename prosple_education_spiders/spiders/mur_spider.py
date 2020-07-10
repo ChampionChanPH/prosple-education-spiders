@@ -104,6 +104,10 @@ class MurSpiderSpider(scrapy.Spider):
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
+        uid = re.findall("(?<=course-details/).*", course_item["sourceURL"], re.DOTALL)
+        if uid:
+            course_item["uid"] = self.uidPrefix + uid[0]
+
         overview = response.xpath("//*[text()='Course Description']/following-sibling::*").getall()
         holder = []
         for item in overview:
