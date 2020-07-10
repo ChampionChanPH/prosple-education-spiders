@@ -163,8 +163,9 @@ class UonSpider(scrapy.Spider):
         if duration:
             duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\sfull.time)",
                                        duration, re.I | re.M | re.DOTALL)
-            duration_part = re.findall("(?<=part.time.equivalent.up.to.)(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
-                                       duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall(
+                "(?<=part.time.equivalent.up.to.)(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                duration, re.I | re.M | re.DOTALL)
             if not duration_full and duration_part:
                 self.get_period(duration_part[0][1].lower(), course_item)
             if duration_full:
@@ -182,7 +183,8 @@ class UonSpider(scrapy.Spider):
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
                                                      / self.teaching_periods[duration_part[0][1].lower()]
             if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
-                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration,
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration,
                                            re.I | re.M | re.DOTALL)
                 if duration_full:
                     if len(duration_full) == 1:
@@ -257,7 +259,6 @@ class UonSpider(scrapy.Spider):
             if len(median_atar) > 0:
                 course_item['medianScore'] = float(median_atar[0])
 
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
-
         if "courseName" in course_item:
+            course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
             yield course_item
