@@ -217,6 +217,6 @@ class MurSpiderSpider(scrapy.Spider):
                         course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                         self.get_period(duration_full[1][1].lower(), course_item)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/", "\+", ";"], type_delims=["of", "in", "by"])
+        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/', '\+', ';'], type_delims=['of', 'in', 'by'])
 
         yield course_item
