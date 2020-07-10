@@ -264,5 +264,7 @@ class UonSpider(scrapy.Spider):
             course_item["uid"] = course_item["uid"] + '-' + course_item['courseCode']
 
         if "courseName" in course_item:
-            course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
-            yield course_item
+            if course_item['courseName'].lower() not in ['phd and research masters', 'yapug', 'newstep', 'music',
+                                                         'fine art', 'creative and performing arts']:
+                course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
+                yield course_item
