@@ -32,7 +32,7 @@ class UonSpider(scrapy.Spider):
     name = 'uon_spider'
     allowed_domains = ['www.newcastle.edu.au', 'newcastle.edu.au']
     start_urls = ['http://www.newcastle.edu.au/degrees/']
-    banned_urls = ['degrees/yapug']
+    banned_urls = []
     institution = "University of Newcastle"
     uidPrefix = "AU-UON-"
 
@@ -113,10 +113,13 @@ class UonSpider(scrapy.Spider):
             course_name = response.xpath("//h1/text()").getall()
         course_name = [x.strip() for x in course_name if x != '']
         course_name = ' '.join(course_name)
+        course_name = re.sub("<img.*?>", "", course_name, re.DOTALL)
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@class='grid-block']/*").getall()
+        if not overview:
+            overview = response.xpath("//h3[@id='description']/following-sibling::*").getall()
         holder = []
         for item in overview:
             if not re.search("^<p", item, re.M) and not re.search("^<ul", item, re.M):
@@ -224,6 +227,8 @@ class UonSpider(scrapy.Spider):
                 course_item["internationalApplyURL"] = response.request.url
 
         learn = response.xpath("//*[contains(@id, 'what-you-will-study')]/*[contains(@class, 'clearfix')]/*/*").getall()
+        if not learn:
+            learn = response.xpath("//div[@id='section-program-learning-outcomes']/*").getall()
         holder = []
         for item in learn:
             if not re.search("^<p", item, re.M) and not re.search("^<ul", item, re.M):
@@ -252,4 +257,5 @@ class UonSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
-        yield course_item
+        if "courseName" in course_item:
+            yield course_item
