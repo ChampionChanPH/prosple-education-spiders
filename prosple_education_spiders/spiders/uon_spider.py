@@ -130,17 +130,6 @@ class UonSpider(scrapy.Spider):
             course_item.set_summary(strip_tags(holder[0] + holder[1]))
             course_item["overview"] = strip_tags("".join(holder), False)
 
-        # Check format used in page
-        if response.css('div#degree-details').get() is None:
-            overview = response.css('div.grid-block').get()
-        else:
-            overview = re.findall('(?<=Description</h3>).+?(?=<hr>)', response.css('div#degree-details').get(), re.DOTALL)
-            if len(overview) > 0:
-                overview = overview[0]
-            else:
-                overview = ''
-        course_item['overview'] = overview
-
         location = response.xpath("//nav[@class='fast-fact-toggle']//text()").getall()
         if location:
             location = ", ".join(location)
