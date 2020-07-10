@@ -32,7 +32,7 @@ class UonSpider(scrapy.Spider):
     name = 'uon_spider'
     allowed_domains = ['www.newcastle.edu.au', 'newcastle.edu.au']
     start_urls = ['https://www.newcastle.edu.au/degrees#filter=level_undergraduate,level_undergraduate_honours,'
-                  'level_postgraduate,level_enabling']
+                  'level_postgraduate']
     banned_urls = []
     institution = "University of Newcastle"
     uidPrefix = "AU-UON-"
