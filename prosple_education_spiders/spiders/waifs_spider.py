@@ -183,10 +183,17 @@ class WaifsSpiderSpider(scrapy.Spider):
             fee = "".join(fee)
             dom_fee = re.findall("(?<=\$)(\d*),?\s?(\d+)", fee, re.M)
             if dom_fee:
-                course_item["domesticFeeAnnual"] = float(dom_fee[0][0] + dom_fee[0][1])
                 if re.search("per week", fee, re.I | re.M) and 'durationMinFull' in course_item:
-                    course_item['domesticFeeTotal'] = course_item['domesticFeeAnnual'] * course_item['durationMinFull']
+                    if course_item['durationMinFull'] > 52:
+                        course_item["domesticFeeAnnual"] = float(dom_fee[0][0] + dom_fee[0][1]) * 52
+                        course_item['domesticFeeTotal'] = float(dom_fee[0][0] + dom_fee[0][1]) * course_item[
+                            'durationMinFull']
+                    else:
+                        course_item["domesticFeeAnnual"] = float(dom_fee[0][0] + dom_fee[0][1]) * course_item[
+                            'durationMinFull']
+                        course_item['domesticFeeTotal'] = course_item['domesticFeeAnnual']
                 else:
+                    course_item["domesticFeeAnnual"] = float(dom_fee[0][0] + dom_fee[0][1])
                     get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         fee = response.xpath("//a[contains(text(), 'International Fees')]/following-sibling::*/*").getall()
@@ -196,7 +203,8 @@ class WaifsSpiderSpider(scrapy.Spider):
             if int_fee:
                 course_item["internationalFeeAnnual"] = float(int_fee[0][0] + int_fee[0][1])
                 if re.search("per week", fee, re.I | re.M) and 'durationMinFull' in course_item:
-                    course_item['internationalFeeTotal'] = course_item['internationalFeeAnnual'] * course_item['durationMinFull']
+                    course_item['internationalFeeTotal'] = course_item['internationalFeeAnnual'] * course_item[
+                        'durationMinFull']
                 else:
                     get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
