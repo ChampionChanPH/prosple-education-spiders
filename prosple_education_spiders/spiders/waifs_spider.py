@@ -82,7 +82,7 @@ class WaifsSpiderSpider(scrapy.Spider):
         "October": "10",
         "November": "11",
         "December": "12",
-        "Monthly": "01|02|03|04|05|06|07|08|09|10|11|12|"
+        "Monthly": "01|02|03|04|05|06|07|08|09|10|11|12"
     }
 
     def get_period(self, string_to_use, course_item):
@@ -181,7 +181,7 @@ class WaifsSpiderSpider(scrapy.Spider):
         dom_fee = response.xpath("//a[contains(text(), 'Domestic Fees')]/following-sibling::*/*").getall()
         if dom_fee:
             dom_fee = "".join(dom_fee)
-            dom_fee = re.findall("(?<=\$)(\d*),?(\d+)", dom_fee, re.M)
+            dom_fee = re.findall("(?<=\$)(\d*),?\s?(\d+)", dom_fee, re.M)
             if dom_fee:
                 course_item["domesticFeeAnnual"] = float(dom_fee[0][0] + dom_fee[0][1])
                 get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
@@ -189,10 +189,13 @@ class WaifsSpiderSpider(scrapy.Spider):
         int_fee = response.xpath("//a[contains(text(), 'International Fees')]/following-sibling::*/*").getall()
         if int_fee:
             int_fee = "".join(int_fee)
-            int_fee = re.findall("(?<=\$)(\d*),?(\d+)", int_fee, re.M)
+            int_fee = re.findall("(?<=\$)(\d*),?\s?(\d+)", int_fee, re.M)
             if int_fee:
                 course_item["internationalFeeAnnual"] = float(int_fee[0][0] + int_fee[0][1])
-                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+                if re.search("per week", int_fee, re.I | re.M) and 'durationMinFull' in course_item:
+                    course_item['internationalFeeTotal'] = course_item['internationalFeeAnnual'] * course_item['durationMinFull']
+                else:
+                    get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
