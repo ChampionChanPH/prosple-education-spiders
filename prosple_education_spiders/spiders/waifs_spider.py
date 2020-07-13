@@ -94,7 +94,8 @@ class WaifsSpiderSpider(scrapy.Spider):
         "October": "10",
         "November": "11",
         "December": "12",
-        "Monthly": "01|02|03|04|05|06|07|08|09|10|11|12"
+        "Monthly": "01|02|03|04|05|06|07|08|09|10|11|12",
+        "Weekly": "01|02|03|04|05|06|07|08|09|10|11|12"
     }
 
     def get_period(self, string_to_use, course_item):
@@ -205,7 +206,7 @@ class WaifsSpiderSpider(scrapy.Spider):
                             'durationMinFull']
                         course_item['domesticFeeTotal'] = course_item['domesticFeeAnnual']
                 else:
-                    course_item["domesticFeeAnnual"] = float(dom_fee[0][0] + dom_fee[0][1])
+                    course_item['domesticFeeTotal'] = float(dom_fee[0][0] + dom_fee[0][1])
                     get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         fee = response.xpath("//a[contains(text(), 'International Fees')]/following-sibling::*/*").getall()
@@ -214,17 +215,12 @@ class WaifsSpiderSpider(scrapy.Spider):
             int_fee = re.findall("(?<=\$)(\d*),?\s?(\d+)", fee, re.M)
             if int_fee:
                 if re.search("per week", fee, re.I | re.M) and 'durationMinFull' in course_item:
-                    if course_item['durationMinFull'] > 52:
-                        course_item["internationalFeeAnnual"] = float(int_fee[0][0] + int_fee[0][1]) * 52
-                        course_item['internationalFeeTotal'] = float(int_fee[0][0] + int_fee[0][1]) * course_item[
-                            'durationMinFull']
-                    else:
-                        course_item["internationalFeeAnnual"] = float(int_fee[0][0] + int_fee[0][1]) * course_item[
-                            'durationMinFull']
-                        course_item['internationalFeeTotal'] = course_item['internationalFeeAnnual']
+                    course_item["internationalFeeAnnual"] = float(int_fee[0][0] + int_fee[0][1]) * course_item[
+                        'durationMinFull']
+                    course_item['internationalFeeTotal'] = course_item['internationalFeeAnnual']
                 else:
                     course_item["internationalFeeAnnual"] = float(int_fee[0][0] + int_fee[0][1])
-                    get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+                    course_item['internationalFeeTotal'] = course_item['internationalFeeAnnual']
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
