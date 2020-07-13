@@ -112,7 +112,6 @@ class WaifsSpiderSpider(scrapy.Spider):
     def sub_parse(self, response):
         courses = response.xpath("//div[@class='course-intro']/following-sibling::ul//a/@href").getall()
 
-        courses = ['http://waifs.wa.edu.au/course/advanced-diploma-business/']
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
 
