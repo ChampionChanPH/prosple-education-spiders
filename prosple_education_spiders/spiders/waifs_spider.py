@@ -112,6 +112,7 @@ class WaifsSpiderSpider(scrapy.Spider):
     def sub_parse(self, response):
         courses = response.xpath("//div[@class='course-intro']/following-sibling::ul//a/@href").getall()
 
+        courses = ['http://waifs.wa.edu.au/course/advanced-diploma-business/']
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
 
@@ -206,7 +207,7 @@ class WaifsSpiderSpider(scrapy.Spider):
                             'durationMinFull']
                         course_item['domesticFeeTotal'] = course_item['domesticFeeAnnual']
                 else:
-                    course_item['domesticFeeTotal'] = float(dom_fee[0][0] + dom_fee[0][1])
+                    course_item['domesticFeeAnnual'] = float(dom_fee[0][0] + dom_fee[0][1])
                     get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         fee = response.xpath("//a[contains(text(), 'International Fees')]/following-sibling::*/*").getall()
