@@ -20,12 +20,24 @@ def bachelor_honours(course_item):
 
 
 def get_total(field_to_use, field_to_update, course_item):
-    if "durationMinFull" in course_item:
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
         if course_item["teachingPeriod"] == 1:
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 52
 
 
 class WaifsSpiderSpider(scrapy.Spider):
@@ -99,6 +111,7 @@ class WaifsSpiderSpider(scrapy.Spider):
     def sub_parse(self, response):
         courses = response.xpath("//div[@class='course-intro']/following-sibling::ul//a/@href").getall()
 
+        courses = ['http://waifs.wa.edu.au/course/intermediate-english/']
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
 
@@ -201,11 +214,17 @@ class WaifsSpiderSpider(scrapy.Spider):
             fee = "".join(fee)
             int_fee = re.findall("(?<=\$)(\d*),?\s?(\d+)", fee, re.M)
             if int_fee:
-                course_item["internationalFeeAnnual"] = float(int_fee[0][0] + int_fee[0][1])
                 if re.search("per week", fee, re.I | re.M) and 'durationMinFull' in course_item:
-                    course_item['internationalFeeTotal'] = course_item['internationalFeeAnnual'] * course_item[
-                        'durationMinFull']
+                    if course_item['durationMinFull'] > 52:
+                        course_item["internationalFeeAnnual"] = float(int_fee[0][0] + int_fee[0][1]) * 52
+                        course_item['internationalFeeTotal'] = float(int_fee[0][0] + int_fee[0][1]) * course_item[
+                            'durationMinFull']
+                    else:
+                        course_item["internationalFeeAnnual"] = float(int_fee[0][0] + int_fee[0][1]) * course_item[
+                            'durationMinFull']
+                        course_item['internationalFeeTotal'] = course_item['internationalFeeAnnual']
                 else:
+                    course_item["internationalFeeAnnual"] = float(int_fee[0][0] + int_fee[0][1])
                     get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
