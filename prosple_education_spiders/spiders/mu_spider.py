@@ -212,11 +212,11 @@ class MuSpiderSpider(scrapy.Spider):
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
         planning_link = response.xpath("//a[i[@class='nav-icon-planning']]/@href").get()
-
-        if planning_link:
-            yield response.follow(planning_link, callback=self.planning_parse, meta={'item': course_item})
-        else:
-            yield course_item
+        if not re.search("not currently accepting applications", key_facts, re.I | re.M):
+            if planning_link:
+                yield response.follow(planning_link, callback=self.planning_parse, meta={'item': course_item})
+            else:
+                yield course_item
 
     def planning_parse(self, response):
         course_item = response.meta['item']
@@ -237,8 +237,4 @@ class MuSpiderSpider(scrapy.Spider):
             if holder:
                 course_item["entryRequirements"] = strip_tags("".join(holder), False)
 
-        key_facts = response.xpath("//ul[@class='key-facts-list']").getall()
-        if key_facts:
-            key_facts = ", ".join(key_facts)
-        if not re.search("not currently accepting applications", key_facts, re.I | re.M):
-            yield course_item
+        yield course_item
