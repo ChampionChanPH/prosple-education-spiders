@@ -10,6 +10,13 @@ def master(course_item):
     else:
         return "11"
 
+def bachelor(course_item):
+    if "honour" in course_item["courseName"].lower():
+        return "3"
+
+    else:
+        return "2"
+
 class UtsSpiderSpider(scrapy.Spider):
     name = 'uts_spider'
     # allowed_domains = ['https://www.uts.edu.au/future-students']
@@ -25,6 +32,9 @@ class UtsSpiderSpider(scrapy.Spider):
 
     degrees = {
         "master": master,
+        "bachelor": bachelor,
+        "advanced master": 11,
+        "executive master": 11
     }
 
     def parse(self, response):
@@ -56,6 +66,9 @@ class UtsSpiderSpider(scrapy.Spider):
         course_item["courseName"] = response.css("h1::text").extract_first()
         course_item["uid"] = self.uidPrefix + course_item["courseName"]
 
-        course_item.set_sf_dt(self.degrees)
-        yield course_item
+        course_item.set_sf_dt(self.degrees, ["\s"])
+        if "flag" in course_item:
+            # print(response.request.url)
+            # print(course_item["flag"])
+            yield course_item
 
