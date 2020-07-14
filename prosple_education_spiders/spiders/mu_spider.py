@@ -71,6 +71,7 @@ class MuSpiderSpider(scrapy.Spider):
         "no match": "15",
         'te aho paerewa postgraduate diploma': '8',
         'postgraduate diploma': '8',
+        'postgraduate certificate': '7',
         'te aho tātairangi: bachelor': bachelor_honours
     }
 
