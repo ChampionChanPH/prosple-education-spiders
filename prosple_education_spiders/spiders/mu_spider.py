@@ -70,6 +70,7 @@ class MuSpiderSpider(scrapy.Spider):
         "non-award": "13",
         "no match": "15",
         'te aho paerewa postgraduate diploma': '8',
+        'postgraduate diploma': '8',
         'te aho tātairangi: bachelor': bachelor_honours
     }
 
@@ -235,4 +236,8 @@ class MuSpiderSpider(scrapy.Spider):
             if holder:
                 course_item["entryRequirements"] = strip_tags("".join(holder), False)
 
-        yield course_item
+        key_facts = response.xpath("//ul[@class='key-facts-list']").getall()
+        if key_facts:
+            key_facts = ", ".join(key_facts)
+        if not re.search("not currently accepting applications", key_facts, re.I | re.M):
+            yield course_item
