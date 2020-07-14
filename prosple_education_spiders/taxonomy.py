@@ -64,4 +64,3 @@ special_chars = {
     u"\u016A": "U"
 }
 
-
