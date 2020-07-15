@@ -34,7 +34,9 @@ class UtsSpiderSpider(scrapy.Spider):
         "master": master,
         "bachelor": bachelor,
         "advanced master": "11",
-        "executive master": "11"
+        "executive master": "11",
+        "juris doctor master": "11",
+        "juris doctor graduate certificate": "7"
     }
 
     campus_map = {
@@ -107,23 +109,24 @@ class UtsSpiderSpider(scrapy.Spider):
             course_item["courseStructure"] = "\n".join([cleanspace(x) for x in structure])
 
         duration = response.xpath("//p[preceding-sibling::h3/text()='Course Duration']/text()").get()
-        if cleanspace(duration):
+        if duration:
             duration = cleanspace(duration)
-            value = re.findall("[\d\.]+", duration)[0]
-            if value:
-                if "year" in duration.lower():
-                    course_item["teachingPeriod"] = 1
-                    if "part" in duration.lower():
-                        course_item["durationMinPart"] = value
-                    elif "full" in duration.lower():
-                        course_item["durationMinFull"] = value
+            if duration != "":
+                value = re.findall("[\d\.]+", duration)[0]
+                if value:
+                    if "year" in duration.lower():
+                        course_item["teachingPeriod"] = 1
+                        if "part" in duration.lower():
+                            course_item["durationMinPart"] = value
+                        elif "full" in duration.lower():
+                            course_item["durationMinFull"] = value
+                        else:
+                            course_item.add_flag("duration", "Unknown duration pattern: "+duration)
                     else:
-                        course_item.add_flag("duration", "Unknown duration pattern: "+duration)
-                else:
-                    course_item.add_flag("teachingPeriod", "Unexpected period: "+duration)
+                        course_item.add_flag("teachingPeriod", "Unexpected period: "+duration)
 
-            else:
-                course_item.add_flag("duration", "No duration value found: "+duration)
+                else:
+                    course_item.add_flag("duration", "No duration value found: "+duration)
 
         campus = response.xpath("//p[preceding-sibling::h3/text()='Location']/text()").get()
         if campus:
