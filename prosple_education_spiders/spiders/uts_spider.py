@@ -33,9 +33,24 @@ class UtsSpiderSpider(scrapy.Spider):
     degrees = {
         "master": master,
         "bachelor": bachelor,
-        "advanced master": 11,
-        "executive master": 11
+        "advanced master": "11",
+        "executive master": "11"
     }
+
+    campus_map = {
+        "blackfriars": "11789",
+        "ultimo": "11717",
+        "sydney": "820",
+        "moore park": "819",
+        "city campus": "818",
+        "distance": "11724",
+        "hong kong": "11723",
+        "shanghai": "11720",
+        "city campus (sydney)": "11719",
+        "city": "11779"
+    }
+
+    holder = []
 
     def parse(self, response):
         categories = response.css("nav.content-menu--course-areas a::attr(href)").extract()
@@ -67,8 +82,67 @@ class UtsSpiderSpider(scrapy.Spider):
         course_item["uid"] = self.uidPrefix + course_item["courseName"]
 
         course_item.set_sf_dt(self.degrees, ["\s"])
-        if "flag" in course_item:
-            # print(response.request.url)
-            # print(course_item["flag"])
-            yield course_item
+
+        overview = response.css(".read-more p::text").getall()
+        if overview:
+            overview = [cleanspace(x) for x in overview]
+            course_item["overview"] = "\n".join(overview)
+            course_item.set_summary(" ".join(overview))
+
+        code = response.xpath("//dd[preceding-sibling::dt/text()='UTS']/span/text()").get()
+        if code:
+            course_item["courseCode"] = cleanspace(code)
+
+        cricos = response.xpath("//dd[preceding-sibling::dt/text()='CRICOS']/text()").get()
+        if cricos:
+            course_item["cricosCode"] = cleanspace(cricos)
+            course_item["internationalApps"] = 1
+
+        careers = response.xpath("//p[preceding-sibling::h2/text()='Careers']/text()").getall()
+        if careers:
+            course_item["careerPathways"] = "\n".join([cleanspace(x) for x in careers])
+
+        structure = response.xpath("//p[preceding-sibling::h2/text()='Course structure']/text()").getall()
+        if structure:
+            course_item["courseStructure"] = "\n".join([cleanspace(x) for x in structure])
+
+        duration = response.xpath("//p[preceding-sibling::h3/text()='Course Duration']/text()").get()
+        if cleanspace(duration):
+            duration = cleanspace(duration)
+            value = re.findall("[\d\.]+", duration)[0]
+            if value:
+                if "year" in duration.lower():
+                    course_item["teachingPeriod"] = 1
+                    if "part" in duration.lower():
+                        course_item["durationMinPart"] = value
+                    elif "full" in duration.lower():
+                        course_item["durationMinFull"] = value
+                    else:
+                        course_item.add_flag("duration", "Unknown duration pattern: "+duration)
+                else:
+                    course_item.add_flag("teachingPeriod", "Unexpected period: "+duration)
+
+            else:
+                course_item.add_flag("duration", "No duration value found: "+duration)
+
+        campus = response.xpath("//p[preceding-sibling::h3/text()='Location']/text()").get()
+        if campus:
+            campus = [x.strip(" ") for x in campus.lower().split(",")]
+            campus_holder = []
+            mode_holder = []
+            for item in campus:
+                if "online" in item:
+                    mode_holder.append("Online")
+
+                if item in list(self.campus_map.keys()):
+                    mode_holder.append("In person")
+                    campus_holder.append(self.campus_map[item])
+            course_item["campusNID"] = "|".join(list(set(campus_holder)))
+            course_item["modeOfStudy"] = "|".join(list(set(mode_holder)))
+
+        # print(self.holder)
+        # if "flag" in course_item:
+        #     # print(response.request.url)
+        #     # print(course_item["flag"])
+        yield course_item
 
