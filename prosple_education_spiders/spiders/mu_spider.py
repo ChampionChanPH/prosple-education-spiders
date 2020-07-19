@@ -211,6 +211,9 @@ class MuSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
+        course_item['group'] = 2
+        course_item['canonicalGroup'] = 'GradNewZealand'
+
         planning_link = response.xpath("//a[i[@class='nav-icon-planning']]/@href").get()
         if not re.search("not currently accepting applications", key_facts, re.I | re.M):
             if planning_link:
