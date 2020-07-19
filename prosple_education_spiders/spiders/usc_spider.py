@@ -122,14 +122,22 @@ class UscSpiderSpider(scrapy.Spider):
             if annual_int_fee:
                 annual_int_fee = annual_int_fee.strip("A$").replace(",", "")
                 course_item["internationalFeeAnnual"] = annual_int_fee
+        summary = response.css(".feature-card-content h4::text").get()
+        if summary:
+            course_item.set_summary(cleanspace(summary))
 
-        duration = response.xpath("//dd[preceding-sibling::dt[contains(text(),'Duration')]]/text()").get()
-        if duration:
-            pattern = re.sub("[\d\.]+", "_", duration)
-            if pattern not in self.holder:
-                self.holder.append(pattern)
+        overview = response.css(".feature-card-lead p::text").getall()
+        if overview:
+            course_item["overview"] = "\n".join([cleanspace(x) for x in overview])
 
-        print(self.holder)
+
+        # duration = response.xpath("//dd[preceding-sibling::dt[contains(text(),'Program length (full-time)')]]/text()").get()
+        # if duration:
+        #     pattern = re.sub("[\d\.]+", "_", duration)
+        #     if pattern not in self.holder:
+        #         self.holder.append(pattern)
+
+        # print(self.holder)
 
         # if "flag" in course_item:
-        #     yield course_item
+        yield course_item
