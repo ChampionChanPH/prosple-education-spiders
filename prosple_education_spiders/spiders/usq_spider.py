@@ -4,22 +4,14 @@
 from ..standard_libs import *
 
 def master(course_item):
-    if course_item["courseLevel"] == "research":
+    if "research" in course_item["courseName"].lower():
         return "12"
 
     else:
         return "11"
 
 def bachelor(course_item):
-    if "doubleDegree" in course_item:
-        if course_item["doubleDegree"] == 1:
-            index = 1 if "degreeType" in course_item else 0
-            if "honour" in course_item["rawStudyfield"][index]:
-                return "3"
-            else:
-                return "2"
-
-    elif "honours" in course_item["sourceURL"]:
+    if "honours" in course_item["sourceURL"]:
         return "3"
 
     else:
@@ -117,9 +109,14 @@ class UsqSpiderSpider(scrapy.Spider):
     start_urls = ['https://www.usq.edu.au/study/']
 
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
-    blacklist_urls = ["https://www.usc.edu.au/learn/courses-and-programs/headstart-program-year-11-and-12-students"]
+    blacklist_urls = [
+        "https://www.usc.edu.au/learn/courses-and-programs/headstart-program-year-11-and-12-students",
+        "https://www.usq.edu.au/study/short-programs",
+        "https://www.usq.edu.au/study/degrees/single-courses",
+        "https://www.usq.edu.au/study/degrees/english-language-programs"
+    ]
     scraped_urls = []
-    superlist_urls = ["https://www.usq.edu.au/study/degrees/graduate-diploma-of-science/agricultural-science"]
+    superlist_urls = []
 
     institution = "University of Southern Queensland (USQ)"
     uidPrefix = "AU-USQ-"
@@ -128,8 +125,6 @@ class UsqSpiderSpider(scrapy.Spider):
         "master": master,
         "bachelor": bachelor
     }
-
-    degree_delims = ["\s"]
 
     valid_headers = {
         # 'OP/Rank': rank,
@@ -140,30 +135,36 @@ class UsqSpiderSpider(scrapy.Spider):
         'Campus': campus
     }
 
+    campus_map = {
+        "springfield": "788",
+        "toowoomba": "787",
+        "ipswich": "11715",
+        "stanthorpe": "52578"
+    }
+
+    holder = []
+
 
     def parse(self, response):
         sub_categories = response.css(".degree-navigation__bottom a::attr(href)").extract()
 
         for sub_category in sub_categories:
-            yield response.follow(response.urljoin(sub_category), callback=self.category_page)
+            if response.urljoin(sub_category) not in self.blacklist_urls:
+                yield response.follow(response.urljoin(sub_category), callback=self.category_page)
 
     def category_page(self, response):
-        categories = response.css(".button-grid a::attr(href)").extract()
+        course_cards = response.css("tr.c-program-table__row")
+        for row in course_cards:
+            cells = row.css("td")
+            course = cells[0].css("a.c-program-table__program-link::attr(href)").get()
+            mode = cells[1].css("li::text").getall()
+            campus = cells[2].css("li::text").getall()
+            start = cells[3].css("li::text").getall()
+            if course not in self.blacklist_urls and course not in self.scraped_urls:
+                if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
+                    self.scraped_urls.append(course)
+                    yield response.follow(course, callback=self.course_parse, meta={"mode": mode, "campus": campus, "start": start})
 
-        for category in categories:
-            yield response.follow(response.urljoin(category), callback=self.sub_category_page)
-
-    def sub_category_page(self, response):
-        tabs = response.css("div.tab-pane")
-        for tab in tabs:
-            level = tab.css("div::attr(id)").extract_first()
-            if level != "professional-development":
-                courses = tab.css("a::attr(href)").extract()
-                for course in [response.urljoin(x) for x in courses]:
-                    if course not in self.blacklist_urls and course not in self.scraped_urls:
-                        if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
-                            self.scraped_urls.append(course)
-                            yield response.follow(course, callback=self.course_parse, meta={'level': level})
 
     def course_parse(self, response):
         course_item = Course()
@@ -174,62 +175,108 @@ class UsqSpiderSpider(scrapy.Spider):
         course_item["institution"] = self.institution
         course_item["domesticApplyURL"] = response.request.url
 
-        course_item["courseName"] = response.css("h1::text").extract_first()
-        if "honour" in course_item["courseName"]:
-            course_item.add_flag("degreeType", course_item["courseName"] + " could be honours.")
-        course_item["uid"] = self.uidPrefix + course_item["courseName"]
-        course_item["courseLevel"] = response.meta["level"]  # Assigning a value to help with master (research) vs master (coursework)
-        course_item.set_sf_dt(self.degrees, degree_delims=self.degree_delims)
+        name = response.css("h1::text").get()
+        if name:
+            course_item.set_course_name(cleanspace(name), self.uidPrefix)
 
-        # info_block = response.css("div.aligned-content-top")
-        # if len(info_block) > 1:
-        #     info_block = response.css("div#overview div.aligned-content-top")
+        course_item.set_sf_dt(self.degrees, ["and"])
+
+        mode = response.meta["mode"]
+        if mode:
+            holder = []
+            mode = " ".join(mode).lower()
+            if "online" in mode or "external" in mode:
+                holder.append("Online")
+            if "on-campus" in mode:
+                holder.append("In person")
+
+            if holder:
+                course_item["modeOfStudy"] = "|".join(holder)
+
+        campus = response.meta["campus"]
+        if campus:
+            holder = []
+            for item in [cleanspace(x).lower() for x in campus if x != "-"]:
+                if item in list(self.campus_map.keys()):
+                    holder.append(self.campus_map[item])
+
+                else:
+                    course_item.add_flag("campusNID", "Found new campus: " + item)
+            if holder:
+                course_item["campusNID"] = "|".join(holder)
+
+        start = response.meta["start"]
+        if start:
+            months = convert_months(start)
+            if months:
+                course_item["startMonths"] = "|".join(months)
+
+        overview = response.xpath("//ul[preceding-sibling::h2/text()='Overview']/li/text()").getall()
+        if overview:
+            overview = "\n".join(overview)
+            course_item["overview"] = overview
+            course_item.set_summary(overview)
+
+        career = response.xpath("//ul[preceding-sibling::h2/text()='Career outcomes']/li/text()").getall()
+        if career:
+            career = "\n".join(career)
+            course_item["careerPathways"] = career
+
+        structure = response.xpath("//p[preceding-sibling::h2/text()='Degree structure']/text()").getall()
+        if structure:
+            course_item["courseStructure"] = "\n".join([cleanspace(x) for x in structure])
+
+        domestic_fee = response.xpath("//td[preceding-sibling::td[contains(text(),'Domestic full fee')]]/text()").get()
+        if domestic_fee:
+            domestic_fee = re.findall("[\d\.]+", domestic_fee)
+            if domestic_fee:
+                course_item["domesticFeeAnnual"] = domestic_fee[0]
+        # entry = response.xpath("//div[preceding-sibling::div//h2/text()='Entry requirements']//ul")
+        # if entry:
+        #     entry = entry[0].css("li::text").getall()
+        #     course_item["entryRequirements"] = "\n".join(entry)
+        #     for i in campus:
+        #         if i not in self.holder:
+        #             self.holder.append(i)
         #
-        # # course_item["overviewSummary"] = info_block.css("h2::text").extract_first()
-        # a = info_block.css("div").extract_first()
-        # # print(a)
-        # a = re.findall("^<div.*?>\n(.(?s)*?)</?[hd]", a)
-        # a = re.sub("<.*?>","",a[0])
-        # print(a)
+        # print(self.holder)
+        # summary_block = response.css("div#summary")
+        # sections = summary_block.css("div.program-details__detail-section")
+        # for section in sections:
+        #     heading = cleanspace(section.css(".program-details__detail-heading::text").extract_first())
+        #     if heading in list(self.valid_headers.keys()):
+        #         value_in = section.css("ul")
+        #         final_value = self.valid_headers[heading](value_in)
+        #         course_item[final_value["field"]] = final_value["value"]
+        #         # print(final_value)
+        #         if final_value["message"] != "no error":
+        #             course_item.add_flag(final_value["field"], final_value["message"])
 
 
-        summary_block = response.css("div#summary")
-        sections = summary_block.css("div.program-details__detail-section")
-        for section in sections:
-            heading = cleanspace(section.css(".program-details__detail-heading::text").extract_first())
-            if heading in list(self.valid_headers.keys()):
-                value_in = section.css("ul")
-                final_value = self.valid_headers[heading](value_in)
-                course_item[final_value["field"]] = final_value["value"]
-                # print(final_value)
-                if final_value["message"] != "no error":
-                    course_item.add_flag(final_value["field"], final_value["message"])
-
-
-
-        dom_int = response.css(".dom-int-selector__details")
-        if len(dom_int) == 1:
-            international = response.request.url + "/international"
-            yield response.follow(international, callback=self.course_parse_international, errback=self.no_international, meta={'item': course_item})
-
-        elif len(dom_int) == 0:
-            yield course_item
-
-        # if "flag" in course_item:
-        #     print(response.request.url)
-        #     print(course_item["flag"])
-
-    def no_international(self, response):
-        course_item = response.meta["item"]
         yield course_item
-
-    def course_parse_international(self, response):
-        course_item = response.meta["item"]
-        summary = response.css("#summary").extract_first()
-        cricos = re.findall("CRICOS: ([\w]+)", summary)[0]
-        fees = response.css("#fees").extract_first()
-        fees = re.findall("AUD (\d+)", fees)
-        total_fee = max([int(x) for x in fees])
-        print(total_fee)
-        print(cricos)
-        yield course_item
+    #     dom_int = response.css(".dom-int-selector__details")
+    #     if len(dom_int) == 1:
+    #         international = response.request.url + "/international"
+    #         yield response.follow(international, callback=self.course_parse_international, errback=self.no_international, meta={'item': course_item})
+    #
+    #     elif len(dom_int) == 0:
+    #         yield course_item
+    #
+    #     # if "flag" in course_item:
+    #     #     print(response.request.url)
+    #     #     print(course_item["flag"])
+    #
+    # def no_international(self, response):
+    #     course_item = response.meta["item"]
+    #     yield course_item
+    #
+    # def course_parse_international(self, response):
+    #     course_item = response.meta["item"]
+    #     summary = response.css("#summary").extract_first()
+    #     cricos = re.findall("CRICOS: ([\w]+)", summary)[0]
+    #     fees = response.css("#fees").extract_first()
+    #     fees = re.findall("AUD (\d+)", fees)
+    #     total_fee = max([int(x) for x in fees])
+    #     print(total_fee)
+    #     print(cricos)
+    #     yield course_item
