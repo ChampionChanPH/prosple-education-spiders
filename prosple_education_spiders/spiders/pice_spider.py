@@ -126,11 +126,11 @@ class PiceSpiderSpider(scrapy.Spider):
                 course_item.set_summary(strip_tags(holder[0]))
                 course_item["overview"] = strip_tags("".join(holder), False)
 
-        if course_name['courseName'] == 'Cambridge Suite':
+        if course_item['courseName'] == 'Cambridge Suite':
             course_item['startMonths'] = '01|03|09'
-        elif course_name['courseName'] == 'EAP':
+        elif course_item['courseName'] == 'EAP':
             course_item['startMonths'] = '01|03|05|07|09|11'
-        elif course_name['courseName'] == 'General English':
+        elif course_item['courseName'] == 'General English':
             course_item['startMonths'] = '01|02|03|04|05|06|07|08|09|10|11|12'
 
         course_item["internationalApps"] = 1
