@@ -135,10 +135,11 @@ class PiceSpiderSpider(scrapy.Spider):
 
         course_item["internationalApps"] = 1
         course_item["internationalApplyURL"] = response.request.url
-        course_item['group'] = 23
-        course_item['canonicalGroup'] = 'StudyPerth'
         course_item['campusNID'] = '30920'
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
+
+        course_item['group'] = 23
+        course_item['canonicalGroup'] = 'StudyPerth'
 
         yield course_item
