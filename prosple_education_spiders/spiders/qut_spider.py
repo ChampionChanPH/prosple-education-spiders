@@ -168,7 +168,8 @@ class QutSpiderSpider(scrapy.Spider):
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.append(self.campuses[campus])
-        delivery = response.xpath("//dt[contains(text(), 'Delivery')]/following-sibling::dd/text()").get()
+        delivery = response.xpath("//div[@class='quick-box-inner']//dt[contains(text(), "
+                                  "'Delivery')]/following-sibling::dd/text()").get()
         study_holder = []
         if delivery is not None:
             if re.search("on.?campus", delivery, re.I):
