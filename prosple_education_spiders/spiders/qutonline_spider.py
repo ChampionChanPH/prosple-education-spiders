@@ -100,7 +100,6 @@ class QutonlineSpiderSpider(scrapy.Spider):
     def parse(self, response):
         courses = response.xpath("//div[@class='course-title']/a/@href").getall()
 
-        courses = ['https://online.qut.edu.au/online-courses/it-planning-engineering/master-of-project-management/']
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
 
