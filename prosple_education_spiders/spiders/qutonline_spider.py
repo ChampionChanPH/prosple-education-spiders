@@ -45,15 +45,11 @@ class QutonlineSpiderSpider(scrapy.Spider):
     allowed_domains = ['online.qut.edu.au']
     start_urls = ['https://online.qut.edu.au/online-courses/']
     banned_urls = ['']
-    institution = 'Deakin University'
+    institution = 'QUT (Queensland University of Technology)'
     uidPrefix = 'AU-QUT-ON-'
 
     campuses = {
-        "Cloud": "52597",
-        "Warrnambool": "584",
-        "Waurn Ponds": "582",
-        "Waterfront": "581",
-        "Burwood": "579"
+        "Online": "53412"
     }
 
     degrees = {
@@ -144,6 +140,7 @@ class QutonlineSpiderSpider(scrapy.Spider):
                 course_item["internationalApplyURL"] = response.request.url
 
         course_item['modeOfStudy'] = 'Online'
+        course_item['campusNID'] = self.campuses['Online']
 
         duration = response.xpath("//*[contains(text(), 'Duration')]/following-sibling::*").get()
         if duration:
