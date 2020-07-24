@@ -100,6 +100,8 @@ class QutonlineSpiderSpider(scrapy.Spider):
     def parse(self, response):
         courses = response.xpath("//div[@class='course-title']/a/@href").getall()
 
+        courses = ['https://online.qut.edu.au/online-courses/it-planning-engineering/master-of-project-management/',
+                   'https://online.qut.edu.au/online-courses/law-justice/graduate-certificate-in-data-and-new-technology-law/']
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
 
@@ -134,9 +136,10 @@ class QutonlineSpiderSpider(scrapy.Spider):
         if entry:
             holder.extend(entry)
         for item in holder:
-            if not re.search('not available to international students', item):
+            if re.search('https://online.qut.edu.au/international-students/', item):
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
+                break
 
         course_item['modeOfStudy'] = 'Online'
         course_item['campusNID'] = self.campuses['Online']
