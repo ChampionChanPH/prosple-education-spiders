@@ -141,7 +141,11 @@ class PhaSpiderSpider(scrapy.Spider):
                 if not re.search('<img', item, re.M):
                     holder.append(item)
         if holder:
-            course_item.set_summary(strip_tags(holder[0]))
+            if holder[0] in ['<p><strong>Our Value Proposition to You</strong></p>',
+                '<p><strong>Partnering with you in Global Leadership and Business Communication</strong></p>']
+                course_item.set_summary(strip_tags(holder[1]))
+            else:
+                course_item.set_summary(strip_tags(holder[0]))
             course_item["overview"] = strip_tags(''.join(holder), False)
 
         duration = response.xpath("//div[@class='top-info']/*[starts-with(text(), 'Course')]/*/text()").getall()
