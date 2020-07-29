@@ -141,8 +141,7 @@ class PhaSpiderSpider(scrapy.Spider):
                 if not re.search('<img', item, re.M):
                     holder.append(item)
         if holder:
-            if holder[0] in ['<p><strong>Our Value Proposition to You</strong></p>',
-                '<p><strong>Partnering with you in Global Leadership and Business Communication</strong></p>']
+            if len(holder[0]) <= 95:
                 course_item.set_summary(strip_tags(holder[1]))
             else:
                 course_item.set_summary(strip_tags(holder[0]))
