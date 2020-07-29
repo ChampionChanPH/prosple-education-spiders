@@ -270,7 +270,7 @@ class UonSpider(scrapy.Spider):
                                                          'fine art', 'creative and performing arts']:
                 course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
                 if 'degreeType' in course_item:
-                    if course_item['degreeType'] == 3:
+                    if course_item['degreeType'] == 'Bachelor (Honours)':
                         course_item['group'] = 3
                         course_item['canonicalGroup'] = 'The Uni Guide'
                 yield course_item
