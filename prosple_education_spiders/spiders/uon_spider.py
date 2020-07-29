@@ -32,7 +32,9 @@ class UonSpider(scrapy.Spider):
     name = 'uon_spider'
     allowed_domains = ['www.newcastle.edu.au', 'newcastle.edu.au']
     start_urls = ['https://www.newcastle.edu.au/degrees']
-    banned_urls = []
+    banned_urls = ['degrees/master-engineering-management',
+                   'degrees/graduate-certificate-financial-planning',
+                   'degrees/graduate-certificate-integrated-science-technology-engineering-mathematics']
     institution = "University of Newcastle"
     uidPrefix = "AU-UON-"
 
@@ -97,7 +99,8 @@ class UonSpider(scrapy.Spider):
             url = item.xpath(".//a[@class='degree-link']/@href").get()
             intake = item.xpath(".//td[@class='no-further-intake']").get()
             if not intake:
-                yield response.follow(url, callback=self.course_parse)
+                if url not in self.banned_urls:
+                    yield response.follow(url, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -266,4 +269,8 @@ class UonSpider(scrapy.Spider):
             if course_item['courseName'].lower() not in ['phd and research masters', 'yapug', 'newstep', 'music',
                                                          'fine art', 'creative and performing arts']:
                 course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
+                if 'degreeType' in course_item:
+                    if course_item['degreeType'] == 3:
+                        course_item['group'] = 3
+                        course_item['canonicalGroup'] = 'The Uni Guide'
                 yield course_item
