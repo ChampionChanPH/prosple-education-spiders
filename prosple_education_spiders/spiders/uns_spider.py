@@ -95,7 +95,7 @@ class UnsSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.request.url
+        # course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.css("h1.banner__title::text").extract_first()
         award = response.xpath("//dd[preceding-sibling::dt/text()='Award']/div/p/text()").get()
@@ -211,7 +211,7 @@ class UnsSpiderSpider(scrapy.Spider):
         student_type = response.css(".banner__student-type-msg::text").extract_first()
         if student_type != "Only for domestic students":
             course_item["internationalApps"] = 1
-            course_item["internationalApplyURL"] = re.sub("domestic$", "international", response.request.url)
+            # course_item["internationalApplyURL"] = re.sub("domestic$", "international", response.request.url)
 
         #international
         # international = re.sub("domestic$","international", response.request.url)
