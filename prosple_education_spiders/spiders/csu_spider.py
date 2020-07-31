@@ -109,7 +109,7 @@ class CsuSpiderSpider(scrapy.Spider):
         course_item["published"] = 1
         course_item["institution"] = self.institution
 
-        course_item["domesticApplyURL"] = response.meta['url']
+        # course_item["domesticApplyURL"] = response.meta['url']
 
         course_name = response.xpath("//div[@id='banner-heading']/text()").get()
         if course_name is not None:
@@ -161,7 +161,7 @@ class CsuSpiderSpider(scrapy.Spider):
             if len(cricos) > 0:
                 cricos = set(cricos)
                 course_item["cricosCode"] = ", ".join(cricos)
-                course_item["internationalApplyURL"] = response.meta['url']
+                # course_item["internationalApplyURL"] = response.meta['url']
 
         int_check = response.xpath("//div[@class='nonInternational']").get()
         if int_check is None:
