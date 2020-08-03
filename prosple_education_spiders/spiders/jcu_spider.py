@@ -237,6 +237,10 @@ class JcuSpiderSpider(scrapy.Spider):
         if starts:
             starts = ", ".join(starts).split(", ")
             starts = convert_months(starts)
-        course_item["startMonths"] = "|".join(list(set(course_item["startMonths"]+starts)))
+
+        if "startMonths" in course_item:
+            course_item["startMonths"] = "|".join(list(set(course_item["startMonths"]+starts)))
+        elif starts:
+            course_item["startMonths"] = "|".join(list(set(starts)))
 
         yield course_item
