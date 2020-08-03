@@ -22,7 +22,7 @@ class JcuSpiderSpider(scrapy.Spider):
     uidPrefix = "AU-JCU-"
 
     holder = []
-
+    counter = 0
     campus_map = {
         "mount isa": "53598",
         "mackay": "53604",
@@ -50,12 +50,54 @@ class JcuSpiderSpider(scrapy.Spider):
             if course not in self.blacklist_urls and course not in self.scraped_urls:
                 if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
                     self.scraped_urls.append(course)
-                    yield response.follow(course, callback=self.course_parse)
+                    if "online.jcu.edu.au" in course:
+                        yield response.follow(course, callback=self.online_course_parse)
+                    else:
+                        yield response.follow(course, callback=self.course_parse)
 
+    def online_course_parse(self, response):
+        course_item = Course()
+        course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
+        course_item["sourceURL"] = response.request.url
+        course_item["published"] = 1
+        course_item["institution"] = self.institution
+
+        name = response.css("figure h1::text").get()
+        if name:
+            course_item.set_course_name(name, self.uidPrefix)
+        course_item.set_sf_dt(self.degrees)
+        course_item["modeOfStudy"] = "Online"
+
+        overview = response.css(".stuckright p::text").getall()
+        if overview:
+            course_item["overview"] = "\n".join(overview[:-1])
+            course_item.set_summary(" ".join(overview[:-1]))
+
+        start = response.css(".views-field-field-course-study-periods div::text").get()
+        if start:
+            course_item["startMonths"] = "|".join(convert_months([cleanspace(x) for x in start.split(",")]))
+
+        duration = response.css(".views-field-field-course-duration div::text").get()
+        if duration:
+            value = re.findall("[\d\.]+", duration)
+            if value:
+                if "part-time" in duration:
+                    course_item["durationMinPart"] = value
+                else:
+                    course_item["durationMinFull"] = value
+            if "month" in duration.lower():
+                course_item["teachingPeriod"] = 12
+            else:
+                course_item.add_flag("teachingPeriod", "New period found: " + duration)
+
+
+        yield course_item
 
     def course_parse(self, response):
+        # if "online.jcu.edu.au" in response.request.url:
+        #     self.counter += 1
+        # print(self.counter)
         course_item = Course()
-
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
@@ -141,9 +183,12 @@ class JcuSpiderSpider(scrapy.Spider):
         if international:
             yield response.follow(response.request.url+"?international", callback=self.int_course_parse, meta={"item": course_item})
         else:
-            course_item["campusNID"] = "|".join(course_item["campusNID"])
-            course_item["modeOfStudy"] = "|".join(list(set(course_item["modeOfStudy"])))
-            course_item["startMonths"] = "|".join(list(set(course_item["startMonths"])))
+            if "campusNID" in course_item:
+                course_item["campusNID"] = "|".join(course_item["campusNID"])
+            if "modeOfStudy" in course_item:
+                course_item["modeOfStudy"] = "|".join(list(set(course_item["modeOfStudy"])))
+            if "startMonths" in course_item:
+                course_item["startMonths"] = "|".join(list(set(course_item["startMonths"])))
             yield course_item
 
     def int_course_parse(self, response):
