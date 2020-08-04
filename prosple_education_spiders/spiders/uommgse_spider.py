@@ -142,9 +142,11 @@ class UommgseSpiderSpider(scrapy.Spider):
                 overview = response.xpath("//div[@data-test='course-overview-content']/*/*").getall()
         overview_list = []
         for item in overview:
-            if (not re.search("^<p", item) and not re.search("^<div><p", item) and overview.index(item) != 0) or \
-                    re.search("notice--default", item):
+            if not re.search("^<p", item) and not re.search("^<ul", item) and not re.search("^<div><p", item) and \
+                    overview.index(item) != 0:
                 break
+            elif re.search("notice--default", item):
+                pass
             else:
                 overview_list.append(strip_tags(item, False))
         if overview_list:
