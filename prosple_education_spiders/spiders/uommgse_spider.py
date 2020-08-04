@@ -206,15 +206,15 @@ class UommgseSpiderSpider(scrapy.Spider):
             study_holder = set()
             campus_holder = set()
             if re.search(r"on campus", location, re.M | re.I):
-                study_holder.append("In Person")
+                study_holder.add("In Person")
             if re.search(r"online", location, re.M | re.I):
-                study_holder.append("Online")
-                campus_holder.append("757")
+                study_holder.add("Online")
+                campus_holder.add("757")
             if study_holder:
                 course_item["modeOfStudy"] = "|".join(study_holder)
             for campus in self.campuses:
                 if re.search(campus, location, re.I | re.M):
-                    campus_holder.append(self.campuses[campus])
+                    campus_holder.add(self.campuses[campus])
             course_item["campusNID"] = "|".join(campus_holder)
 
         entry = response.xpath("//*[contains(text(), 'Prerequisites')]/following-sibling::*").get()
