@@ -44,7 +44,8 @@ class UommgseSpiderSpider(scrapy.Spider):
     name = 'uommgse_spider'
     allowed_domains = ['education.unimelb.edu.au', 'unimelb.edu.au']
     start_urls = ['https://education.unimelb.edu.au/study/courses']
-    banned_urls = []
+    banned_urls = ['https://education.unimelb.edu.au/study/courses/learning-intervention/inclusive-education'
+                   '-scholarship-master-of-learning-intervention']
     institution = 'Melbourne Graduate School of Education'
     uidPrefix = 'AU-UOM-MGSE-'
 
@@ -234,10 +235,15 @@ class UommgseSpiderSpider(scrapy.Spider):
 
         learn = response.xpath("//a[@data-test='nav-link-what-will-i-study']/@href").get()
 
-        if learn:
-            yield response.follow(learn, callback=self.learn_parse, meta={'item': course_item})
+        if re.search("/major/", course_item["sourceURL"]) or \
+                re.search("/specialisation/", course_item["sourceURL"]) or \
+                re.search("/minor/", course_item["sourceURL"]):
+            pass
         else:
-            yield course_item
+            if learn:
+                yield response.follow(learn, callback=self.learn_parse, meta={'item': course_item})
+            else:
+                yield course_item
 
     def learn_parse(self, response):
         course_item = response.meta['item']
