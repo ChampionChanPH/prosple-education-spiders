@@ -142,7 +142,7 @@ class UommgseSpiderSpider(scrapy.Spider):
             else:
                 overview_list.append(strip_tags(item, False))
         if overview_list:
-            course_item.set_summary(overview_list[0])
+            course_item.set_summary(strip_tags(overview_list[0]))
             course_item["overview"] = strip_tags("".join(overview_list), remove_all_tags=False)
 
         cricos = response.xpath("//li[contains(text(), 'CRICOS')]/*/text()").get()
@@ -249,9 +249,15 @@ class UommgseSpiderSpider(scrapy.Spider):
     def learn_parse(self, response):
         course_item = response.meta['item']
 
-        learn = response.xpath("//div[@class='course-content']").get()
-        if learn:
-            course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False)
+        learn = response.xpath("//div[@class='course-content']/*").getall()
+        holder = []
+        for item in learn:
+            if re.search("btn--icon", item):
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item["whatLearn"] = strip_tags("".join(holder), remove_all_tags=False)
 
         career = response.xpath("//a[@data-test='nav-link-where-will-this-take-me']/@href").get()
 
