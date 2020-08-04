@@ -126,10 +126,11 @@ class UomSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[@data-test='course-overview-content']/*").getall()
         overview_list = []
         for item in overview:
-            if not re.search("^<p", item) and overview.index(item) != 0:
+            if (not re.search("^<p", item) and not re.search("^<div><p", item) and overview.index(item) != 0) or \
+                    re.search("notice--default", item):
                 break
             else:
-                overview_list.append(item)
+                overview_list.append(strip_tags(item, False))
         if overview_list:
             course_item["overview"] = strip_tags("".join(overview_list), remove_all_tags=False)
 
@@ -214,17 +215,17 @@ class UomSpiderSpider(scrapy.Spider):
         if location:
             study_holder = set()
             campus_holder = set()
-            if re.search(r"on campus", location, re.M | re.I):
-                study_holder.add("In Person")
             if re.search(r"online", location, re.M | re.I):
                 study_holder.add("Online")
                 campus_holder.add("757")
-            if study_holder:
-                course_item["modeOfStudy"] = "|".join(study_holder)
             for campus in self.campuses:
                 if re.search(campus, location, re.I | re.M):
                     campus_holder.add(self.campuses[campus])
-            course_item["campusNID"] = "|".join(campus_holder)
+                    study_holder.add("In Person")
+            if study_holder:
+                course_item["modeOfStudy"] = "|".join(study_holder)
+            if campus_holder:
+                course_item["campusNID"] = "|".join(campus_holder)
 
         entry = response.xpath("//*[contains(text(), 'Prerequisites')]/following-sibling::*").get()
         if entry:

@@ -72,6 +72,7 @@ class UommgseSpiderSpider(scrapy.Spider):
         "doctoral program": "6",
         "certificate": "4",
         "specialist certificate": "4",
+        "professional certificate": "4",
         "certificate i": "4",
         "certificate ii": "4",
         "certificate iii": "4",
@@ -207,17 +208,17 @@ class UommgseSpiderSpider(scrapy.Spider):
         if location:
             study_holder = set()
             campus_holder = set()
-            if re.search(r"on campus", location, re.M | re.I):
-                study_holder.add("In Person")
             if re.search(r"online", location, re.M | re.I):
                 study_holder.add("Online")
                 campus_holder.add("757")
-            if study_holder:
-                course_item["modeOfStudy"] = "|".join(study_holder)
             for campus in self.campuses:
                 if re.search(campus, location, re.I | re.M):
                     campus_holder.add(self.campuses[campus])
-            course_item["campusNID"] = "|".join(campus_holder)
+                    study_holder.add("In Person")
+            if study_holder:
+                course_item["modeOfStudy"] = "|".join(study_holder)
+            if campus_holder:
+                course_item["campusNID"] = "|".join(campus_holder)
 
         entry = response.xpath("//*[contains(text(), 'Prerequisites')]/following-sibling::*").get()
         if entry:
