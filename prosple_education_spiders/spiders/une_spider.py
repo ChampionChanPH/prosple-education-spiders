@@ -79,7 +79,7 @@ class UneSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.request.url
+        # course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//div[@class='content']//h2/text()").get()
         if course_name is not None:
@@ -125,7 +125,7 @@ class UneSpiderSpider(scrapy.Spider):
                 if len(cricos) > 0:
                     course_item["cricosCode"] = ", ".join(cricos)
                     course_item["internationalApps"] = 1
-                    course_item["internationalApplyURL"] = response.request.url
+                    # course_item["internationalApplyURL"] = response.request.url
             if re.search("commencing", row[0], re.IGNORECASE | re.MULTILINE):
                 study_holder = []
                 campus_holder = []

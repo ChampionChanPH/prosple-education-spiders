@@ -167,7 +167,7 @@ class MonSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.request.url
+        # course_item["domesticApplyURL"] = response.request.url
 
         name = response.xpath("//h1/text()").get()
         if not name:
@@ -365,6 +365,6 @@ class MonSpiderSpider(scrapy.Spider):
             course_item["uid"] = course_item["uid"] + "-" + course_item["cricosCode"]
 
         course_item["internationalApps"] = 1
-        course_item["internationalApplyURL"] = course_item["sourceURL"]
+        # course_item["internationalApplyURL"] = course_item["sourceURL"]
 
         yield course_item

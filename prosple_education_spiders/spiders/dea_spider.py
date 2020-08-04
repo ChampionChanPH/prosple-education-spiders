@@ -121,7 +121,7 @@ class DeaSpiderSpider(scrapy.Spider):
         course_item['sourceURL'] = response.request.url
         course_item['published'] = 1
         course_item['institution'] = self.institution
-        course_item['domesticApplyURL'] = response.request.url
+        # course_item['domesticApplyURL'] = response.request.url
 
         course_name = response.xpath("//ol[@aria-label='breadcrumb']/li[count(//ol["
                                      "@aria-label='breadcrumb']/li)]/a/text()").get()
@@ -153,7 +153,7 @@ class DeaSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item['cricosCode'] = ', '.join(cricos)
                 course_item['internationalApps'] = 1
-                course_item['internationalApplyURL'] = response.request.url
+                # course_item['internationalApplyURL'] = response.request.url
 
         course_code = response.xpath("//div[@class='module__key-information--item-title'][contains(*/text(), "
                                      "'Deakin code')]/following-sibling::*["
