@@ -135,6 +135,11 @@ class UommgseSpiderSpider(scrapy.Spider):
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@data-test='course-overview-content']/*").getall()
+        if overview:
+            if re.search("^<div><div", overview[0]):
+                overview = response.xpath("//div[@data-test='course-overview-content']/*/*/*").getall()
+            elif re.search("^<div><p", overview[0]) or re.search("^<section", overview[0]):
+                overview = response.xpath("//div[@data-test='course-overview-content']/*/*").getall()
         overview_list = []
         for item in overview:
             if (not re.search("^<p", item) and not re.search("^<div><p", item) and overview.index(item) != 0) or \
