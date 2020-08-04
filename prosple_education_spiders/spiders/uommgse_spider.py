@@ -19,29 +19,34 @@ def bachelor_honours(course_item):
         return "2"
 
 
-class UomSpiderSpider(scrapy.Spider):
-    name = 'uom_spider'
-    allowed_domains = ['study.unimelb.edu.au', 'unimelb.edu.au']
-    start_urls = ['https://study.unimelb.edu.au/find/']
-    banned_urls = []
-    http_user = 'b4a56de85d954e9b924ec0e0b7696641'
-    institution = "University of Melbourne"
-    uidPrefix = "AU-UOM-"
+def get_total(field_to_use, field_to_update, course_item):
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
+        if course_item["teachingPeriod"] == 1:
+            if float(course_item["durationMinFull"]) < 1:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 52
 
-    months = {
-        "January": "01",
-        "February": "02",
-        "March": "03",
-        "April": "04",
-        "May": "05",
-        "June": "06",
-        "July": "07",
-        "August": "08",
-        "September": "09",
-        "October": "10",
-        "November": "11",
-        "December": "12"
-    }
+
+class UommgseSpiderSpider(scrapy.Spider):
+    name = 'uommgse_spider'
+    allowed_domains = ['education.unimelb.edu.au', 'unimelb.edu.au']
+    start_urls = ['https://education.unimelb.edu.au/study/courses']
+    banned_urls = []
+    institution = 'Melbourne Graduate School of Education'
+    uidPrefix = 'AU-UOM-MGSE-'
 
     campuses = {
         "Werribee": "762",
@@ -88,68 +93,55 @@ class UomSpiderSpider(scrapy.Spider):
         "day": 365
     }
 
+    months = {
+        "Jan": "01",
+        "Feb": "02",
+        "Mar": "03",
+        "Apr": "04",
+        "May": "05",
+        "Jun": "06",
+        "Jul": "07",
+        "Aug": "08",
+        "Sep": "09",
+        "Oct": "10",
+        "Nov": "11",
+        "Dec": "12"
+    }
+
     def get_period(self, string_to_use, course_item):
         for item in self.teaching_periods:
             if re.search(item, string_to_use):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        categories = response.xpath("//div[@data-test='interest-list']//a[@data-test='interest-item']/@href").getall()
-
-        for item in categories:
-            yield response.follow(item, callback=self.sub_parse)
-
-    def sub_parse(self, response):
-        courses = response.xpath("//ul[@data-test='course-list']//a/@href").getall()
+        courses = response.xpath("//li[contains(@class, 'filtered-listing-item')]/a/@href").getall()
 
         for item in courses:
-            if item not in self.banned_urls and \
-                    not re.search("/major/", item) and \
-                    not re.search("/specialisation/", item) and \
-                    not re.search("/minor/", item):
-                yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 10},
-                                    meta={'url': response.urljoin(item)})
+            if item not in self.banned_urls:
+                yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
 
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
-        course_item["sourceURL"] = response.meta["url"]
+        course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.meta["url"]
 
         course_name = response.xpath("//h1[@data-test='header-course-title']/text()").get()
         if course_name is not None:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//div[@data-test='course-overview-content']/*").getall()
+        overview = response.xpath("//div[@data-test='course-overview-content']/*/*").getall()
         overview_list = []
         for item in overview:
             if not re.search("^<p", item) and overview.index(item) != 0:
                 break
             else:
-                overview_list.append(item)
+                overview_list.append(strip_tags(item, False))
         if overview_list:
+            course_item.set_summary(overview_list[0])
             course_item["overview"] = strip_tags("".join(overview_list), remove_all_tags=False)
-
-        summary = []
-        first_p = response.xpath("//div[@data-test='course-overview-content']//p[1]//text()").getall()
-        if first_p:
-            first_p = "".join(first_p)
-            if first_p in ["Overview", "Course Description",
-                           "This offering is not available to international students.",
-                           "Tobias Manderson-Galvin from VCA on Vimeo."] or \
-                    re.search("note:\s", first_p, re.I | re.M):
-                first_p = ""
-            summary.append(first_p)
-        second_p = response.xpath("//div[@data-test='course-overview-content']//p[2]//text()").getall()
-        if second_p:
-            second_p = "".join(second_p)
-            summary.append(second_p)
-        if summary:
-            summary = " ".join([x.strip() for x in summary])
-            course_item.set_summary(summary)
 
         cricos = response.xpath("//li[contains(text(), 'CRICOS')]/*/text()").get()
         if cricos:
@@ -157,7 +149,6 @@ class UomSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.meta["url"]
 
         atar = response.xpath("//dt[contains(*/text(), 'Lowest Selection Rank')]/following-sibling::dd/*[contains("
                               "@class, 'score-panel__value-heading')]/text()").get()
