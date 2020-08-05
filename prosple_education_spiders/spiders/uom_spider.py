@@ -66,6 +66,7 @@ class UomSpiderSpider(scrapy.Spider):
         "doctoral program": "6",
         "certificate": "4",
         "specialist certificate": "4",
+        "professional certificate": "14",
         "certificate i": "4",
         "certificate ii": "4",
         "certificate iii": "4",
@@ -235,17 +236,29 @@ class UomSpiderSpider(scrapy.Spider):
 
         learn = response.xpath("//a[@data-test='nav-link-what-will-i-study']/@href").get()
 
-        if learn:
-            yield response.follow(learn, callback=self.learn_parse, meta={'item': course_item})
+        if response.xpath("//*[contains(text(), 'Page not found')]").getall():
+            pass
         else:
-            yield course_item
+            if learn:
+                yield response.follow(learn, callback=self.learn_parse, meta={'item': course_item})
+            else:
+                yield course_item
 
     def learn_parse(self, response):
         course_item = response.meta['item']
 
-        learn = response.xpath("//div[@class='course-content']").get()
-        if learn:
-            course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False)
+        learn = response.xpath("//div[@class='course-content']/*").getall()
+        holder = []
+        for item in learn:
+            if not re.search("^<p", item) and not re.search("^<ul", item) and not re.search("^<div><p", item) and \
+                    learn.index(item) != 0:
+                break
+            elif re.search("notice--default", item):
+                pass
+            else:
+                holder.append(strip_tags(item, False))
+        if holder:
+            course_item["whatLearn"] = strip_tags("".join(holder), remove_all_tags=False)
 
         career = response.xpath("//a[@data-test='nav-link-where-will-this-take-me']/@href").get()
 
@@ -257,9 +270,18 @@ class UomSpiderSpider(scrapy.Spider):
     def career_parse(self, response):
         course_item = response.meta['item']
 
-        career = response.xpath("//div[@class='course-content']").get()
-        if career:
-            course_item["careerPathways"] = strip_tags(career, remove_all_tags=False)
+        career = response.xpath("//div[@class='course-content']/*").getall()
+        holder = []
+        for item in career:
+            if not re.search("^<p", item) and not re.search("^<ul", item) and not re.search("^<div><p", item) and \
+                    career.index(item) != 0:
+                break
+            elif re.search("notice--default", item):
+                pass
+            else:
+                holder.append(strip_tags(item, False))
+        if holder:
+            course_item["careerPathways"] = strip_tags("".join(holder), remove_all_tags=False)
 
         apply = response.xpath("//a[@data-test='nav-link-how-to-apply']/@href").get()
 
@@ -271,9 +293,17 @@ class UomSpiderSpider(scrapy.Spider):
     def apply_parse(self, response):
         course_item = response.meta['item']
 
-        apply = response.xpath("//div[contains(@class, 'course-content')]").get()
-
-        if apply:
-            course_item["howToApply"] = strip_tags(apply, remove_all_tags=False)
+        apply = response.xpath("//div[contains(@class, 'course-content')]/*").getall()
+        holder = []
+        for item in apply:
+            if not re.search("^<p", item) and not re.search("^<ul", item) and not re.search("^<div><p", item) and \
+                    apply.index(item) != 0:
+                break
+            elif re.search("notice--default", item):
+                pass
+            else:
+                holder.append(strip_tags(item, False))
+        if holder:
+            course_item["howToApply"] = strip_tags("".join(holder), remove_all_tags=False)
 
         yield course_item
