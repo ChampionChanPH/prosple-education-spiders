@@ -151,7 +151,7 @@ class UommgseSpiderSpider(scrapy.Spider):
                 overview_list.append(strip_tags(item, False))
         if overview_list:
             if len(overview_list[0]) < 95 and len(overview_list) > 1:
-                course_item.set_summary(strip_tags(overview_list[0]) + ' ' + overview_list[1])
+                course_item.set_summary(strip_tags(overview_list[0]) + ' ' + strip_tags(overview_list[1]))
             else:
                 course_item.set_summary(strip_tags(overview_list[0]))
             course_item["overview"] = strip_tags("".join(overview_list), remove_all_tags=False)
