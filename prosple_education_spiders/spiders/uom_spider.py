@@ -117,7 +117,6 @@ class UomSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.meta["url"]
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.meta["url"]
 
         course_name = response.xpath("//h1[@data-test='header-course-title']/text()").get()
         if course_name is not None:
@@ -151,7 +150,6 @@ class UomSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.meta["url"]
 
         atar = response.xpath("//dt[contains(*/text(), 'Lowest Selection Rank')]/following-sibling::dd/*[contains("
                               "@class, 'score-panel__value-heading')]/text()").get()

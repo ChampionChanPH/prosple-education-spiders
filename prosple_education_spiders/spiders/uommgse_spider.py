@@ -46,6 +46,7 @@ class UommgseSpiderSpider(scrapy.Spider):
     start_urls = ['https://education.unimelb.edu.au/study/courses']
     banned_urls = ['https://education.unimelb.edu.au/study/courses/learning-intervention/inclusive-education'
                    '-scholarship-master-of-learning-intervention']
+    http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = 'Melbourne Graduate School of Education'
     uidPrefix = 'AU-UOM-MGSE-'
 
@@ -120,13 +121,14 @@ class UommgseSpiderSpider(scrapy.Spider):
 
         for item in courses:
             if item not in self.banned_urls:
-                yield response.follow(item, callback=self.course_parse)
+                yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 10},
+                                    meta={'url': response.urljoin(item)})
 
     def course_parse(self, response):
         course_item = Course()
 
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
-        course_item["sourceURL"] = response.request.url
+        course_item["sourceURL"] = response.meta["url"]
         course_item["published"] = 1
         course_item["institution"] = self.institution
 
