@@ -120,12 +120,15 @@ class UommgseSpiderSpider(scrapy.Spider):
         courses = response.xpath("//li[contains(@class, 'filtered-listing-item')]/a/@href").getall()
 
         for item in courses:
-            if item not in self.banned_urls and \
-                    not re.search("/major/", item) and \
-                    not re.search("/specialisation/", item) and \
-                    not re.search("/minor/", item):
-                yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 10},
-                                    meta={'url': response.urljoin(item)})
+            yield response.follow(item, callback=self.sub_parse)
+
+    def sub_parse(self, response):
+        if response.request.url not in self.banned_urls and \
+                not re.search("/major/", response.request.url) and \
+                not re.search("/specialisation/", response.request.url) and \
+                not re.search("/minor/", response.request.url):
+            yield SplashRequest(response.request.url, callback=self.course_parse, args={'wait': 20},
+                                meta={'url': response.request.url})
 
     def course_parse(self, response):
         course_item = Course()
@@ -252,10 +255,13 @@ class UommgseSpiderSpider(scrapy.Spider):
 
         learn = response.xpath("//a[@data-test='nav-link-what-will-i-study']/@href").get()
 
-        if learn:
-            yield response.follow(learn, callback=self.learn_parse, meta={'item': course_item})
+        if response.xpath("//*[contains(text(), 'Page not found')]").getall():
+            pass
         else:
-            yield course_item
+            if learn:
+                yield response.follow(learn, callback=self.learn_parse, meta={'item': course_item})
+            else:
+                yield course_item
 
     def learn_parse(self, response):
         course_item = response.meta['item']
