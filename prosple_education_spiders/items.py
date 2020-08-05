@@ -181,7 +181,7 @@ class Course(scrapy.Item):
         "11": {"level": "2", "rank": 2},
         "12": {"level": "2", "rank": 2},
         "13": {"level": "1", "rank": 1},
-        "14": {"level": "2", "rank": 1},
+        "14": {"level": "2", "rank": 2},
         "15": {"level": "1", "rank": 99}
     }
 
