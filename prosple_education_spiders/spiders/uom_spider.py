@@ -124,33 +124,26 @@ class UomSpiderSpider(scrapy.Spider):
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@data-test='course-overview-content']/*").getall()
+        if overview:
+            if re.search("^<div><div", overview[0]):
+                overview = response.xpath("//div[@data-test='course-overview-content']/*/*/*").getall()
+            elif re.search("^<div><p", overview[0]) or re.search("^<section", overview[0]):
+                overview = response.xpath("//div[@data-test='course-overview-content']/*/*").getall()
         overview_list = []
         for item in overview:
-            if (not re.search("^<p", item) and not re.search("^<div><p", item) and overview.index(item) != 0) or \
-                    re.search("notice--default", item):
+            if not re.search("^<p", item) and not re.search("^<ul", item) and not re.search("^<div><p", item) and \
+                    overview.index(item) != 0:
                 break
+            elif re.search("notice--default", item):
+                pass
             else:
                 overview_list.append(strip_tags(item, False))
         if overview_list:
+            if len(overview_list[0]) < 95 and len(overview_list) > 1:
+                course_item.set_summary(strip_tags(overview_list[0]) + ' ' + strip_tags(overview_list[1]))
+            else:
+                course_item.set_summary(strip_tags(overview_list[0]))
             course_item["overview"] = strip_tags("".join(overview_list), remove_all_tags=False)
-
-        summary = []
-        first_p = response.xpath("//div[@data-test='course-overview-content']//p[1]//text()").getall()
-        if first_p:
-            first_p = "".join(first_p)
-            if first_p in ["Overview", "Course Description",
-                           "This offering is not available to international students.",
-                           "Tobias Manderson-Galvin from VCA on Vimeo."] or \
-                    re.search("note:\s", first_p, re.I | re.M):
-                first_p = ""
-            summary.append(first_p)
-        second_p = response.xpath("//div[@data-test='course-overview-content']//p[2]//text()").getall()
-        if second_p:
-            second_p = "".join(second_p)
-            summary.append(second_p)
-        if summary:
-            summary = " ".join([x.strip() for x in summary])
-            course_item.set_summary(summary)
 
         cricos = response.xpath("//li[contains(text(), 'CRICOS')]/*/text()").get()
         if cricos:
