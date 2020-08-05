@@ -72,7 +72,7 @@ class UommgseSpiderSpider(scrapy.Spider):
         "doctoral program": "6",
         "certificate": "4",
         "specialist certificate": "4",
-        "professional certificate": "4",
+        "professional certificate": "14",
         "certificate i": "4",
         "certificate ii": "4",
         "certificate iii": "4",
@@ -150,7 +150,10 @@ class UommgseSpiderSpider(scrapy.Spider):
             else:
                 overview_list.append(strip_tags(item, False))
         if overview_list:
-            course_item.set_summary(strip_tags(overview_list[0]))
+            if len(overview_list[0]) < 95 and len(overview_list) > 1:
+                course_item.set_summary(strip_tags(overview_list[0]) + ' ' + overview_list[1])
+            else:
+                course_item.set_summary(strip_tags(overview_list[0]))
             course_item["overview"] = strip_tags("".join(overview_list), remove_all_tags=False)
 
         cricos = response.xpath("//li[contains(text(), 'CRICOS')]/*/text()").get()
