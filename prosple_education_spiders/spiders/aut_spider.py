@@ -45,6 +45,7 @@ class AutSpiderSpider(scrapy.Spider):
     allowed_domains = ['www.aut.ac.nz', 'aut.ac.nz']
     start_urls = ['https://www.aut.ac.nz/s/search.html?search_target=main&query=&collection=aut-ac-nz-meta-dev'
                   '&sitetheme=red&f.Tabs%7CT=Course&tab=Course&form=simple']
+    banned_urls = ['https://www.aut.ac.nz/courses']
     institution = 'Auckland University of Technology'
     uidPrefix = 'NZ-AUT-'
 
@@ -134,8 +135,15 @@ class AutSpiderSpider(scrapy.Spider):
         course_item['institution'] = self.institution
 
         course_name = response.xpath("//h1/text()").get()
-        if course_name:
-            course_item.set_course_name(course_name.strip(), self.uidPrefix)
+        name = re.split(' - ', course_name.strip())
+        holder = []
+        for item in name:
+            if re.search('bachelor|diploma|certificate|master', item):
+                holder.insert(0, item.strip())
+            else:
+                holder.append(item)
+        if holder:
+            course_item.set_course_name(' - '.join(holder), self.uidPrefix)
 
         summary = response.xpath("//div[@class='intro']/*").get()
         if summary:
@@ -144,9 +152,9 @@ class AutSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[@class='intro']/following-sibling::*[1]/*").getall()
         if overview:
             if summary:
-                course_item["overview"] = strip_tags(summary + ''.join(overview_list), remove_all_tags=False)
+                course_item["overview"] = strip_tags(summary + ''.join(overview), remove_all_tags=False)
             else:
-                course_item["overview"] = strip_tags(''.join(overview_list), remove_all_tags=False)
+                course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False)
 
         career_link = response.xpath("//a[contains(*//text(), 'Career opportunities')]/@href").get()
         career_link = re.sub('#', '', career_link)
@@ -218,4 +226,9 @@ class AutSpiderSpider(scrapy.Spider):
             if start_holder:
                 course_item["startMonths"] = "|".join(start_holder)
 
-        yield course_item
+        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
+
+        course_item['courseName'] = course_name
+
+        if course_item['sourceURL'] not in self.banned_urls:
+            yield course_item
