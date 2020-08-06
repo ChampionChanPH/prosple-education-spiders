@@ -59,6 +59,7 @@ special_chars = {
     u"\u202F": " ",
     u"\uFEFF": " ",
     u"\u0101": "a",
+    u"\u00E2": "a",
     u"\u0100": "A",
     u"\u016B": "u",
     u"\u016A": "U"
