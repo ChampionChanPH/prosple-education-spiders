@@ -157,14 +157,15 @@ class AutSpiderSpider(scrapy.Spider):
                 course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False)
 
         career_link = response.xpath("//a[contains(*//text(), 'Career opportunities')]/@href").get()
-        career_link = re.sub('#', '', career_link)
-        career_xpath1 = "//div[@id='" + career_link + "']/*"
-        career_xpath2 = "//div[@id='" + career_link + "']//*[contains(@class, 'thumbnailTile')]/*"
-        if response.xpath(career_xpath2).getall():
-            career = response.xpath(career_xpath2).getall()
-        else:
-            career = response.xpath(career_xpath1).getall()
-        course_item['careerPathways'] = strip_tags(''.join(career), remove_all_tags=False)
+        if career_link:
+            career_link = re.sub('#', '', career_link)
+            career_xpath1 = "//div[@id='" + career_link + "']/*"
+            career_xpath2 = "//div[@id='" + career_link + "']//*[contains(@class, 'thumbnailTile')]/*"
+            if response.xpath(career_xpath2).getall():
+                career = response.xpath(career_xpath2).getall()
+            else:
+                career = response.xpath(career_xpath1).getall()
+            course_item['careerPathways'] = strip_tags(''.join(career), remove_all_tags=False)
 
         location = response.meta['location']
         if location:
