@@ -249,7 +249,7 @@ class AutSpiderSpider(scrapy.Spider):
         if dom_fee:
             dom_fee = re.findall("\$(\d*),?(\d+)", dom_fee, re.M)
             if dom_fee:
-                dom_fee = [float(x) for x in dom_fee]
+                dom_fee = [float(''.join(x)) for x in dom_fee]
                 course_item["domesticFeeAnnual"] = max(dom_fee)
                 get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
@@ -257,7 +257,7 @@ class AutSpiderSpider(scrapy.Spider):
         if int_fee:
             int_fee = re.findall("\$(\d*),?(\d+)", int_fee, re.M)
             if int_fee:
-                int_fee = [float(x) for x in int_fee]
+                int_fee = [float(''.join(x)) for x in int_fee]
                 course_item["domesticFeeAnnual"] = max(int_fee)
                 get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
