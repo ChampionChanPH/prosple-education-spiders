@@ -160,6 +160,20 @@ class AutSpiderSpider(scrapy.Spider):
             else:
                 course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False)
 
+        course_code = response.xpath("//div[contains(text(), 'Programme code')]/following-sibling::div/text()").get()
+        if course_code:
+            course_item['courseCode'] = course_code.strip()
+
+        entry = response.xpath("//*[contains(text(), 'Minimum entry requirements')]/following-sibling::*").getall()
+        holder = []
+        for item in entry:
+            if re.search('^<p', item) or re.search('^<ul', item):
+                holder.append(item)
+            else:
+                break
+        if holder:
+            course_item['entryRequirements'] = strip_tags(''.join(holder), remove_all_tags=False)
+
         career_link = response.xpath("//a[contains(*//text(), 'Career opportunities')]/@href").get()
         if career_link:
             career_link = re.sub('#', '', career_link)
@@ -230,6 +244,22 @@ class AutSpiderSpider(scrapy.Spider):
                     start_holder.append(self.months[month])
             if start_holder:
                 course_item["startMonths"] = "|".join(start_holder)
+
+        dom_fee = response.xpath("//a[@title='Domestic fees']/following-sibling::span[1]").get()
+        if dom_fee:
+            dom_fee = re.findall("\$(\d*),?(\d+)", dom_fee, re.M)
+            if dom_fee:
+                dom_fee = [float(x) for x in dom_fee]
+                course_item["domesticFeeAnnual"] = max(dom_fee)
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+        int_fee = response.xpath("//a[@title='International fees']/following-sibling::span[1]").get()
+        if int_fee:
+            int_fee = re.findall("\$(\d*),?(\d+)", int_fee, re.M)
+            if int_fee:
+                int_fee = [float(x) for x in int_fee]
+                course_item["domesticFeeAnnual"] = max(int_fee)
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
