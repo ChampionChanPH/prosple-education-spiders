@@ -45,7 +45,9 @@ class AutSpiderSpider(scrapy.Spider):
     allowed_domains = ['www.aut.ac.nz', 'aut.ac.nz']
     start_urls = ['https://www.aut.ac.nz/s/search.html?search_target=main&query=&collection=aut-ac-nz-meta-dev'
                   '&sitetheme=red&f.Tabs%7CT=Course&tab=Course&form=simple']
-    banned_urls = ['https://www.aut.ac.nz/courses']
+    banned_urls = ['https://www.aut.ac.nz/courses',
+                   'https://www.aut.ac.nz/courses/doctor-of-philosophy/our-phd-students-and-alumni',
+                   'https://www.aut.ac.nz/courses/certificate-of-proficiency']
     institution = 'Auckland University of Technology'
     uidPrefix = 'NZ-AUT-'
 
@@ -58,7 +60,9 @@ class AutSpiderSpider(scrapy.Spider):
 
     degrees = {
         "graduate certificate": "7",
+        "postgraduate certificate": "7",
         "graduate diploma": "8",
+        "postgraduate diploma": "8",
         "master": research_coursework,
         "executive master": research_coursework,
         "senior executive master": research_coursework,
