@@ -142,7 +142,7 @@ class AutSpiderSpider(scrapy.Spider):
         name = re.split(' - ', course_name.strip())
         holder = []
         for item in name:
-            if re.search('bachelor|diploma|certificate|master', item):
+            if re.search('bachelor|diploma|certificate|master', item, re.I):
                 holder.insert(0, item.strip())
             else:
                 holder.append(item)
@@ -262,8 +262,6 @@ class AutSpiderSpider(scrapy.Spider):
                 get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
-
-        course_item['courseName'] = course_name
 
         if course_item['sourceURL'] not in self.banned_urls:
             yield course_item
