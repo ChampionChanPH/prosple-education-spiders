@@ -258,8 +258,8 @@ class AutSpiderSpider(scrapy.Spider):
             int_fee = re.findall("\$(\d*),?(\d+)", int_fee, re.M)
             if int_fee:
                 int_fee = [float(''.join(x)) for x in int_fee]
-                course_item["domesticFeeAnnual"] = max(int_fee)
-                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+                course_item["internationalFeeAnnual"] = max(int_fee)
+                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
