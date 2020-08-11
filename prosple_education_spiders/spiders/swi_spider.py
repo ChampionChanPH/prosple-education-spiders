@@ -106,15 +106,13 @@ class SwiSpiderSpider(scrapy.Spider):
     lua_source = """
         function main(splash, args)
           assert(splash:go(args.url))
-          assert(splash:wait(2))
+          assert(splash:wait(2.0))
           local element = splash:select(args.selector)
           assert(element:mouse_click())
-          assert(splash:wait(2))
+          assert(splash:wait(2.0))
     
           return {
-            html = splash:html(),
-            png = splash:png(),
-            har = splash:har(),
+            html = splash:html()
           }
         end
     """
@@ -134,15 +132,16 @@ class SwiSpiderSpider(scrapy.Spider):
         sub = response.xpath("//ul[@class='list']//a[@class='card  ']/@href").getall()
 
         for item in sub:
-            yield SplashRequest(response.urljoin(item), callback=self.link_parse, args={"wait": 20})
+            yield SplashRequest(response.urljoin(item), callback=self.link_parse, args={"wait": 20}, meta={
+                'url': response.urljoin(item)})
 
     def link_parse(self, response):
         # view_more = response.css('.view-more.btn.btn-secondary-outline')
         view_more = response.css('.view-more')
 
         while view_more:
-            yield SplashRequest(response.request.url, callback=self.link_parse, endpoint='execute',
-                                args={'lua_source': self.lua_source, 'url': response.request.url,
+            yield SplashRequest(response.meta["url"], callback=self.link_parse, endpoint='execute',
+                                args={'lua_source': self.lua_source, 'url': response.meta["url"],
                                       'selector': '.view-more'})
 
         courses = response.xpath("//a[@class='results-item']/@href").getall()
@@ -182,7 +181,8 @@ class SwiSpiderSpider(scrapy.Spider):
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
 
-        overview = response.xpath("//div[@id='cs-description']/*").getall()
+        overview = response.xpath("//div[@class='course-meta']/following-sibling::*//div[contains(@class, "
+                                  "'general-content')]/*").getall()
         if overview:
             course_item.set_summary(strip_tags(overview[0]))
             course_item['overview'] = strip_tags(''.join(overview), False)
