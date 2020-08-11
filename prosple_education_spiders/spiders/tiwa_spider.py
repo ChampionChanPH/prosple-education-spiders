@@ -162,16 +162,8 @@ class TiwaSpiderSpider(scrapy.Spider):
                         if period[0] == "semester" and multiplier > 1:
                             course_item["internationalFeeAnnual"] = int(value) * 2
                         course_item["internationalFeeTotal"] = int(value) * multiplier
-        if "flag" in course_item:
-            yield course_item
 
 
+        # if "flag" in course_item:
+        yield course_item
 
-
-                # course_item["feesRaw"].append(row.css("td::text").extract_first())
-            # print(row.css("th span::text").extract_first())
-        # print(course_data)
-
-        # print(response.css('section#course-institute-info').extract_first())
-        # print(response.css('#SelectedPeriodId+ span::text').extract_first())
-        # print(response.css('span[data-bind*="text: Institute.OrganisationName"]::text').extract_first())
