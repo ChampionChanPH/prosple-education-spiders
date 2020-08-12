@@ -92,17 +92,24 @@ class TiwaSpiderSpider(scrapy.Spider):
 
         raw_course_name = response.css("#main h1::text").extract_first()
         if raw_course_name:
-            if len(re.findall("\d",raw_course_name.split(" ")[0])) > 0:
-                course_item.set_course_name(re.sub(raw_course_name.split(" ")[0]+" ","",raw_course_name), self.uidPrefix)
-                # course_item["courseCode"] = raw_course_name.split(" ")[0]
+            if raw_course_name == "Advanced Diploma of Maritime Operations - Master Unlimited":
+                course_item.set_course_name("Advanced Diploma of Maritime Operations", self.uidPrefix)
+                course_item.set_sf_dt(self.degrees)
+                course_item.set_course_name("Advanced Diploma of Maritime Operations - Master Unlimited", self.uidPrefix)
 
             else:
-                course_item.set_course_name(raw_course_name, self.uidPrefix)
+                if len(re.findall("\d",raw_course_name.split(" ")[0])) > 0:
+                    course_item.set_course_name(re.sub(raw_course_name.split(" ")[0]+" ","",raw_course_name), self.uidPrefix)
+                    # course_item["courseCode"] = raw_course_name.split(" ")[0]
+
+                else:
+                    course_item.set_course_name(raw_course_name, self.uidPrefix)
+                course_item.set_sf_dt(self.degrees)
         else:
             return
 
         course_item["uid"] = self.uidPrefix + course_item["courseName"]
-        course_item.set_sf_dt(self.degrees)
+
         # StudyPerth override
         course_item["group"] = 23
         course_item["canonicalGroup"] = "StudyPerth"
