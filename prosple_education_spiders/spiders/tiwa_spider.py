@@ -73,7 +73,7 @@ class TiwaSpiderSpider(scrapy.Spider):
         courses = response.css("a.view-course-btn::attr(href)").extract()
         # print(len(courses))
         for course in courses:
-            yield SplashRequest(response.urljoin(course), callback=self.course_parse, args={'wait': 25}, meta={'url': response.urljoin(course)})
+            yield SplashRequest(response.urljoin(course), callback=self.course_parse, args={'wait': 5}, meta={'url': response.urljoin(course)})
 
     def course_parse(self, response):
         canonical_group = "StudyPerth"
