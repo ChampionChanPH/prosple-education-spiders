@@ -43,6 +43,7 @@ def get_total(field_to_use, field_to_update, course_item):
 class LtuSpiderSpider(scrapy.Spider):
     name = 'ltu_spider'
     start_urls = ['https://www.latrobe.edu.au/courses/a-z']
+    http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     banned_urls = []
     institution = 'La Trobe University'
     uidPrefix = 'AU-LTU-'
