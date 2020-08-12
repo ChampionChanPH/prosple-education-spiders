@@ -43,8 +43,8 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class SwiSpiderSpider(scrapy.Spider):
     name = 'swi_spider'
-    allowed_domains = ['www.swinburne.edu.au', 'swinburne.edu.au']
-    start_urls = ['https://www.swinburne.edu.au/courses/find-a-course/']
+    # start_urls = ['https://www.swinburne.edu.au/courses/find-a-course/']
+    start_urls = ['https://www.swinburne.edu.au/courses/find-a-course/engineering/']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "Swinburne University of Technology"
     uidPrefix = "AU-SWI-"
@@ -103,16 +103,17 @@ class SwiSpiderSpider(scrapy.Spider):
         "day": 365
     }
 
-    lua_source = """
+    lua_script = """
         function main(splash, args)
           assert(splash:go(args.url))
           assert(splash:wait(2.0))
-          local element = splash:select(args.selector)
+          local element = splash:select('button.view-more.btn.btn-secondary-outline')
           assert(element:mouse_click())
           assert(splash:wait(2.0))
-    
           return {
-            html = splash:html()
+            html = splash:html(),
+            png = splash:png(),
+            har = splash:har(),
           }
         end
     """
@@ -122,26 +123,27 @@ class SwiSpiderSpider(scrapy.Spider):
             if re.search(item, string_to_use):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
+    # def parse(self, response):
+    #     categories = response.xpath("//a[@title='Learn more']/@href").getall()
+    #
+    #     for item in categories:
+    #         yield response.follow(item, callback=self.sub_parse)
+
     def parse(self, response):
-        categories = response.xpath("//a[@title='Learn more']/@href").getall()
-
-        for item in categories:
-            yield response.follow(item, callback=self.sub_parse)
-
-    def sub_parse(self, response):
         sub = response.xpath("//ul[@class='list']//a[@class='card  ']/@href").getall()
 
+        courses = ['/courses/find-a-course/engineering/civil-engineering']
         for item in sub:
-            yield SplashRequest(response.urljoin(item), callback=self.link_parse, args={"wait": 20}, meta={
-                'url': response.urljoin(item)})
+            if item in courses:
+                yield SplashRequest(response.urljoin(item), callback=self.link_parse, args={"wait": 20})
 
     def link_parse(self, response):
-        # view_more = response.css('.view-more.btn.btn-secondary-outline')
-        view_more = response.css('.view-more')
+        view_more = response.css('button.view-more.btn.btn-secondary-outline')
+        # view_more = response.css('.view-more')
 
         while view_more:
-            yield SplashRequest(response.meta["url"], callback=self.link_parse, endpoint='execute',
-                                args={'lua_source': self.lua_source, 'url': response.meta["url"],
+            yield SplashRequest(response.request.url, callback=self.link_parse, endpoint='execute',
+                                args={'lua_source': self.lua_script, 'url': response.request.url,
                                       'selector': '.view-more'})
 
         courses = response.xpath("//a[@class='results-item']/@href").getall()
@@ -182,10 +184,10 @@ class SwiSpiderSpider(scrapy.Spider):
             course_item['modeOfStudy'] = '|'.join(study_holder)
 
         overview = response.xpath("//div[@class='course-meta']/following-sibling::*//div[contains(@class, "
-                                  "'general-content')]/*").getall()
+                                  "'general-content')]").get()
         if overview:
-            course_item.set_summary(strip_tags(overview[0]))
-            course_item['overview'] = strip_tags(''.join(overview), False)
+            course_item.set_summary(strip_tags(overview))
+            course_item['overview'] = strip_tags(overview, False)
 
         credit = response.xpath("//h4[contains(text(), 'Credit')]/following-sibling::*").get()
         if credit:
