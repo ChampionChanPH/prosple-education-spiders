@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
 # remove courses with "201X only" on course name - 2017, 2018 or 2019
+# 8/13/2020: having issues trying to click on view more button to show all of the pages to scrape.
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
