@@ -123,33 +123,30 @@ class SwiSpiderSpider(scrapy.Spider):
             if re.search(item, string_to_use):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
-    # def parse(self, response):
-    #     categories = response.xpath("//a[@title='Learn more']/@href").getall()
-    #
-    #     for item in categories:
-    #         yield response.follow(item, callback=self.sub_parse)
-
     def parse(self, response):
+        categories = response.xpath("//a[@title='Learn more']/@href").getall()
+
+        for item in categories:
+            yield response.follow(item, callback=self.sub_parse)
+
+    def sub_parse(self, response):
         sub = response.xpath("//ul[@class='list']//a[@class='card  ']/@href").getall()
 
-        courses = ['/courses/find-a-course/engineering/civil-engineering']
         for item in sub:
-            if item in courses:
-                yield SplashRequest(response.urljoin(item), callback=self.link_parse, args={"wait": 20})
+            yield SplashRequest(response.urljoin(item), callback=self.link_parse, args={"wait": 20},
+                                meta={'url': response.urljoin(item)})
 
     def link_parse(self, response):
         view_more = response.css('button.view-more.btn.btn-secondary-outline')
-        # view_more = response.css('.view-more')
 
-        while view_more:
-            yield SplashRequest(response.request.url, callback=self.link_parse, endpoint='execute',
-                                args={'lua_source': self.lua_script, 'url': response.request.url,
-                                      'selector': '.view-more'})
+        if view_more:
+            yield SplashRequest(response.meta['url'], callback=self.link_parse, endpoint='execute',
+                                args={'lua_source': self.lua_script, 'url': response.meta['url']})
+        else:
+            courses = response.xpath("//a[@class='results-item']/@href").getall()
 
-        courses = response.xpath("//a[@class='results-item']/@href").getall()
-
-        for item in courses:
-            yield response.follow(item, callback=self.course_parse)
+            for item in courses:
+                yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -307,10 +304,7 @@ class SwiSpiderSpider(scrapy.Spider):
             if course_item["durationMinFull"] < 1:
                 course_item["internationalFeeTotal"] = course_item["internationalFeeAnnual"]
             else:
-                course_item["internationalFeeTotal"] = course_item["internationalFeeAnnual"]\
+                course_item["internationalFeeTotal"] = course_item["internationalFeeAnnual"] \
                                                        * course_item["durationMinFull"]
 
         yield course_item
-
-
-
