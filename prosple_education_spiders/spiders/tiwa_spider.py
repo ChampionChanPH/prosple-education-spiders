@@ -47,6 +47,9 @@ class TiwaSpiderSpider(scrapy.Spider):
     }
 
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
+    blacklist_urls = []
+    scraped_urls = []
+    superlist_urls = [] #["https://www.tafeinternational.wa.edu.au/your-study-options/study-at-tafe/course-catalogue/course-outline?courseId=364fc5b7-74d4-e511-bf2c-00505681920a"]
 
     institution = "TAFE International Western Australia"
     uidPrefix = "AU-TIWA-"
@@ -73,7 +76,11 @@ class TiwaSpiderSpider(scrapy.Spider):
         courses = response.css("a.view-course-btn::attr(href)").extract()
         # print(len(courses))
         for course in courses:
-            yield SplashRequest(response.urljoin(course), callback=self.course_parse, args={'wait': 5}, meta={'url': response.urljoin(course)})
+            course = response.urljoin(course)
+            if course not in self.blacklist_urls and course not in self.scraped_urls:
+                if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
+                    self.scraped_urls.append(course)
+                    yield SplashRequest(response.urljoin(course), callback=self.course_parse, args={'wait': 5}, meta={'url': response.urljoin(course)})
 
     def course_parse(self, response):
         canonical_group = "StudyPerth"
@@ -91,8 +98,9 @@ class TiwaSpiderSpider(scrapy.Spider):
         course_item["domesticApplyURL"] = response.meta['url']
 
         raw_course_name = response.css("#main h1::text").extract_first()
+        # print(raw_course_name)
         if raw_course_name:
-            if raw_course_name == "Advanced Diploma of Maritime Operations - Master Unlimited":
+            if "master unlimited" in raw_course_name.lower():
                 course_item.set_course_name("Advanced Diploma of Maritime Operations", self.uidPrefix)
                 course_item.set_sf_dt(self.degrees)
                 course_item.set_course_name("Advanced Diploma of Maritime Operations - Master Unlimited", self.uidPrefix)
