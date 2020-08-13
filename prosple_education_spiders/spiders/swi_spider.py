@@ -43,7 +43,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class SwiSpiderSpider(scrapy.Spider):
     name = 'swi_spider'
-    start_urls = ['https://www.swinburne.edu.au/courses/find-a-course/engineering/']
+    start_urls = ['https://www.swinburne.edu.au/courses/find-a-course/']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "Swinburne University of Technology"
     uidPrefix = "AU-SWI-"
