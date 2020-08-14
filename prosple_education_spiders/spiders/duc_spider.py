@@ -165,7 +165,7 @@ class DucSpiderSpider(scrapy.Spider):
             "//div[contains(@class, 'dhvc_woo_product-meta-field-course_requirements')]/text()").getall()
         holder = []
         for item in entry:
-            holder.append('<li>' + item + '</li>')
+            holder.append('<li>' + item.strip() + '</li>')
         if holder:
             course_item['entryRequirements'] = '<ul>' + ''.join(holder) + '</ul>'
 
