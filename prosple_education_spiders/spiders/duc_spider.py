@@ -139,11 +139,11 @@ class DucSpiderSpider(scrapy.Spider):
         if holder:
             course_item['overview'] = strip_tags(''.join(overview), False)
 
-        summary = response.xpath("//div[contains(@class, 'dhvc_woo_product-meta-field-course_info')]/text()").getall()
+        summary = response.xpath("//div[contains(@class, 'dhvc_woo_product-meta-field-course_info')]/text()").get()
         if not summary and holder:
             summary = holder[0]
         if summary:
-            course_item.set_summary(strip_tags(summary))
+            course_item.set_summary(strip_tags(summary.strip()))
 
         start = response.xpath("//div[contains(*//text(), 'Intake Dates')]").getall()
         start_holder = []
