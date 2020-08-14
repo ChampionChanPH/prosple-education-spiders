@@ -139,6 +139,12 @@ class DucSpiderSpider(scrapy.Spider):
         if holder:
             course_item['overview'] = strip_tags(''.join(overview), False)
 
+        summary = response.xpath("//div[contains(@class, 'dhvc_woo_product-meta-field-course_info')]/text()").getall()
+        if not summary and holder:
+            summary = holder[0]
+        if summary:
+            course_item.set_summary(strip_tags(summary))
+
         start = response.xpath("//div[contains(*//text(), 'Intake Dates')]").getall()
         start_holder = []
         if start:
@@ -155,9 +161,59 @@ class DucSpiderSpider(scrapy.Spider):
         if learn:
             course_item['overview'] = strip_tags(learn, False)
 
+        entry = response.xpath(
+            "//div[contains(@class, 'dhvc_woo_product-meta-field-course_requirements')]/text()").getall()
+        holder = []
+        for item in entry:
+            holder.append('<li>' + item + '</li>')
+        if holder:
+            course_item['entryRequirements'] = '<ul>' + ''.join(holder) + '</ul>'
+
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', '-'])
 
         course_item.set_course_name(course_name.strip(), self.uidPrefix)
+
+        if course_item['courseName'] == 'Bachelor of Applied Entrepreneurship':
+            course_item['domesticFeeTotal'] = 46200
+            course_item['creditTransfer'] = '''You may be able to get credit or RPL for some units of this course 
+                        based on your previous education and work experience. This means the duration of the course may 
+                        be reduced. Applicants are advised to contact the degree administrator.'''
+            course_item['durationMinFull'] = 2
+            course_item['durationMaxPart'] = 4
+            course_item['teachingPeriod'] = 1
+        elif course_item['courseName'] == 'Bachelor of Applied Business (Marketing)':
+            course_item['domesticFeeTotal'] = 46200
+            course_item['creditTransfer'] = '''You may be able to get credit or RPL for some units of this course 
+                        based on your previous education and work experience. This means the duration of the course may 
+                        be reduced. Applicants are advised to contact the degree administrator.'''
+            course_item['durationMinFull'] = 2
+            course_item['durationMaxPart'] = 4
+            course_item['teachingPeriod'] = 1
+        elif course_item['courseName'] == 'Master of Business Administration (Innovation and Leadership)':
+            course_item['durationMinFull'] = 1.25
+            course_item['durationMaxPart'] = 3
+            course_item['teachingPeriod'] = 1
+        elif course_item['courseName'] == 'Graduate Certificate - Data & Cyber Management':
+            course_item['domesticFeeTotal'] = 10800
+            course_item['creditTransfer'] = '''You may be able to get credit or RPL for some units of this course 
+                        based on your previous education and work experience. This means the duration of the course may 
+                        be reduced. Applicants are advised to contact the degree administrator.'''
+            course_item['durationMinFull'] = 0.5
+            course_item['durationMaxPart'] = 2
+            course_item['teachingPeriod'] = 1
+        elif course_item['courseName'] == 'MBA (Data & Cyber Management)':
+            course_item['domesticFeeTotal'] = 32400
+            course_item['durationMinFull'] = 1
+            course_item['durationMaxPart'] = 2
+            course_item['teachingPeriod'] = 1
+        elif course_item['courseName'] == 'Bachelor of Applied Business (Management)':
+            course_item['domesticFeeTotal'] = 46200
+            course_item['creditTransfer'] = '''You may be able to get credit or RPL for some units of this course 
+                        based on your previous education and work experience. This means the duration of the course may 
+                        be reduced. Applicants are advised to contact the degree administrator.'''
+            course_item['durationMinFull'] = 2
+            course_item['durationMaxPart'] = 4
+            course_item['teachingPeriod'] = 1
 
         yield course_item
 
