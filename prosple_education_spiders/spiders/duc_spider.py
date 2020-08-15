@@ -102,7 +102,7 @@ class DucSpiderSpider(scrapy.Spider):
                                  "@class, 'program-name')]/a/@href").getall()
 
         for item in courses:
-            yield response.follow(item, callback=self.course_parse, meta={'duration': duration, 'study': study})
+            yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
