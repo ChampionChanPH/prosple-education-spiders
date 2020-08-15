@@ -98,14 +98,11 @@ class DucSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//div[@class='products']/div[contains(@class, 'wtrContainerColor')]")
+        courses = response.xpath("//div[@class='products']/div[contains(@class, 'wtrContainerColor')]//div[contains("
+                                 "@class, 'program-name')]/a/@href").getall()
 
         for item in courses:
-            url = item.xpath(".//div[contains(@class, 'program-name')]/a/@href").get()
-            duration = item.xpath(".//div[contains(*//text(), 'Duration')]").get()
-            study = item.xpath(".//div[contains(*//text(), 'Study Mode')]").get()
-            if url:
-                yield response.follow(url, callback=self.course_parse, meta={'duration': duration, 'study': study})
+            yield response.follow(item, callback=self.course_parse, meta={'duration': duration, 'study': study})
 
     def course_parse(self, response):
         course_item = Course()
@@ -124,9 +121,6 @@ class DucSpiderSpider(scrapy.Spider):
             else:
                 course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        course_item['durationRaw'] = response.meta['duration']
-        course_item['modeOfStudy'] = response.meta['study']
-
         overview = response.xpath("//div[@class='vc_empty_space  desktoponly']/following-sibling::*").getall()
         holder = []
         for item in overview:
@@ -137,7 +131,7 @@ class DucSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item['overview'] = strip_tags(''.join(overview), False)
+            course_item['overview'] = strip_tags(''.join(holder), False)
 
         summary = response.xpath("//div[contains(@class, 'dhvc_woo_product-meta-field-course_info')]/text()").get()
         if not summary and holder:
@@ -159,7 +153,7 @@ class DucSpiderSpider(scrapy.Spider):
                                "strong/text(), 'Course Learning Outcomes')]/following-sibling::*[self::ul or "
                                "self::ol]").get()
         if learn:
-            course_item['overview'] = strip_tags(learn, False)
+            course_item['whatLearn'] = strip_tags(learn, False)
 
         entry = response.xpath(
             "//div[contains(@class, 'dhvc_woo_product-meta-field-course_requirements')]/text()").getall()
@@ -176,44 +170,50 @@ class DucSpiderSpider(scrapy.Spider):
         if course_item['courseName'] == 'Bachelor of Applied Entrepreneurship':
             course_item['domesticFeeTotal'] = 46200
             course_item['creditTransfer'] = '''You may be able to get credit or RPL for some units of this course 
-                        based on your previous education and work experience. This means the duration of the course may 
-                        be reduced. Applicants are advised to contact the degree administrator.'''
+                        based on your previous education and work experience. This means the duration of the course may be 
+                        reduced. Applicants are advised to contact the degree administrator. '''
             course_item['durationMinFull'] = 2
             course_item['durationMaxPart'] = 4
             course_item['teachingPeriod'] = 1
+            course_item['modeOfStudy'] = 'Online'
         elif course_item['courseName'] == 'Bachelor of Applied Business (Marketing)':
             course_item['domesticFeeTotal'] = 46200
             course_item['creditTransfer'] = '''You may be able to get credit or RPL for some units of this course 
-                        based on your previous education and work experience. This means the duration of the course may 
-                        be reduced. Applicants are advised to contact the degree administrator.'''
+                        based on your previous education and work experience. This means the duration of the course may be 
+                        reduced. Applicants are advised to contact the degree administrator. '''
             course_item['durationMinFull'] = 2
             course_item['durationMaxPart'] = 4
             course_item['teachingPeriod'] = 1
+            course_item['modeOfStudy'] = 'Online'
         elif course_item['courseName'] == 'Master of Business Administration (Innovation and Leadership)':
             course_item['durationMinFull'] = 1.25
             course_item['durationMaxPart'] = 3
             course_item['teachingPeriod'] = 1
+            course_item['modeOfStudy'] = 'Online|In Person'
         elif course_item['courseName'] == 'Graduate Certificate - Data & Cyber Management':
             course_item['domesticFeeTotal'] = 10800
             course_item['creditTransfer'] = '''You may be able to get credit or RPL for some units of this course 
-                        based on your previous education and work experience. This means the duration of the course may 
-                        be reduced. Applicants are advised to contact the degree administrator.'''
+                        based on your previous education and work experience. This means the duration of the course may be 
+                        reduced. Applicants are advised to contact the degree administrator. '''
             course_item['durationMinFull'] = 0.5
             course_item['durationMaxPart'] = 2
             course_item['teachingPeriod'] = 1
+            course_item['modeOfStudy'] = 'Online'
         elif course_item['courseName'] == 'MBA (Data & Cyber Management)':
             course_item['domesticFeeTotal'] = 32400
             course_item['durationMinFull'] = 1
             course_item['durationMaxPart'] = 2
             course_item['teachingPeriod'] = 1
+            course_item['modeOfStudy'] = 'Online'
         elif course_item['courseName'] == 'Bachelor of Applied Business (Management)':
             course_item['domesticFeeTotal'] = 46200
             course_item['creditTransfer'] = '''You may be able to get credit or RPL for some units of this course 
-                        based on your previous education and work experience. This means the duration of the course may 
-                        be reduced. Applicants are advised to contact the degree administrator.'''
+                        based on your previous education and work experience. This means the duration of the course may be 
+                        reduced. Applicants are advised to contact the degree administrator. '''
             course_item['durationMinFull'] = 2
             course_item['durationMaxPart'] = 4
             course_item['teachingPeriod'] = 1
+            course_item['modeOfStudy'] = 'Online'
 
         yield course_item
 

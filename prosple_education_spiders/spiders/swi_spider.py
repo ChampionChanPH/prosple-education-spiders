@@ -133,7 +133,8 @@ class SwiSpiderSpider(scrapy.Spider):
         sub = response.xpath("//ul[@class='list']//a[@class='card  ']/@href").getall()
 
         for item in sub:
-            yield SplashRequest(response.urljoin(item), callback=self.link_parse, args={"wait": 20},
+            yield SplashRequest(response.urljoin(item), callback=self.link_parse, endpoint='execute',
+                                args={'lua_source': self.lua_script, 'url': response.meta['url'], 'wait': 20},
                                 meta={'url': response.urljoin(item)})
 
     def link_parse(self, response):
@@ -141,7 +142,8 @@ class SwiSpiderSpider(scrapy.Spider):
 
         if view_more:
             yield SplashRequest(response.meta['url'], callback=self.link_parse, endpoint='execute',
-                                args={'lua_source': self.lua_script, 'url': response.meta['url']})
+                                args={'lua_source': self.lua_script, 'url': response.meta['url'], 'wait': 20},
+                                meta={'url': response.meta['url']})
         else:
             courses = response.xpath("//a[@class='results-item']/@href").getall()
 
