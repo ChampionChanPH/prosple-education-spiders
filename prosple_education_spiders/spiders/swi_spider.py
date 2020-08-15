@@ -134,8 +134,7 @@ class SwiSpiderSpider(scrapy.Spider):
 
         for item in sub:
             yield SplashRequest(response.urljoin(item), callback=self.link_parse, endpoint='execute',
-                                args={'lua_source': self.lua_script, 'url': response.urljoin(item), 'wait': 20},
-                                meta={'url': response.urljoin(item)})
+                                args={'wait': 20}, meta={'url': response.urljoin(item)})
 
     def link_parse(self, response):
         view_more = response.css('button.view-more.btn.btn-secondary-outline')
