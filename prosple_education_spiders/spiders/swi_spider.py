@@ -133,7 +133,7 @@ class SwiSpiderSpider(scrapy.Spider):
         sub = response.xpath("//ul[@class='list']//a[@class='card  ']/@href").getall()
 
         for item in sub:
-            yield SplashRequest(response.urljoin(item), callback=self.link_parse, endpoint='execute',
+            yield SplashRequest(response.urljoin(item), callback=self.link_parse,
                                 args={'wait': 20}, meta={'url': response.urljoin(item)})
 
     def link_parse(self, response):
