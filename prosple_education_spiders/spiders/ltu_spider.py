@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
+# having difficulties getting the details on the course pages
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
