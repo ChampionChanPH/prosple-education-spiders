@@ -106,6 +106,16 @@ class LtuSpiderSpider(scrapy.Spider):
         "Dec": "12"
     }
 
+    lua_script = """
+        function main(splash, args)
+          assert(splash:go(args.url))
+          assert(splash:wait(2.0))
+          return {
+            html = splash:html(),
+          }
+        end
+    """
+
     def get_period(self, string_to_use, course_item):
         for item in self.teaching_periods:
             if re.search(item, string_to_use):
@@ -123,9 +133,11 @@ class LtuSpiderSpider(scrapy.Spider):
         for item in boxes:
             url = item.xpath(".//h3/a/@href").get()
             location = item.xpath(".//p[contains(@class, 'course-list-atar')]").get()
+            start = item.xpath(".//p[contains(@class, 'course-start-dates')]").get()
             if url:
-                yield SplashRequest(url, callback=self.course_parse, args={"wait": 20},
-                                    meta={'location': location, 'url': url})
+                yield SplashRequest(url, callback=self.course_parse, endpoint='execute',
+                                    args={'lua_source': self.lua_script, 'url': url, 'wait': 20},
+                                    meta={'location': location, 'url': url, 'start': start})
 
     def course_parse(self, response):
         course_item = Course()
@@ -141,7 +153,7 @@ class LtuSpiderSpider(scrapy.Spider):
 
         course_item['campusNID'] = response.meta['location']
 
-        overview = response.xpath("//p[@class='footnote']/preceding-sibling::*").getall()
+        overview = response.xpath("//p[@class='footnote']").getall()
         if overview:
             course_item.set_summary(strip_tags(overview[0]))
             course_item['overview'] = strip_tags(''.join(overview), False)
