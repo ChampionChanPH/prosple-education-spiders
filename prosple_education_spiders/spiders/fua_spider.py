@@ -124,7 +124,6 @@ class FuaSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.meta['url']
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.meta['url']
 
         course_name = response.xpath("//h1[@ng-bind-html='prg.program.award']/text()").get()
         if course_name:
@@ -214,7 +213,6 @@ class FuaSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.meta['url']
 
         career = []
         career_ul = response.xpath("//div[@ng-if='prg.program.careers']/ul").getall()
