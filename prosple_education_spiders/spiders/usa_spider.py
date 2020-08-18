@@ -103,8 +103,6 @@ class UsaSpiderSpider(scrapy.Spider):
         courses = response.xpath("//table[contains(@class, 'degree-list-table')]//a/@href").getall()
 
         for item in courses:
-            item = re.sub("\?audience.*", "", item, re.DOTALL | re.I)
-            item = re.sub("/$", "", item)
             yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
@@ -128,11 +126,13 @@ class UsaSpiderSpider(scrapy.Spider):
         if summary:
             course_item.set_summary(summary.strip())
 
-        learn = response.xpath("//*[contains(text(), 'What you') and contains(text(), 'learn')]/following-sibling::div").getall()
+        learn = response.xpath(
+            "//*[contains(text(), 'What you') and contains(text(), 'learn')]/following-sibling::div/*").getall()
         if learn:
             course_item["whatLearn"] = strip_tags("".join(learn), False)
 
-        career = response.xpath("//div[contains(div/span/@id, 'yourcareer')]/following-sibling::div/div/div/div/*").getall()
+        career = response.xpath(
+            "//*[contains(text(), 'Your career')]/following-sibling::*").getall()
         if career:
             course_item["careerPathways"] = strip_tags("".join(career), False)
 
@@ -159,16 +159,16 @@ class UsaSpiderSpider(scrapy.Spider):
                 course_item["campusNID"] = "|".join(campus_holder)
 
         study_holder = []
-        online = response.xpath("//p[contains(span/text(), 'Mode')]//text()").getall()
-        if online:
-            online = [x.strip() for x in online]
-            online = "".join(online)
-            if re.search("online", online, re.I | re.M):
-                study_holder.append("Online")
-        if "campusNID" in course_item:
-            study_holder.append("In Person")
+        study = response.xpath("//p[contains(span/text(), 'Mode')]//text()").getall()
+        if study:
+            study = [x.strip() for x in study]
+            study = ''.join(study)
+            if re.search('online', study, re.I | re.M):
+                study_holder.append('Online')
+            if re.search('campus', study, re.I | re.M):
+                study_holder.append('In Person')
         if study_holder:
-            course_item["modeOfStudy"] = "|".join(study_holder)
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         duration = response.xpath("//p[contains(span/text(), 'Duration')]//text()").getall()
         if duration:
@@ -236,12 +236,12 @@ class UsaSpiderSpider(scrapy.Spider):
         if "courseCode" in course_item:
             course_item["uid"] = course_item["uid"] + "-" + course_item["courseCode"]
 
-        check_int = response.xpath("//span[@class='altis-regular']/text()").get()
-        if not check_int or check_int == "Australian students only":
+        check_int = response.xpath("//span[contains(@class, 'altis-regular')]/following-sibling::a").get()
+        if not check_int or re.search("Australian students only", check_int, re.I | re.M):
             if course_item["sourceURL"] not in self.banned_urls:
                 yield course_item
         else:
-            int_link = response.request.url + "/int"
+            int_link = re.sub("/dom", "/int", response.request.url)
 
             yield response.follow(int_link, callback=self.international_parse, meta={'item': course_item})
 
