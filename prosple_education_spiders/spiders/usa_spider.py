@@ -129,7 +129,7 @@ class UsaSpiderSpider(scrapy.Spider):
             "//span[contains(@id, 'whythisdegree')]/following-sibling::div[@class='intro']/*").getall()
         holder = []
         for item in overview:
-            if not re.search("^<p", item) or not re.search("^<ol", item) or not re.search("^<ul", item):
+            if not re.search("^<p", item) and not re.search("^<ol", item) and not re.search("^<ul", item):
                 break
             else:
                 item = re.sub("<img.*?>", "", item)
