@@ -97,12 +97,20 @@ class UsaSpiderSpider(scrapy.Spider):
         categories = response.xpath("//div[contains(@class, 'online-degree-panel')]/a/@href").getall()
 
         for item in categories:
+            if not re.search('/dom', item):
+                item = item + 'dom'
             yield response.follow(item, callback=self.sub_parse)
 
     def sub_parse(self, response):
         courses = response.xpath("//table[contains(@class, 'degree-list-table')]//a/@href").getall()
 
         for item in courses:
+            if re.search('/int', item):
+                item = re.sub('/int', '/dom', item)
+            elif re.search('/dom', item):
+                pass
+            else:
+                item = item + 'dom'
             yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
@@ -241,7 +249,7 @@ class UsaSpiderSpider(scrapy.Spider):
             if course_item["sourceURL"] not in self.banned_urls:
                 yield course_item
         else:
-            int_link = re.sub("/dom", "/int", response.request.url)
+            int_link = re.sub("/dom", "/int", course_item["sourceURL"])
 
             yield response.follow(int_link, callback=self.international_parse, meta={'item': course_item})
 
