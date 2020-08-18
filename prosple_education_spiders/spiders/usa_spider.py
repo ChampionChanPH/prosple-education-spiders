@@ -125,14 +125,18 @@ class UsaSpiderSpider(scrapy.Spider):
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//div[contains(div/*/text(), 'Degree overview')]/following-sibling::div//ul").get()
-        if overview:
-            course_item["overview"] = strip_tags(overview.strip(), False)
-
-        summary = response.xpath("//span[contains(@id, 'why') and contains(@id, "
-                                 "'degree')]/following-sibling::div/p/text()").get()
-        if summary:
-            course_item.set_summary(summary.strip())
+        overview = response.xpath(
+            "//span[contains(@id, 'whythisdegree')]/following-sibling::div[@class='intro']/*").getall()
+        holder = []
+        for item in overview:
+            if not re.search("^<p", item) or not re.search("^<ol", item) or not re.search("^<ul", item):
+                break
+            else:
+                item = re.sub("<img.*?>", "", item)
+                holder.append(item)
+        if holder:
+            course_item.set_summary(strip_tags(holder[0]))
+            course_item["overview"] = strip_tags(''.join(holder), False)
 
         learn = response.xpath(
             "//*[contains(text(), 'What you') and contains(text(), 'learn')]/following-sibling::div/*").getall()
