@@ -111,17 +111,17 @@ class FuaSpiderSpider(scrapy.Spider):
         yield SplashRequest(response.request.url, callback=self.sub_parse, args={'wait': 20})
 
     def sub_parse(self, response):
-        courses = response.xpath("//div[contains(@id, 'degree-list-item')]//a[text()='Read more']/@href").getall()
+        courses = response.xpath(
+            "//div[contains(@id, 'degree-list-item')]//a[contains(@class, 'btn-readMore')]/@href").getall()
 
         for item in courses:
-            yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 20},
-                                meta={'url': response.urljoin(item)})
+            yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
 
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
-        course_item["sourceURL"] = response.meta['url']
+        course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
 
@@ -206,6 +206,7 @@ class FuaSpiderSpider(scrapy.Spider):
 
         cricos = response.xpath("//p[contains(*/text(), 'CRICOS')]").getall()
         if cricos:
+            cricos = ''.join(cricos)
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
                 course_item["cricosCode"] = ', '.join(cricos)
