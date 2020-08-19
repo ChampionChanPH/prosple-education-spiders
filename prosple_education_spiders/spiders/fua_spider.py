@@ -129,9 +129,14 @@ class FuaSpiderSpider(scrapy.Spider):
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//div[@id='course-outline-expand']/*/*/*").getall()
+        overview = response.xpath("//div[@id='course-outline-expand']/div/div/*").getall()
+        if not overview:
+            overview = response.xpath("//div[@id='course-outline-expand']/div/*").getall()
         if overview:
             overview = [x for x in overview if strip_tags(x).strip() != '']
+            if not overview:
+                overview = response.xpath("//div[@id='course-outline-expand']/div/*").getall()
+                overview = [x for x in overview if strip_tags(x).strip() != '']
             course_item.set_summary(strip_tags(overview[0]))
             course_item["overview"] = strip_tags(''.join(overview), False)
 
