@@ -32,7 +32,7 @@ def get_total(field_to_use, field_to_update, course_item):
 class FuaSpiderSpider(scrapy.Spider):
     name = 'fua_spider'
     allowed_domains = ['study.federation.edu.au', 'federation.edu.au']
-    start_urls = ['https://study.federation.edu.au/#/results']
+    start_urls = ['https://study.federation.edu.au/search/?modes=domestic']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     banned_urls = []
     courses = []
@@ -111,7 +111,7 @@ class FuaSpiderSpider(scrapy.Spider):
         yield SplashRequest(response.request.url, callback=self.sub_parse, args={'wait': 20})
 
     def sub_parse(self, response):
-        courses = response.xpath("//div[@class='programs-list']//a[text()='Read more']/@href").getall()
+        courses = response.xpath("//div[contains(@id, 'degree-list-item')]//a[text()='Read more']/@href").getall()
 
         for item in courses:
             yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 20},
@@ -125,28 +125,26 @@ class FuaSpiderSpider(scrapy.Spider):
         course_item["published"] = 1
         course_item["institution"] = self.institution
 
-        course_name = response.xpath("//h1[@ng-bind-html='prg.program.award']/text()").get()
+        course_name = response.xpath("//div[@id='course-title-header']/h1/text()").get()
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        summary = response.xpath("//p[@ng-bind-html='prg.program.marketing_summary | htmlToPlaintext']/text()").get()
-        if summary:
-            course_item.set_summary(strip_tags(summary))
-
-        overview = response.xpath("//*[@ng-bind-html='prg.program.outline']/*").getall()
+        overview = response.xpath("//div[@id='course-outline-expand']/*/*/*").getall()
         if overview:
-            course_item["overview"] = strip_tags("".join(overview), False)
+            overview = [x for x in overview if strip_tags(x).strip() != '']
+            course_item.set_summary(strip_tags(overview[0]))
+            course_item["overview"] = strip_tags(''.join(overview), False)
 
-        intake = response.xpath("//*[@ng-bind-html='prg.program.commences']/text()").get()
-        if intake:
-            start_holder = []
-            for item in self.sem:
-                if re.search(item, intake, re.I | re.M):
-                    start_holder.append(self.sem[item])
-            if start_holder:
-                course_item["startMonths"] = "|".join(start_holder)
+        # intake = response.xpath("//*[@ng-bind-html='prg.program.commences']/text()").get()
+        # if intake:
+        #     start_holder = []
+        #     for item in self.sem:
+        #         if re.search(item, intake, re.I | re.M):
+        #             start_holder.append(self.sem[item])
+        #     if start_holder:
+        #         course_item["startMonths"] = "|".join(start_holder)
 
-        location = response.xpath("//p[@ng-bind-html='prg.program.domestic_details.location']/text()").get()
+        location = response.xpath("//*[@id='locations-and-semesters']").get()
         if location:
             campus_holder = []
             for campus in self.campuses:
@@ -172,8 +170,7 @@ class FuaSpiderSpider(scrapy.Spider):
             if study_holder:
                 course_item["modeOfStudy"] = "|".join(study_holder)
 
-        duration = response.xpath(
-            "//*[@ng-bind-html='prg.program.domestic_details.duration | htmlToPlaintext']/text()").get()
+        duration = response.xpath("//*[@id='course-overview-length']").get()
         if duration:
             duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\sfull.time)",
                                        duration, re.I | re.M | re.DOTALL)
@@ -207,22 +204,22 @@ class FuaSpiderSpider(scrapy.Spider):
                         course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                         self.get_period(duration_full[1][1].lower(), course_item)
 
-        cricos = response.xpath("//p[@ng-if='prg.program.cricos_code']").get()
+        cricos = response.xpath("//p[contains(*/text(), 'CRICOS')]").getall()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
-                course_item["cricosCode"] = ", ".join(cricos)
+                course_item["cricosCode"] = ', '.join(cricos)
                 course_item["internationalApps"] = 1
 
-        career = []
-        career_ul = response.xpath("//div[@ng-if='prg.program.careers']/ul").getall()
-        if career_ul:
-            career.extend(career_ul)
-        career_p = response.xpath("//div[@ng-bind-html='prg.program.career_opportunities']/*").getall()
-        if career_p:
-            career.extend(career_p)
+        career = response.xpath("//div[@id='course-careers-expand']/*/*").getall()
         if career:
+            career = [x for x in career if strip_tags(x).strip() != '']
             course_item["careerPathways"] = strip_tags("".join(career), False)
+
+        credit = response.xpath("//div[@id='course-recognition_of_prior_learning-expand']/*").getall()
+        if credit:
+            credit = [x for x in credit if strip_tags(x).strip() != '']
+            course_item["creditTransfer"] = strip_tags("".join(credit), False)
 
         code = re.findall(r"/([0-9A-Z.]+)\b", course_item["sourceURL"])
         if code:
