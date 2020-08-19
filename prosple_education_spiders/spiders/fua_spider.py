@@ -220,6 +220,8 @@ class FuaSpiderSpider(scrapy.Spider):
         career = response.xpath("//div[@id='course-careers-expand']/*/*").getall()
         if career:
             career = [x for x in career if strip_tags(x).strip() != '']
+            if not career:
+                career = response.xpath("//div[@id='course-careers-expand']/*").getall()
             course_item["careerPathways"] = strip_tags("".join(career), False)
 
         credit = response.xpath("//div[@id='course-recognition_of_prior_learning-expand']/*").getall()
