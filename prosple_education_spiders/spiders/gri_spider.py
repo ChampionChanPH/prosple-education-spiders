@@ -42,11 +42,12 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class GriSpiderSpider(scrapy.Spider):
     name = 'gri_spider'
-    start_urls = ['https://www.griffith.edu.au/study/degrees?term=&studentType=domestic&studentType=international'
-                  '&academicTermYear=2020']
+    # start_urls = ['https://www.griffith.edu.au/study/degrees?term=&studentType=domestic&studentType=international'
+    #               '&academicTermYear=2020']
+    start_urls = ['https://www.griffith.edu.au/study/degrees?term=&studentType=domestic&studentType=international']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
-    institution = "Swinburne University of Technology"
-    uidPrefix = "AU-SWI-"
+    institution = "Griffith University"
+    uidPrefix = "AU-GRI-"
 
     degrees = {
         "graduate certificate": "7",
@@ -102,6 +103,16 @@ class GriSpiderSpider(scrapy.Spider):
         "day": 365
     }
 
+    lua_script = """
+        function main(splash, args)
+          assert(splash:go(args.url))
+          assert(splash:wait(2.0))
+          return {
+            html = splash:html(),
+          }
+        end
+    """
+
     def get_period(self, string_to_use, course_item):
         for item in self.teaching_periods:
             if re.search(item, string_to_use):
@@ -113,11 +124,13 @@ class GriSpiderSpider(scrapy.Spider):
     def sub_parse(self, response):
         courses = response.xpath("//div[@class='tr']//a/@href").getall()
 
-        print(courses)
-
+        courses = ['https://www.griffith.edu.au/study/degrees/bachelor-of-arts-1016']
         for item in courses:
-            yield SplashRequest(response.urljoin(item), callback=self.course_parse,
-                                args={'wait': 20}, meta={'url': response.urljoin(item)})
+            # yield SplashRequest(response.urljoin(item), callback=self.course_parse,
+            #                     args={'wait': 20}, meta={'url': response.urljoin(item)})
+            yield SplashRequest(response.urljoin(item), callback=self.course_parse, endpoint='execute',
+                                args={'lua_source': self.lua_script, 'url': response.urljoin(item), 'wait': 20},
+                                meta={'url': response.urljoin(item)})
 
     def course_parse(self, response):
         course_item = Course()
@@ -127,8 +140,16 @@ class GriSpiderSpider(scrapy.Spider):
         course_item["published"] = 1
         course_item["institution"] = self.institution
 
-        course_name = response.xpath("//h1/text()").get()
+        course_name = response.xpath("//title/text()").get()
         if course_name:
+            course_name = re.sub('-.*', '', course_name, re.DOTALL)
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
+
+        cricos = response.xpath("//dt[contains(@class, 'cricos-code')]/following-sibling::dd").get()
+        if cricos:
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if cricos:
+                course_item["cricosCode"] = ', '.join(cricos)
+                course_item["internationalApps"] = 1
 
         yield course_item
