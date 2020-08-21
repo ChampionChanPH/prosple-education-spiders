@@ -129,7 +129,10 @@ class KcbtSpiderSpider(scrapy.Spider):
         else:
             course_item.set_course_name(name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//div[contains(@class, 'c-block')][1]/*").getall()
+        overview = response.xpath(
+            "//div[contains(@class, 'c-block')][1]//div[@class='tve_shortcode_rendered']/p[1]").getall()
+        if not overview:
+            overview = response.xpath("//div[contains(@class, 'c-block')][1]/*").getall()
         holder = []
         for item in overview:
             if re.search("^<p", item):
