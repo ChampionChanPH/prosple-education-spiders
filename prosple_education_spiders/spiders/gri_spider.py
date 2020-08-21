@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
+# 8/21/2020 having difficulties getting the data from the course page
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
