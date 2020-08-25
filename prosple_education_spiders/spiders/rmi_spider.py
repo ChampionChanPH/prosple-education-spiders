@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
-# Update course level of "University Certificate in Tertiary Preparation for Postgraduate Studies" to Postgraduate
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
