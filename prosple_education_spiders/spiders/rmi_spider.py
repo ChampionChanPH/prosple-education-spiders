@@ -41,8 +41,8 @@ def get_total(field_to_use, field_to_update, course_item):
                                                / 52
 
 
-class TestSpiderSpider(scrapy.Spider):
-    name = 'test_spider'
+class RmiSpiderSpider(scrapy.Spider):
+    name = 'rmi_spider'
     start_urls = ['https://www.rmit.edu.au/study-with-us']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "RMIT University"
@@ -102,16 +102,6 @@ class TestSpiderSpider(scrapy.Spider):
         "week": 52,
         "day": 365
     }
-
-    lua_script = """
-            function main(splash, args)
-              assert(splash:go(args.url))
-              assert(splash:wait(2.0))
-              return {
-                html = splash:html(),
-              }
-            end
-        """
 
     def parse(self, response):
         yield SplashRequest(response.request.url, callback=self.category_parse, args={'wait': 20})
