@@ -150,3 +150,4 @@ class RmiSpiderSpider(scrapy.Spider):
             course_item['careerPathways'] = strip_tags(''.join(career), False)
 
         yield course_item
+
