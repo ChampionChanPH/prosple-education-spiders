@@ -99,6 +99,11 @@ class RmiSpiderSpider(scrapy.Spider):
         "day": 365
     }
 
+    def get_period(self, string_to_use, course_item):
+        for item in self.teaching_periods:
+            if re.search(item, string_to_use):
+                course_item["teachingPeriod"] = self.teaching_periods[item]
+
     def parse(self, response):
         yield SplashRequest(response.request.url, callback=self.category_parse, args={'wait': 20})
 
