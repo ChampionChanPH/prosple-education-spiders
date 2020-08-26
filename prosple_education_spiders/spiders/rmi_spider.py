@@ -262,5 +262,8 @@ class RmiSpiderSpider(scrapy.Spider):
         if credit:
             course_item['creditTransfer'] = strip_tags(''.join(credit), False)
 
+        if 'uid' in course_item and 'courseCode' in course_item:
+            course_item['uid'] = course_item['uid'] + '-' + course_item['courseCode']
+
         yield course_item
 
