@@ -140,7 +140,7 @@ class RmiSpiderSpider(scrapy.Spider):
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@class='MainSectionPad'][contains(*//h2/text(), "
-                                  "'Overview')]/following-sibling::div[1]/div[contains(@class, "
+                                  "'Overview')]/following-sibling::div[not(@class='module')][1]/div[contains(@class, "
                                   "'extended-desc')]/*").getall()
         if not overview or strip_tags(''.join(overview)).strip() == '':
             overview = response.xpath("//div[@class='MainSectionPad'][contains(*//h2/text(), "
@@ -148,6 +148,10 @@ class RmiSpiderSpider(scrapy.Spider):
                                       "'extended-desc')]/p").getall()
         if overview:
             course_item['overview'] = strip_tags(''.join(overview), False)
+
+        summary = response.xpath("//*[@class='program-tilte']/text()").get()
+        if summary:
+            course_item.set_summary(strip_tags(summary.strip()))
 
         career = response.xpath("//div[@class='MainSectionPad'][contains(*//h2/text(), "
                                 "'Career')]/following-sibling::div[1]/div[contains(@class, "
@@ -266,6 +270,8 @@ class RmiSpiderSpider(scrapy.Spider):
             "//*[contains(text(), 'Credit and recognition of prior learning')]/following-sibling::*").getall()
         if credit:
             course_item['creditTransfer'] = strip_tags(''.join(credit), False)
+
+        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
         if 'uid' in course_item and 'courseCode' in course_item:
             course_item['uid'] = course_item['uid'] + '-' + course_item['courseCode']
