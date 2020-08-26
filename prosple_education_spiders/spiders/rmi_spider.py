@@ -139,6 +139,10 @@ class RmiSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[@class='MainSectionPad'][contains(*//h2/text(), "
                                   "'Overview')]/following-sibling::div[1]/div[contains(@class, "
                                   "'extended-desc')]/*").getall()
+        if not overview or strip_tags(overview).strip() == '':
+            overview = response.xpath("//div[@class='MainSectionPad'][contains(*//h2/text(), "
+                                      "'Details')]/following-sibling::div[1]/div[contains(@class, "
+                                      "'extended-desc')]/p").getall()
         if overview:
             course_item['overview'] = strip_tags(''.join(overview), False)
 
