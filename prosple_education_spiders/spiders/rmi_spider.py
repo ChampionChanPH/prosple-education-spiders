@@ -42,9 +42,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class RmiSpiderSpider(scrapy.Spider):
     name = 'rmi_spider'
-    # start_urls = ['https://www.rmit.edu.au/study-with-us']
-    start_urls = ['https://www.rmit.edu.au/study-with-us/levels-of-study/vocational-study/advanced-diplomas/advanced'
-                  '-diploma-of-business-public-relations-c6140']
+    start_urls = ['https://www.rmit.edu.au/study-with-us']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "RMIT University"
     uidPrefix = "AU-RMI-"
@@ -106,29 +104,29 @@ class RmiSpiderSpider(scrapy.Spider):
             if re.search(item, string_to_use):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
-    # def parse(self, response):
-    #     yield SplashRequest(response.request.url, callback=self.category_parse, args={'wait': 20})
-    #
-    # def category_parse(self, response):
-    #     categories = response.xpath("//div[@class='target_EF']//a/@href").getall()
-    #
-    #     for item in categories:
-    #         yield response.follow(item, callback=self.sub_parse)
-    #
-    # def sub_parse(self, response):
-    #     sub = response.xpath("//div[contains(@class, 'columnlinklist__content--box')]//a["
-    #                          "@data-analytics-type='columnlinklist']/@href").getall()
-    #
-    #     for item in sub:
-    #         yield SplashRequest(response.urljoin(item), callback=self.link_parse, args={'wait': 20})
-    #
-    # def link_parse(self, response):
-    #     courses = response.xpath("//a[@data-analytics-type='program list']/@href").getall()
-    #
-    #     for item in courses:
-    #         yield response.follow(response.urljoin(item), callback=self.course_parse)
-
     def parse(self, response):
+        yield SplashRequest(response.request.url, callback=self.category_parse, args={'wait': 20})
+
+    def category_parse(self, response):
+        categories = response.xpath("//div[@class='target_EF']//a/@href").getall()
+
+        for item in categories:
+            yield response.follow(item, callback=self.sub_parse)
+
+    def sub_parse(self, response):
+        sub = response.xpath("//div[contains(@class, 'columnlinklist__content--box')]//a["
+                             "@data-analytics-type='columnlinklist']/@href").getall()
+
+        for item in sub:
+            yield SplashRequest(response.urljoin(item), callback=self.link_parse, args={'wait': 20})
+
+    def link_parse(self, response):
+        courses = response.xpath("//a[@data-analytics-type='program list']/@href").getall()
+
+        for item in courses:
+            yield response.follow(response.urljoin(item), callback=self.course_parse)
+
+    def course_parse(self, response):
         course_item = Course()
 
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
