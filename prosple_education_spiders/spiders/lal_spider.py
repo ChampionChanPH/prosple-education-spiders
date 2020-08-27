@@ -45,8 +45,8 @@ class LalSpiderSpider(scrapy.Spider):
     start_urls = ['https://www.languagelinks.wa.edu.au/our-courses/ielts-academic-english-eiap/',
                   'https://www.languagelinks.wa.edu.au/our-courses/cambridge-english-exam-courses/',
                   'https://www.languagelinks.wa.edu.au/our-courses/general-english/']
-    institution = "RMIT University"
-    uidPrefix = "AU-RMI-"
+    institution = "Language Links"
+    uidPrefix = "AU-LAL-"
 
     degrees = {
         "graduate certificate": "7",
