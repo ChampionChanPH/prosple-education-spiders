@@ -149,7 +149,7 @@ class RmiSpiderSpider(scrapy.Spider):
                 if overview:
                     course_item['overview'] = strip_tags(''.join(overview), False)
                     break
-        if not overview or strip_tags(''.join(overview)).strip() == '':
+        if 'overview' not in course_item:
             overview = response.xpath("//div[@class='MainSectionPad'][contains(*//h2/text(), "
                                       "'Details')]/following-sibling::*")
             for item in overview:
