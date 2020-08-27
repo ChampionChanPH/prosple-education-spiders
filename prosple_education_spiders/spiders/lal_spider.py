@@ -39,6 +39,7 @@ def get_total(field_to_use, field_to_update, course_item):
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
                                                / 52
 
+
 class LalSpiderSpider(scrapy.Spider):
     name = 'lal_spider'
     start_urls = ['https://www.languagelinks.wa.edu.au/our-courses/ielts-academic-english-eiap/',
