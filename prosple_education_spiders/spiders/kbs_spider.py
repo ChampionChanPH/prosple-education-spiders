@@ -57,6 +57,7 @@ class KbsSpiderSpider(scrapy.Spider):
         "graduate certificate": "7",
         "graduate diploma": "8",
         "master": research_coursework,
+        "mba - master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
@@ -170,6 +171,7 @@ class KbsSpiderSpider(scrapy.Spider):
 
         duration = response.xpath("//div[contains(@class, 'typical-duration')]").get()
         if duration:
+            duration = strip_tags(duration)
             duration_full = re.findall("(\d*\.?\d+)(?=\s(trimester))",
                                        duration, re.I | re.M | re.DOTALL)
             if duration_full:
