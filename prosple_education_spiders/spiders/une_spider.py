@@ -40,6 +40,7 @@ class UneSpiderSpider(scrapy.Spider):
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
+        "undergraduate certificate": "4",
         "certificate i": "4",
         "certificate ii": "4",
         "certificate iii": "4",
