@@ -118,9 +118,9 @@ class CuuSpider(scrapy.Spider):
             category = item.xpath(
                 ".//div[@class='search-card__title-wrap']/*[contains(@class, 'search-card__category')]/text()").get()
             study = item.xpath(".//div[@class='search-card__meta']//li[@aria-label='Availability']").get()
-            if url:
+            if url and not re.search('major|specialisation', category, re.I | re.M):
                 yield response.follow(url, callback=self.course_parse,
-                                      meta={'study': study, 'category': category})
+                                      meta={'study': study})
 
         next_page = response.xpath("//div[@class='search-pagination__pages']/following-sibling::a["
                                    "@class='search-pagination__next']/@href").get()
@@ -137,6 +137,8 @@ class CuuSpider(scrapy.Spider):
         course_item["institution"] = self.institution
 
         course_name = response.xpath("//dt[text()='Course']/following-sibling::dd/text()").get()
+        if not course_name:
+            course_name = response.xpath("//dt[text()='MOOC']/following-sibling::dd/text()").get()
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
@@ -147,7 +149,7 @@ class CuuSpider(scrapy.Spider):
         overview = response.xpath("//div[contains(@class, 'outline__content')]/*").getall()
         holder = []
         for index, item in enumerate(overview):
-            if not re.search("^p", item) and index != 0:
+            if not re.search("^p", item) and not re.search("^ul", item) and index != 0:
                 break
             else:
                 holder.append(item)
@@ -225,10 +227,6 @@ class CuuSpider(scrapy.Spider):
             course_item['campusNID'] = '|'.join(campus_holder)
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
-
-        category = response.meta['category']
-        if category:
-            course_item['durationRaw'] = category.strip()
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/', ','], type_delims=['of', 'in', 'by'])
 
