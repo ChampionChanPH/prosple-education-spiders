@@ -203,12 +203,12 @@ class CuuSpider(scrapy.Spider):
         if location:
             for campus in self.campuses:
                 if re.search(campus, location, re.I | re.M):
-                    campus_holder.append(self.campuses[campus])
+                    campus_holder.add(self.campuses[campus])
         if re.search('online', response.meta['study'], re.I | re.M):
-            study_holder.append('Online')
-            campus_holder.append(self.campuses['Open Universities Australia'])
+            study_holder.add('Online')
+            campus_holder.add(self.campuses['Open Universities Australia'])
         if campus_holder:
-            study_holder.append('In Person')
+            study_holder.add('In Person')
             course_item['campusNID'] = '|'.join(campus_holder)
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
