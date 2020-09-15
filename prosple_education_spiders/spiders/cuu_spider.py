@@ -118,7 +118,7 @@ class CuuSpider(scrapy.Spider):
             category = item.xpath(
                 ".//div[@class='search-card__title-wrap']/*[contains(@class, 'search-card__category')]/text()").get()
             study = item.xpath(".//div[@class='search-card__meta']//li[@aria-label='Availability']").get()
-            if url and not re.search('major|specialisation', category, re.I | re.M):
+            if url and not re.search('major|specialisation|stream', category, re.I | re.M):
                 yield response.follow(url, callback=self.course_parse,
                                       meta={'study': study})
 
@@ -228,6 +228,7 @@ class CuuSpider(scrapy.Spider):
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/', ','], type_delims=['of', 'in', 'by'])
+        if 'courseName' not in course_item:
+            course_item.set_sf_dt(self.degrees, degree_delims=['and', '/', ','], type_delims=['of', 'in', 'by'])
 
-        yield course_item
+            yield course_item
