@@ -118,9 +118,10 @@ class CuuSpider(scrapy.Spider):
             category = item.xpath(
                 ".//div[@class='search-card__title-wrap']/*[contains(@class, 'search-card__category')]/text()").get()
             study = item.xpath(".//div[@class='search-card__meta']//li[@aria-label='Availability']").get()
-            if url and not re.search('major|specialisation|stream', category, re.I | re.M):
-                yield response.follow(url, callback=self.course_parse,
-                                      meta={'study': study})
+            if re.search('major|specialisation|stream', category, re.I | re.M):
+                pass
+            elif url:
+                yield response.follow(url, callback=self.course_parse, meta={'study': study})
 
         next_page = response.xpath("//div[@class='search-pagination__pages']/following-sibling::a["
                                    "@class='search-pagination__next']/@href").get()
