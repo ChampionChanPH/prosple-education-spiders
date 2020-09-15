@@ -50,6 +50,7 @@ class CuuSpider(scrapy.Spider):
         "graduate certificate": "7",
         "graduate diploma": "8",
         "master": research_coursework,
+        "masters": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
@@ -153,15 +154,26 @@ class CuuSpider(scrapy.Spider):
                 holder.append(item)
         if holder:
             course_item['overview'] = strip_tags(''.join(holder), False)
+            if 'overviewSummary' not in course_item:
+                course_item.set_summary(strip_tags(holder[0]))
 
-        atar = response.xpath("//dt[text()='Admission criteria']/following-sibling::dd/text()").get()
+        atar = response.xpath("//td[contains(text(), 'ATAR')]/following-sibling::td/text()").get()
         if atar:
-            guaranteed_atar = re.findall("(?<=Guaranteed ATAR\s)(\d*),?(\d+)", atar, re.M)
-            minimum_atar = re.findall("(?<=Minimum ATAR\s)(\d*),?(\d+)", atar, re.M)
-            if guaranteed_atar:
-                course_item["guaranteedEntryScore"] = float(''.join(guaranteed_atar[0]))
-            if minimum_atar:
-                course_item["minScoreNextIntake"] = float(''.join(minimum_atar[0]))
+            atar = re.findall("(\d*),?(\d+)", atar, re.M)
+            if atar:
+                course_item["minScoreNextIntake"] = float(''.join(atar[0]))
+
+        cricos = response.xpath("//dt[text()='CRICOS']/following-sibling::dd/text()").get()
+        if cricos:
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if cricos:
+                course_item['cricosCode'] = ', '.join(cricos)
+                course_item['internationalApps'] = 1
+
+        learn = response.xpath(
+            "//*[contains(text(), 'What you') and contains(text(), 'll learn')]/following-sibling::ul").get()
+        if learn:
+            course_item['whatLearn'] = strip_tags(learn, False)
 
         duration = response.xpath("//dt[contains(a/text(), 'Duration')]/following-sibling::dd").get()
         if duration and re.search(',', duration):
@@ -207,7 +219,7 @@ class CuuSpider(scrapy.Spider):
                             course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                             self.get_period(duration_full[1][1].lower(), course_item)
 
-        location = response.xpath("//dt[text()='Location']/following-sibling::dd").get()
+        location = response.xpath("//div[@class='locations']").get()
         campus_holder = set()
         study_holder = set()
         study = response.meta['study']
@@ -217,7 +229,9 @@ class CuuSpider(scrapy.Spider):
                     campus_holder.add(self.campuses[campus])
         if study and re.search('online', study, re.I | re.M):
             study_holder.add('Online')
-            campus_holder.add(self.campuses['Open Universities Australia'])
+        if 'courseName' in course_item:
+            if re.search('OpenUnis', course_item['courseName'], re.I):
+                campus_holder.add(self.campuses['Open Universities Australia'])
         if len(campus_holder) == 1 and self.campuses['Open Universities Australia'] in campus_holder:
             course_item['campusNID'] = '|'.join(campus_holder)
         elif campus_holder:
