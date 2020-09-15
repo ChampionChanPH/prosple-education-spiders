@@ -42,7 +42,6 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class CuuSpider(scrapy.Spider):
     name = 'cuu_spider'
-    allowed_domains = ['www.acu.edu.au', 'study.curtin.edu.au', 'search.curtin.edu.au']
     start_urls = ['https://study.curtin.edu.au/search/?search_text=&study_type=course']
     institution = "Curtin University"
     uidPrefix = "AU-CUU-"
@@ -118,9 +117,7 @@ class CuuSpider(scrapy.Spider):
             category = item.xpath(
                 ".//div[@class='search-card__title-wrap']/*[contains(@class, 'search-card__category')]/text()").get()
             study = item.xpath(".//div[@class='search-card__meta']//li[@aria-label='Availability']").get()
-            if re.search('major|specialisation|stream', category, re.I | re.M):
-                pass
-            elif url:
+            if url and not re.search('major|specialisation|stream', category, re.I | re.M):
                 yield response.follow(url, callback=self.course_parse, meta={'study': study})
 
         next_page = response.xpath("//div[@class='search-pagination__pages']/following-sibling::a["
@@ -229,7 +226,7 @@ class CuuSpider(scrapy.Spider):
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
 
-        if 'courseName' not in course_item:
+        if 'courseName' in course_item:
             course_item.set_sf_dt(self.degrees, degree_delims=['and', '/', ','], type_delims=['of', 'in', 'by'])
 
             yield course_item
