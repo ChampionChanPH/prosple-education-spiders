@@ -91,7 +91,8 @@ class CuuSpider(scrapy.Spider):
         "Curtin Singapore": "576",
         "Curtin University Dubai": "54873",
         "Curtin Mauritius": "578",
-        "Open Universities Australia": "573"
+        "Open Universities Australia": "573",
+        "Perth City": "54883"
     }
 
     teaching_periods = {
@@ -114,9 +115,12 @@ class CuuSpider(scrapy.Spider):
 
         for item in boxes:
             url = item.xpath(".//div[@class='search-card__title-wrap']//a/@href").get()
+            category = item.xpath(
+                ".//div[@class='search-card__title-wrap']/*[contains(@class, 'search-card__category')]/text()").get()
             study = item.xpath(".//div[@class='search-card__meta']//li[@aria-label='Availability']").get()
             if url:
-                yield response.follow(url, callback=self.course_parse, meta={'study': study})
+                yield response.follow(url, callback=self.course_parse,
+                                      meta={'study': study, 'category': category})
 
         next_page = response.xpath("//div[@class='search-pagination__pages']/following-sibling::a["
                                    "@class='search-pagination__next']/@href").get()
@@ -141,8 +145,14 @@ class CuuSpider(scrapy.Spider):
             course_item.set_summary(strip_tags(summary))
 
         overview = response.xpath("//div[contains(@class, 'outline__content')]/*").getall()
-        if overview:
-            course_item['overview'] = strip_tags(''.join(overview), False)
+        holder = []
+        for index, item in enumerate(overview):
+            if not re.search("^p", item) and index != 0:
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item['overview'] = strip_tags(''.join(holder), False)
 
         atar = response.xpath("//dt[text()='Admission criteria']/following-sibling::dd/text()").get()
         if atar:
@@ -200,18 +210,25 @@ class CuuSpider(scrapy.Spider):
         location = response.xpath("//dt[text()='Location']/following-sibling::dd").get()
         campus_holder = set()
         study_holder = set()
+        study = response.meta['study']
         if location:
             for campus in self.campuses:
                 if re.search(campus, location, re.I | re.M):
                     campus_holder.add(self.campuses[campus])
-        if re.search('online', response.meta['study'], re.I | re.M):
+        if study and re.search('online', study, re.I | re.M):
             study_holder.add('Online')
             campus_holder.add(self.campuses['Open Universities Australia'])
-        if campus_holder:
+        if len(campus_holder) == 1 and campus_holder[0] == self.campuses['Open Universities Australia']:
+            pass
+        elif len(campus_holder) >= 1:
             study_holder.add('In Person')
             course_item['campusNID'] = '|'.join(campus_holder)
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
+
+        category = response.meta['category']
+        if category:
+            course_item['durationRaw'] = category.strip()
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/', ','], type_delims=['of', 'in', 'by'])
 
