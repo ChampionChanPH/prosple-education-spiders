@@ -218,9 +218,9 @@ class CuuSpider(scrapy.Spider):
         if study and re.search('online', study, re.I | re.M):
             study_holder.add('Online')
             campus_holder.add(self.campuses['Open Universities Australia'])
-        if len(campus_holder) == 1 and campus_holder[0] == self.campuses['Open Universities Australia']:
-            pass
-        elif len(campus_holder) >= 1:
+        if len(campus_holder) == 1 and self.campuses['Open Universities Australia'] in campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+        elif campus_holder:
             study_holder.add('In Person')
             course_item['campusNID'] = '|'.join(campus_holder)
         if study_holder:
