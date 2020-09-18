@@ -170,6 +170,10 @@ class CuuSpider(scrapy.Spider):
                 course_item['cricosCode'] = ', '.join(cricos)
                 course_item['internationalApps'] = 1
 
+        course_code = response.xpath("//p[contains(@class, 'offering-overview__hero__udc')]/text()").get()
+        if course_code:
+            course_item['courseCode'] = course_code.strip()
+
         learn = response.xpath(
             "//*[contains(text(), 'What you') and contains(text(), 'll learn')]/following-sibling::ul").get()
         if learn:
