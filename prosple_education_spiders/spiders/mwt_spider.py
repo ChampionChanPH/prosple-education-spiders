@@ -63,7 +63,6 @@ class MwtSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.request.url
 
         title = response.xpath("//title/text()").get()
         split_title = re.findall("(\w+):\s(.+)\s–", title, re.DOTALL)
