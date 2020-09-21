@@ -74,9 +74,11 @@ class AiwtSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[@class='course-overview']/text()").get()
         if overview is not None:
             course_item["overview"] = overview
+            course_item.set_summary(overview)
         if "overview" not in course_item:
             overview = "Learn more about studying " + course_item["courseName"] + " at " + self.institution + "."
             course_item["overview"] = overview
+
 
         career = max(response.xpath("//div[contains(h2, 'Career Prospects')]/text()").getall())
         if career is not None:
