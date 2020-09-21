@@ -9,6 +9,7 @@ import scrapy
 import re
 from .misc_functions import *
 
+
 class Scholarship(scrapy.Item):
     source_url = scrapy.Field()
     uid = scrapy.Field()
@@ -44,6 +45,10 @@ class Scholarship(scrapy.Item):
     apply_email = scrapy.Field()
     published = scrapy.Field()
 
+    def set_scholarship_name(self, name, prefix):
+        self["name"] = re.sub("\s+", " ", name)
+        self["uid"] = prefix + re.sub(" ", "-", self["name"])
+
 
 class Rating(scrapy.Item):
     # define the fields for your item here like:
@@ -68,7 +73,6 @@ class Rating(scrapy.Item):
 
 
 class Course(scrapy.Item):
-
     flag = scrapy.Field()  # Non cms field. contains list of potential errors during scrape.
     # {"field name" : "short description"} eg. {"courseName": "full course name too long. could be a double degree"}
 
@@ -213,7 +217,8 @@ class Course(scrapy.Item):
             self["specificStudyField"] = self["courseName"]
 
         else:
-            degree_matches = [re.finditer(x + " ", self["courseName"].lower()) for x in list(degrees_map.keys()) if re.search(x + " ", self["courseName"].lower())]
+            degree_matches = [re.finditer(x + " ", self["courseName"].lower()) for x in list(degrees_map.keys()) if
+                              re.search(x + " ", self["courseName"].lower())]
             if degree_matches:
                 for match in degree_matches:
                     for r in match:
@@ -245,13 +250,14 @@ class Course(scrapy.Item):
             names = []
             if len(degree_matches) > 2:
                 print(str(len(degree_matches)) + " degrees were found.")
-                self.add_flag("degreeType", str(len(degree_matches)) + " degree types were found for: " + self["courseName"])
+                self.add_flag("degreeType",
+                              str(len(degree_matches)) + " degree types were found for: " + self["courseName"])
                 degree_matches = degree_matches[:2]
 
             if len(degree_matches) == 2:
                 self["doubleDegree"] = 1
                 for delim in degree_delims:
-                    pattern = "\s?"+delim+"\s?(?="+degree_matches[1]+")"
+                    pattern = "\s?" + delim + "\s?(?=" + degree_matches[1] + ")"
                     holder = re.split(pattern, self["courseName"], flags=re.IGNORECASE)
                     if len(holder) == 2:
                         names = holder[:]
@@ -313,7 +319,7 @@ class Course(scrapy.Item):
                 self["specificStudyField"] = " / ".join(study_fields)
 
             for index in range(len(degree_matches)):
-            # for index in range(len(raw_degree_types)):
+                # for index in range(len(raw_degree_types)):
                 # try:
                 #     degree_match = max([x for x in list(dict.fromkeys(degrees_map)) if x in raw_degree_types[index]], key=len)  # match degree type and get longest match
                 # except ValueError:
@@ -332,8 +338,9 @@ class Course(scrapy.Item):
                     self["degreeType"] = degree_match
                     rank = self.degrees[degree_match]["rank"]
                     if names:
-                        if "honour" in names[index].lower() and self["degreeType"] != "3" and "doubleDegree" not in self:
-                                self.add_flag("degreeType", "This could be an honours degree: "+self["courseName"])
+                        if "honour" in names[index].lower() and self[
+                            "degreeType"] != "3" and "doubleDegree" not in self:
+                            self.add_flag("degreeType", "This could be an honours degree: " + self["courseName"])
 
         self["courseLevel"] = self.degrees[self["degreeType"]]["level"]
         self["group"] = self.groups[self["courseLevel"]]["num"]
@@ -371,5 +378,3 @@ class Course(scrapy.Item):
                 cut_summary = text[0][:250]
                 last_space = cut_summary.rindex(" ")
                 self["overviewSummary"] = cut_summary[:last_space] + "..."
-
-
