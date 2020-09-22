@@ -96,7 +96,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
                                      ")='Eligibility']/following-sibling::*").getall()
         holder = []
         for item in eligibility:
-            if re.search('^ul', item) or re.search('^ol', item):
+            if re.search('^<ul', item) or re.search('^<ol', item):
                 holder.append(item)
                 break
             else:
