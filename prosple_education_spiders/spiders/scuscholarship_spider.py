@@ -171,7 +171,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         if duration:
             for num in self.num:
                 duration = re.sub(num, self.num[num], duration)
-            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)(s?))", duration,
+            duration_full = re.findall("(\d*\.?\d+)(?=(\s)(year|month|semester|trimester|quarter|week|day)(s?))", duration,
                                        re.I | re.M | re.DOTALL)
             if duration_full:
                 scholarship_item['length_support'] = ' '.join(duration_full[0])
