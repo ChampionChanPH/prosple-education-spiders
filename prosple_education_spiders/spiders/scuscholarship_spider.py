@@ -106,8 +106,8 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
 
         value = response.xpath("//*[text()='Value' or text()='Amount']/following-sibling::*").get()
         if value:
-            value = re.findall("\$(\d*,?\d+)", value)
-            value = max([float(x) for x in value])
+            value = re.findall("\$(\d*),?(\d+)", value)
+            value = max([float(''.join(x)) for x in value])
             if value:
                 scholarship_item['total_value'] = value
 
@@ -173,7 +173,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
             duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration,
                                        re.I | re.M | re.DOTALL)
             if duration_full:
-                scholarship_item['length_support'] = ' '.join(duration_full)
+                scholarship_item['length_support'] = ' '.join(duration_full[0])
         if 'length_support' not in scholarship_item and re.search('one.off.payment', duration, re.I | re.M):
             scholarship_item['length_support'] = 'One-off payment'
 
