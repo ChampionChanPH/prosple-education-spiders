@@ -77,7 +77,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         holder = []
         for index, item in enumerate(overview):
             if (index == 0 or re.search("^<p", item)) and not re.search("Application process", item):
-                item = re.sub('<img.*?>', '', item, re.DOTALL)
+                item = re.sub('<img.*?>', '', item, re.DOTALL | re.I | re.M)
                 holder.append(item)
             elif index != 0 and not re.search("^<p", item):
                 break
