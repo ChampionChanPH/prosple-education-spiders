@@ -104,7 +104,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         if holder:
             scholarship_item['eligibility'] = strip_tags(''.join(holder), False)
 
-        value = response.xpath("//*[text()='Value' or text()='Amount']/following-sibling::*").get()
+        value = response.xpath("//*[text()='Value' or text()='Amount' or text()='ValuE']/following-sibling::*").get()
         if value:
             value = re.findall("\$(\d*),?(\d+)", value)
             value = [float(''.join(x)) for x in value]
@@ -166,7 +166,8 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
 
         duration = response.xpath("//*[contains(text(), 'Duration')]/following-sibling::*/text()").get()
         if not duration:
-            duration = response.xpath("//*[text()='Value' or text()='Amount']/following-sibling::*").get()
+            duration = response.xpath(
+                "//*[text()='Value' or text()='Amount' or text()='ValuE']/following-sibling::*").get()
         if duration:
             for num in self.num:
                 duration = re.sub(num, self.num[num], duration)
@@ -174,7 +175,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
                                        re.I | re.M | re.DOTALL)
             if duration_full:
                 scholarship_item['length_support'] = ' '.join(duration_full[0])
-        if 'length_support' not in scholarship_item and re.search('one.off.payment', duration, re.I | re.M):
-            scholarship_item['length_support'] = 'One-off payment'
+            if 'length_support' not in scholarship_item and re.search('one.off.payment', duration, re.I | re.M):
+                scholarship_item['length_support'] = 'One-off payment'
 
         yield scholarship_item
