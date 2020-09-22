@@ -78,7 +78,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         for index, item in enumerate(overview):
             if re.search("^<p", item):
                 holder.append(item)
-            elif index != 0 and not re.search("^p", item):
+            elif index != 0 and not re.search("^<p", item):
                 break
             elif re.search("Application process", item):
                 break
