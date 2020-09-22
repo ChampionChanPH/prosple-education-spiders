@@ -76,7 +76,9 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         overview = response.xpath("//h1/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(overview):
-            if re.search("^<p", item):
+            if re.search('<img', item):
+                pass
+            elif (index == 0 or re.search("^<p", item)) and not re.search("Application process", item):
                 holder.append(item)
             elif index != 0 and not re.search("^<p", item):
                 break
@@ -111,8 +113,8 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
             if value:
                 scholarship_item['total_value'] = max(value)
 
-        application_process = response.xpath(
-            "//*[contains(text(), 'Application process')]/following-sibling::*").getall()
+        application_process = response.xpath("//*[contains(text(), 'Application process') or contains(*/text(), "
+                                             "'Application process')]/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(application_process):
             if index == 0 or re.search("^p", item) or re.search("^ul", item) or re.search("^ol", item):
@@ -122,7 +124,8 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         if holder:
             scholarship_item['app_process'] = strip_tags(''.join(holder), False)
 
-        criteria = response.xpath("//*[contains(text(), 'Selection criteria')]/following-sibling::*").getall()
+        criteria = response.xpath("//*[contains(text(), 'Selection criteria') or contains(*/text(), 'Selection "
+                                  "criteria')]/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(criteria):
             if index == 0 or re.search("^p", item) or re.search("^ul", item) or re.search("^ol", item):
@@ -161,7 +164,8 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
                 close_date = datetime.strptime(close_date, '%d %m %Y')
                 scholarship_item['closes'] = close_date.strftime("%d/%m/%Y")
 
-        count = response.xpath("//*[contains(text(), 'Number available')]/following-sibling::*/text()").get()
+        count = response.xpath("//*[contains(text(), 'Number available') or contains(*/text(), 'Number "
+                               "available')]/following-sibling::*/text()").get()
         if count:
             scholarship_item['count_description'] = count.strip()
 
