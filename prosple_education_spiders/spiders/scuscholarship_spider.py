@@ -107,9 +107,9 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         value = response.xpath("//*[text()='Value' or text()='Amount']/following-sibling::*").get()
         if value:
             value = re.findall("\$(\d*),?(\d+)", value)
-            value = max([float(''.join(x)) for x in value])
+            value = [float(''.join(x)) for x in value]
             if value:
-                scholarship_item['total_value'] = value
+                scholarship_item['total_value'] = max(value)
 
         application_process = response.xpath(
             "//*[contains(text(), 'Application process')]/following-sibling::*").getall()
