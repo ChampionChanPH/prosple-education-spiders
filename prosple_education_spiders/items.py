@@ -49,6 +49,25 @@ class Scholarship(scrapy.Item):
         self["name"] = re.sub("\s+", " ", name)
         self["uid"] = prefix + re.sub(" ", "-", self["name"])
 
+    def set_summary(self, text):
+        text = re.split("(?<=[\.\?])\s", text)
+        if len(text) == 1:
+            if len(text[0]) < 250:
+                self["summary"] = text[0]
+            else:
+                cut_summary = text[0][:250]
+                last_space = cut_summary.rindex(" ")
+                self["summary"] = cut_summary[:last_space] + "..."
+        if len(text) > 1:
+            if len(text[0] + " " + text[1]) < 250:
+                self["summary"] = text[0] + " " + text[1]
+            elif len(text[0]) < 250:
+                self["summary"] = text[0]
+            else:
+                cut_summary = text[0][:250]
+                last_space = cut_summary.rindex(" ")
+                self["summary"] = cut_summary[:last_space] + "..."
+
 
 class Rating(scrapy.Item):
     # define the fields for your item here like:
