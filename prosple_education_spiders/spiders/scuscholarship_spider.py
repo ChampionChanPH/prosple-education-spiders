@@ -158,7 +158,8 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
             if not re.search('n/a', close_date, re.I) and not re.search('tbc', close_date, re.I):
                 for month in self.months:
                     close_date = re.sub(month, self.months[month], close_date)
-                scholarship_item['closes'] = datetime.strptime(close_date, '%d %m %Y')
+                close_date = datetime.strptime(close_date, '%d %m %Y')
+                scholarship_item['closes'] = close_date.strftime("%d/%m/%Y")
 
         count = response.xpath("//*[contains(text(), 'Number available')]/following-sibling::*/text()").get()
         if count:
@@ -174,7 +175,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
             duration_full = re.findall("(\d*\.?\d+)(?=(\s)(year|month|semester|trimester|quarter|week|day)(s?))", duration,
                                        re.I | re.M | re.DOTALL)
             if duration_full:
-                scholarship_item['length_support'] = ' '.join(duration_full[0])
+                scholarship_item['length_support'] = ''.join(duration_full[0])
             if 'length_support' not in scholarship_item and re.search('one.off.payment', duration, re.I | re.M):
                 scholarship_item['length_support'] = 'One-off payment'
 
