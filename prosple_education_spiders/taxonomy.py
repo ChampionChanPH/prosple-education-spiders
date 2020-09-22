@@ -14,7 +14,8 @@ taxonomies = {
         "12": "Masters (Research)",
         "13": "Non-Award",
         "14": "Professional Certificate",
-        "15": "No Match"
+        "15": "No Match",
+        "16": "Micro Credential"
     },
     "courseLevel": {
         "1": "Undergraduate",
