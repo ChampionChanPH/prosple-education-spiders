@@ -47,7 +47,7 @@ class CourseraSpider(scrapy.Spider):
         name = response.css("h1::text").get()
         if name:
             course_item.set_course_name(name, self.uidPrefix)
-            course_item["studyField"]
+            course_item["studyField"] = name
 
         overview = response.css(".description p::text").get()
         if overview:
