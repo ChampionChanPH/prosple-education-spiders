@@ -76,9 +76,8 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         overview = response.xpath("//h1/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(overview):
-            if re.search('<img', item):
-                pass
-            elif (index == 0 or re.search("^<p", item)) and not re.search("Application process", item):
+            if (index == 0 or re.search("^<p", item)) and not re.search("Application process", item):
+                item = re.sub('<img.*?>', '', item, re.DOTALL)
                 holder.append(item)
             elif index != 0 and not re.search("^<p", item):
                 break
