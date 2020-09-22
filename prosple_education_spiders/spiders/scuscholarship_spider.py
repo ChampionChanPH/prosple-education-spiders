@@ -76,7 +76,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         overview = response.xpath("//h1/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(overview):
-            if re.search("^p", item):
+            if re.search("^<p", item):
                 holder.append(item)
             elif index != 0 and not re.search("^p", item):
                 break
@@ -171,7 +171,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         if duration:
             for num in self.num:
                 duration = re.sub(num, self.num[num], duration)
-            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration,
+            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)(s?)", duration,
                                        re.I | re.M | re.DOTALL)
             if duration_full:
                 scholarship_item['length_support'] = ' '.join(duration_full[0])
