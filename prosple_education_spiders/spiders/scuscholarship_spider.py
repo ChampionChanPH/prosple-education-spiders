@@ -138,9 +138,9 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
             scholarship_item['criteria'] = strip_tags(''.join(holder), False)
 
         location = response.meta['campus']
+        campus_holder = set()
+        study_holder = set()
         if location:
-            campus_holder = set()
-            study_holder = set()
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.add(self.campuses[campus])
@@ -152,16 +152,16 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
                 study_holder.add('In person')
             if campus_holder:
                 scholarship_item['campus_names'] = '|'.join(campus_holder)
-                if "699" in campus_holder:
-                    scholarship_item['time_zone'] = 'Sydney'
-                elif "701" in campus_holder:
-                    scholarship_item['time_zone'] = 'Melbourne'
-                elif "700" in campus_holder:
-                    scholarship_item['time_zone'] = 'Perth'
-                else:
-                    scholarship_item['time_zone'] = 'Sydney'
             if study_holder:
                 scholarship_item['study_mode'] = '|'.join(study_holder)
+        if "699" in campus_holder:
+            scholarship_item['time_zone'] = 'Sydney'
+        elif "701" in campus_holder:
+            scholarship_item['time_zone'] = 'Melbourne'
+        elif "700" in campus_holder:
+            scholarship_item['time_zone'] = 'Perth'
+        else:
+            scholarship_item['time_zone'] = 'Sydney'
 
         close_date = response.meta['close_date']
         if close_date:
