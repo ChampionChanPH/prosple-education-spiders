@@ -95,7 +95,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
             scholarship_item['canonical_group'] = 'PostgradAustralia'
 
         eligibility = response.xpath("//*[self::h3 or self::h2][text()='Non eligibility' or text("
-                                     ")='Eligibility']/following-sibling::*").getall()
+                                     ")='Eligibility' or text()='Eligibility criteria']/following-sibling::*").getall()
         holder = []
         for item in eligibility:
             if re.search('^<ul', item) or re.search('^<ol', item):
@@ -106,7 +106,8 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         if holder:
             scholarship_item['eligibility'] = strip_tags(''.join(holder), False)
 
-        value = response.xpath("//*[text()='Value' or text()='Amount' or text()='ValuE']/following-sibling::*").get()
+        value = response.xpath("//*[text()='Value' or text()='Amount' or text()='ValuE' or */text("
+                               ")='Value']/following-sibling::*").get()
         if value:
             value = re.findall("\$(\d*),?(\d+)", value)
             value = [float(''.join(x)) for x in value]
@@ -117,7 +118,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
                                              "'Application process')]/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(application_process):
-            if index == 0 or re.search("^p", item) or re.search("^ul", item) or re.search("^ol", item):
+            if index == 0 or re.search("^<p", item) or re.search("^<ul", item) or re.search("^<ol", item):
                 holder.append(item)
             else:
                 break
@@ -128,7 +129,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
                                   "criteria')]/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(criteria):
-            if index == 0 or re.search("^p", item) or re.search("^ul", item) or re.search("^ol", item):
+            if index == 0 or re.search("^<p", item) or re.search("^<ul", item) or re.search("^<ol", item):
                 holder.append(item)
             elif re.search("#top", item):
                 pass
@@ -170,7 +171,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
                 for month in self.months:
                     close_date = re.sub(month, self.months[month], close_date)
                 close_date = datetime.strptime(close_date, '%d %m %Y')
-                scholarship_item['closes'] = close_date.strftime("%d/%m/%Y")
+                scholarship_item['closes'] = close_date.strftime("%m/%d/%Y") + " 00:00:00"
 
         count = response.xpath("//*[contains(text(), 'Number available') or contains(*/text(), 'Number "
                                "available')]/following-sibling::*/text()").get()
