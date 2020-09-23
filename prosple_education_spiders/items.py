@@ -61,8 +61,6 @@ class Scholarship(scrapy.Item):
         if len(text) > 1:
             if len(text[0] + " " + text[1]) < 250:
                 self["summary"] = text[0] + " " + text[1]
-            elif len(text[0]) < 250:
-                self["summary"] = text[0]
             else:
                 cut_summary = text[0][:250]
                 last_space = cut_summary.rindex(" ")
