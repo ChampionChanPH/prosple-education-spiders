@@ -62,7 +62,7 @@ class Scholarship(scrapy.Item):
             if len(text[0] + " " + text[1]) < 250:
                 self["summary"] = text[0] + " " + text[1]
             else:
-                cut_summary = text[0][:250]
+                cut_summary = (text[0] + " " + text[1])[:250]
                 last_space = cut_summary.rindex(" ")
                 self["summary"] = cut_summary[:last_space] + "..."
 
