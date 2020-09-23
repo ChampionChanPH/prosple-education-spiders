@@ -13,10 +13,10 @@ from .misc_functions import *
 class Scholarship(scrapy.Item):
     source_url = scrapy.Field()
     uid = scrapy.Field()
-    name = scrapy.Field()
+    name = scrapy.Field() #unique, like uid on courses
     code = scrapy.Field()
     canonical_group = scrapy.Field()
-    time_zone = scrapy.Field()
+    time_zone = scrapy.Field() #required
     provider_name = scrapy.Field()
     eligible = scrapy.Field()
     degree_types = scrapy.Field()
