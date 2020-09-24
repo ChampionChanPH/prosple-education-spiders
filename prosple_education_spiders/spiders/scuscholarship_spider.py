@@ -126,10 +126,11 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
             scholarship_item['app_process'] = strip_tags(''.join(holder), False)
 
         criteria = response.xpath("//*[contains(text(), 'Selection criteria') or contains(*/text(), 'Selection "
-                                  "criteria')]/following-sibling::*").getall()
+                                  "criteria') or contains(text(), 'selection criteria')]/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(criteria):
-            if index == 0 or re.search("^<p", item) or re.search("^<ul", item) or re.search("^<ol", item):
+            if (index == 0 or re.search("^<p", item) or re.search("^<ul", item) or re.search("^<ol", item)) and \
+                    not re.search("#top", item):
                 holder.append(item)
             elif re.search("#top", item):
                 pass
@@ -156,13 +157,13 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
             if study_holder:
                 scholarship_item['study_mode'] = '|'.join(study_holder)
         if "699" in campus_holder:
-            scholarship_item['time_zone'] = 'Sydney'
+            scholarship_item['time_zone'] = 'Australia/Sydney'
         elif "701" in campus_holder:
-            scholarship_item['time_zone'] = 'Melbourne'
+            scholarship_item['time_zone'] = 'Australia/Melbourne'
         elif "700" in campus_holder:
-            scholarship_item['time_zone'] = 'Perth'
+            scholarship_item['time_zone'] = 'Australia/Perth'
         else:
-            scholarship_item['time_zone'] = 'Sydney'
+            scholarship_item['time_zone'] = 'Australia/Sydney'
 
         close_date = response.meta['close_date']
         if close_date:
@@ -171,25 +172,26 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
                 for month in self.months:
                     close_date = re.sub(month, self.months[month], close_date)
                 close_date = datetime.strptime(close_date, '%d %m %Y')
-                scholarship_item['closes'] = close_date.strftime("%m/%d/%Y") + " 00:00:00"
+                scholarship_item['closes'] = close_date.strftime("%m/%d/%Y") + " 14:00:00"
 
         count = response.xpath("//*[contains(text(), 'Number available') or contains(*/text(), 'Number "
                                "available')]/following-sibling::*/text()").get()
         if count:
             scholarship_item['count_description'] = count.strip()
 
-        duration = response.xpath("//*[contains(text(), 'Duration')]/following-sibling::*/text()").get()
+        duration = response.xpath("//*[contains(text(), 'Duration')]/following-sibling::*").get()
         if not duration:
-            duration = response.xpath(
-                "//*[text()='Value' or text()='Amount' or text()='ValuE']/following-sibling::*").get()
+            duration = response.xpath("//*[text()='Value' or text()='Amount' or text()='ValuE' or */text("
+                                      ")='Value']/following-sibling::*").get()
         if duration:
             for num in self.num:
                 duration = re.sub(num, self.num[num], duration)
-            duration_full = re.findall("(\d*\.?\d+)(?=(\s)(year|month|semester|trimester|quarter|week|day)(s?))", duration,
-                                       re.I | re.M | re.DOTALL)
+            duration_full = re.findall("(\d*\.?\d+)(?=(\s)(year|month|semester|trimester|quarter|week|day)(s?))",
+                                       duration, re.I | re.M | re.DOTALL)
             if duration_full:
                 scholarship_item['length_support'] = ''.join(duration_full[0])
-            if 'length_support' not in scholarship_item and re.search('one.off.payment', duration, re.I | re.M):
+            if 'length_support' not in scholarship_item and re.search('one.off.payment', duration,
+                                                                      re.I | re.M | re.DOTALL):
                 scholarship_item['length_support'] = 'One-off payment'
 
         yield scholarship_item
