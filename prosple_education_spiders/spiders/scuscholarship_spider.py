@@ -172,7 +172,7 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
                 for month in self.months:
                     close_date = re.sub(month, self.months[month], close_date)
                 close_date = datetime.strptime(close_date, '%d %m %Y')
-                scholarship_item['closes'] = close_date.strftime("%m/%d/%Y") + " 14:00:00"
+                scholarship_item['closes'] = str(close_date.strftime("%m/%d/%Y") + " 14:00:00")
 
         count = response.xpath("//*[contains(text(), 'Number available') or contains(*/text(), 'Number "
                                "available')]/following-sibling::*/text()").get()
