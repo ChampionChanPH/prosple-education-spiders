@@ -13,10 +13,10 @@ from .misc_functions import *
 class Scholarship(scrapy.Item):
     source_url = scrapy.Field()
     uid = scrapy.Field()
-    name = scrapy.Field()
+    name = scrapy.Field() #unique, like uid on courses
     code = scrapy.Field()
     canonical_group = scrapy.Field()
-    time_zone = scrapy.Field()
+    time_zone = scrapy.Field() #required
     provider_name = scrapy.Field()
     eligible = scrapy.Field()
     degree_types = scrapy.Field()
@@ -48,6 +48,23 @@ class Scholarship(scrapy.Item):
     def set_scholarship_name(self, name, prefix):
         self["name"] = re.sub("\s+", " ", name)
         self["uid"] = prefix + re.sub(" ", "-", self["name"])
+
+    def set_summary(self, text):
+        text = re.split("(?<=[\.\?])\s", text)
+        if len(text) == 1:
+            if len(text[0]) < 250:
+                self["summary"] = text[0]
+            else:
+                cut_summary = text[0][:250]
+                last_space = cut_summary.rindex(" ")
+                self["summary"] = cut_summary[:last_space] + "..."
+        if len(text) > 1:
+            if len(text[0] + " " + text[1]) < 250:
+                self["summary"] = text[0] + " " + text[1]
+            else:
+                cut_summary = (text[0] + " " + text[1])[:250]
+                last_space = cut_summary.rindex(" ")
+                self["summary"] = cut_summary[:last_space] + "..."
 
 
 class Rating(scrapy.Item):
@@ -372,9 +389,7 @@ class Course(scrapy.Item):
         if len(text) > 1:
             if len(text[0] + " " + text[1]) < 250:
                 self["overviewSummary"] = text[0] + " " + text[1]
-            elif len(text[0]) < 250:
-                self["overviewSummary"] = text[0]
             else:
-                cut_summary = text[0][:250]
+                cut_summary = (text[0] + " " + text[1])[:250]
                 last_space = cut_summary.rindex(" ")
                 self["overviewSummary"] = cut_summary[:last_space] + "..."
