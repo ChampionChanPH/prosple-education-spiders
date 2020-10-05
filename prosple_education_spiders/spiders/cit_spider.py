@@ -174,13 +174,15 @@ class CitSpiderSpider(scrapy.Spider):
                                            duration,
                                            re.I | re.M | re.DOTALL)
                 if duration_full:
-                    if len(duration_full) == 1:
-                        course_item["durationMinFull"] = float(duration_full[0][0])
-                        self.get_period(duration_full[0][1].lower(), course_item)
-                    if len(duration_full) == 2:
-                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
-                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
-                        self.get_period(duration_full[1][1].lower(), course_item)
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 1:
+                    #     course_item["durationMinFull"] = float(duration_full[0][0])
+                    #     self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 2:
+                    #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     self.get_period(duration_full[1][1].lower(), course_item)
 
         dom_fee = response.xpath("//table[@class='course-info']//td[contains(p/text(), 'Indicative "
                                  "Cost:')]/following-sibling::*").get()
@@ -206,6 +208,22 @@ class CitSpiderSpider(scrapy.Spider):
                 break
         if holder:
             course_item['entryRequirements'] = strip_tags(''.join(holder), False)
+
+        location = response.xpath("//table[@class='course-info']//td[contains(p/text(), "
+                                  "'Campus:')]/following-sibling::*").get()
+        campus_holder = set()
+        study_holder = set()
+        if location:
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        if re.search('online', duration, re.I | re.M):
+            study_holder.add('Online')
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            study_holder.add('In Person')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
