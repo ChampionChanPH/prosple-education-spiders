@@ -217,8 +217,9 @@ class CitSpiderSpider(scrapy.Spider):
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.add(self.campuses[campus])
-        if re.search('online', duration, re.I | re.M):
-            study_holder.add('Online')
+        if duration:
+            if re.search('online', duration, re.I | re.M):
+                study_holder.add('Online')
         if campus_holder:
             course_item['campusNID'] = '|'.join(campus_holder)
             study_holder.add('In Person')
