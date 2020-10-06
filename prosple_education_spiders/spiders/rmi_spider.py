@@ -59,7 +59,7 @@ class RmiSpiderSpider(scrapy.Spider):
         "doctor": "6",
         "phd": "6",
         "certificate": "4",
-        "vce": "4",
+        "vce": "9",
         "undergraduate certificate": "4",
         "certificate i": "4",
         "certificate ii": "4",
