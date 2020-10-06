@@ -23,6 +23,26 @@ class UniSpiderSpider(scrapy.Spider):
         'Mt Albert': "0000"
     }
 
+    degrees = {
+        # "graduate certificate": "7",
+        "postgraduate diploma": "8",
+        "master": "11",
+        "new zealand diploma": "5",
+        # "bachelor": ,
+        # "doctor": "6",
+        "new zealand certificate": "4",
+        # "certificate i": "4",
+        # "certificate ii": "4",
+        # "certificate iii": "4",
+        # "certificate iv": "4",
+        # "advanced diploma": "5",
+        # "diploma": "5",
+        # "associate degree": "1",
+        # "non-award": "13",
+        # "no match": "15"
+    }
+
+
     def parse(self, response):
         course_cards = response.css(".progrow:not(#progrow):not(.overview)")
         for card in course_cards:
@@ -45,6 +65,8 @@ class UniSpiderSpider(scrapy.Spider):
         if name:
             course_item.set_course_name(name, self.uidPrefix)
 
+        course_item.set_sf_dt(self.degrees)
+
         campus = response.css("dl.programme-campus dd::text").getall()
         if campus:
             campus = " ".join(campus).split(",")
@@ -63,6 +85,7 @@ class UniSpiderSpider(scrapy.Spider):
             course_item["startMonths"] = "'"+"|".join(months)
 
         duration = response.css("dl.programme-duration dd::text").get()
+
         # if duration:
         #     print(duration)
 
@@ -70,4 +93,33 @@ class UniSpiderSpider(scrapy.Spider):
         if summary:
             course_item["overviewSummary"] = summary
 
+        # overview = response.css("div.overview-content").get()
+        # if overview:
+        #     course_item["overview"] = overview.replace("<div>", "").replace("</div>", "")
+
+        careers = response.xpath("//ul[preceding-sibling::h3/text()='Career Options']/li/text()").getall()
+        if careers:
+            course_item["careerPathways"] = "\n".join(["- "+x for x in careers])
+
+        fees = response.xpath("//div[preceding-sibling::h3/text()='Annual Tuition Fees']/span").getall()
+        if fees:
+            for item in fees:
+                if "Domestic" in item:
+                    field = "domesticFeeAnnual"
+
+                elif "International" in item:
+                    field = "internationalFeeAnnual"
+
+                else:
+                    course_item.add_flag("fees", "Could not find fee: "+item)
+
+                fee = re.findall("\$([\d,\.]+)", item)
+                if fee:
+                    course_item[field] = fee[0].replace(",", "")
+
+        # admission = response.css("section#admission div").get()
+        # if admission:
+        #     course_item["entryRequirements"] = admission.replace("<div>", "").replace("</div>", "")
+
+        # if "flag" in course_item:
         yield course_item
