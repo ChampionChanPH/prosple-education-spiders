@@ -93,9 +93,9 @@ class UniSpiderSpider(scrapy.Spider):
         if summary:
             course_item["overviewSummary"] = summary
 
-        # overview = response.css("div.overview-content").get()
-        # if overview:
-        #     course_item["overview"] = overview.replace("<div>", "").replace("</div>", "")
+        overview = response.css("div.overview-content").get()
+        if overview:
+            course_item["overview"] = overview.replace("<div>", "").replace("</div>", "")
 
         careers = response.xpath("//ul[preceding-sibling::h3/text()='Career Options']/li/text()").getall()
         if careers:
@@ -117,9 +117,9 @@ class UniSpiderSpider(scrapy.Spider):
                 if fee:
                     course_item[field] = fee[0].replace(",", "")
 
-        # admission = response.css("section#admission div").get()
-        # if admission:
-        #     course_item["entryRequirements"] = admission.replace("<div>", "").replace("</div>", "")
+        admission = response.css("section#admission div").get()
+        if admission:
+            course_item["entryRequirements"] = admission.replace("<div>", "").replace("</div>", "")
 
         # if "flag" in course_item:
         yield course_item
