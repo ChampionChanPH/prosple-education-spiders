@@ -239,23 +239,23 @@ class HoiSpiderSpider(scrapy.Spider):
             if not re.search('not available for international students', international, re.I | re.M):
                 course_item["internationalApps"] = 1
 
-        dom_fee = response.xpath("//*[text()='Full Fee']/following-sibling::*").getall()
+        dom_fee = response.xpath("//*[text()='Full Fee']/following-sibling::*").get()
         if dom_fee:
-            dom_fee = re.findall("\$(\d*),?(\d+)", dom_fee, re.M)
+            dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
             if dom_fee:
                 course_item["domesticFeeAnnual"] = float(''.join(dom_fee[0]))
                 get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-        csp_fee = response.xpath("//*[text()='Government subsidised']/following-sibling::*").getall()
+        csp_fee = response.xpath("//*[text()='Government subsidised']/following-sibling::*").get()
         if csp_fee:
-            csp_fee = re.findall("\$(\d*),?(\d+)", csp_fee, re.M)
+            csp_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", csp_fee, re.M)
             if csp_fee:
                 course_item["domesticSubFeeAnnual"] = float(''.join(csp_fee[0]))
                 get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
 
         int_fee = response.xpath("//div[@id='courseTab-intl']//*[contains(@id, 'lblIntlFees')]").get()
         if int_fee:
-            int_fee = re.findall("\$(\d*),?(\d+)", int_fee, re.M)
+            int_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
             if int_fee:
                 course_item["internationalFeeAnnual"] = float(''.join(int_fee[0]))
                 get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
