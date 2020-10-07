@@ -43,7 +43,7 @@ def get_total(field_to_use, field_to_update, course_item):
 class CitSpiderSpider(scrapy.Spider):
     name = 'cit_spider'
     start_urls = ['https://cit.edu.au/courses']
-    institution = "	Canberra Institute of Technology (CIT)"
+    institution = "Canberra Institute of Technology (CIT)"
     uidPrefix = "AU-CIT-"
 
     degrees = {
