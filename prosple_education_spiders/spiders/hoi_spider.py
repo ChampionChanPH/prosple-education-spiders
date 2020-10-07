@@ -137,4 +137,9 @@ class HoiSpiderSpider(scrapy.Spider):
             course_code = re.sub('Course Code', '', course_code)
             course_item['courseCode'] = course_code.strip()
 
+        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+
+        course_item['group'] = 141
+        course_item['canonicalGroup'] = 'CareerStarter'
+
         yield course_item
