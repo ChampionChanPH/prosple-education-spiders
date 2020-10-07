@@ -57,6 +57,7 @@ class HoiSpiderSpider(scrapy.Spider):
         "certificate ii": "4",
         "certificate iii": "4",
         "certificate iv": "4",
+        "victorian certificate": "9",
         "advanced diploma": "5",
         "diploma": "5",
         "associate degree": "1",
@@ -131,11 +132,133 @@ class HoiSpiderSpider(scrapy.Spider):
         course_name = response.xpath("//h1[@class='pageHeader-title']/text()").get()
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
+        sub_title = response.xpath("//span[@class='pageHeader-subTitle']/text()").get()
+        if sub_title and 'uid' in course_item:
+            sub_title = re.sub(' ', '-', sub_title.strip().lower())
+            course_item['uid'] = course_item['uid'] + '-' + sub_title
+
+        overview = response.xpath("//div[@class='courseDetailPage-secSubtitle']/*").getall()
+        if overview:
+            overview = ''.join(overview)
+            course_item.set_summary(strip_tags(overview))
+            course_item["overview"] = strip_tags(overview, False)
 
         course_code = response.xpath("//span[@class='pageHeader-codeTitle']/text()").get()
         if course_code:
             course_code = re.sub('Course Code', '', course_code)
             course_item['courseCode'] = course_code.strip()
+
+        career = response.xpath("//*[contains(text(), 'Career opportunities')]/following-sibling::*").get()
+        if career:
+            course_item['careerPathways'] = strip_tags(career, False)
+
+        learn = response.xpath("//*[contains(text(), 'Studying the') and contains(text(), "
+                               "'at Holmesglen')]/following-sibling::*").getall()
+        if learn:
+            course_item['whatLearn'] = strip_tags(''.join(learn), False)
+
+        duration = response.xpath("//div[@id='courseTab-local']//*[contains(@id, 'lblLocalDuration')]").get()
+        if duration:
+            duration_full = re.findall("full.time.(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                       duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall("part.time.(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                       duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                if len(duration_full[0]) == 2:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                if len(duration_full[0]) == 3:
+                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[0][1]))
+                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[0][1]))
+                    self.get_period(duration_full[0][2].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration,
+                                           re.I | re.M | re.DOTALL)
+                if duration_full:
+                    if len(duration_full) == 1:
+                        course_item["durationMinFull"] = float(duration_full[0][0])
+                        self.get_period(duration_full[0][1].lower(), course_item)
+                    if len(duration_full) == 2:
+                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                        self.get_period(duration_full[1][1].lower(), course_item)
+
+        intake = response.xpath("//div[@id='courseTab-local']//*[contains(@id, 'lblLocalIntake')]").get()
+        if intake:
+            start_holder = []
+            for item in self.months:
+                if re.search(item, intake, re.M):
+                    start_holder.append(self.months[item])
+            if start_holder:
+                course_item['startMonths'] = '|'.join(start_holder)
+
+        entry = response.xpath("//*[contains(text(), 'Entry requirements')]/following-sibling::*").getall()
+        holder = []
+        for item in entry:
+            if not re.search('^<p', item):
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item['entryRequirements'] = ''.join(holder)
+
+        credit = response.xpath("//*[contains(text(), 'Recognition of prior learning')]/following-sibling::*").getall()
+        holder = []
+        for item in credit:
+            if not re.search('^<p', item):
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item['creditTransfer'] = ''.join(holder)
+
+        location = response.xpath("//div[@id='courseTab-local']//*[contains(@id, 'lblLocalCampus')]").get()
+        campus_holder = set()
+        study_holder = set()
+        if location:
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            study_holder.add('In Person')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
+
+        international = response.xpath("//div[@id='courseTab-intl']").get()
+        if international:
+            if not re.search('not available for international students', international, re.I | re.M):
+                course_item["internationalApps"] = 1
+
+        dom_fee = response.xpath("//*[text()='Full Fee']/following-sibling::*").getall()
+        if dom_fee:
+            dom_fee = re.findall("\$(\d*),?(\d+)", dom_fee, re.M)
+            if dom_fee:
+                course_item["domesticFeeAnnual"] = float(''.join(dom_fee[0]))
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+        csp_fee = response.xpath("//*[text()='Government subsidised']/following-sibling::*").getall()
+        if csp_fee:
+            csp_fee = re.findall("\$(\d*),?(\d+)", csp_fee, re.M)
+            if csp_fee:
+                course_item["domesticSubFeeAnnual"] = float(''.join(csp_fee[0]))
+                get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
+
+        int_fee = response.xpath("//div[@id='courseTab-intl']//*[contains(@id, 'lblIntlFees')]").get()
+        if int_fee:
+            int_fee = re.findall("\$(\d*),?(\d+)", int_fee, re.M)
+            if int_fee:
+                course_item["internationalFeeAnnual"] = float(''.join(int_fee[0]))
+                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
