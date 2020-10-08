@@ -11,6 +11,7 @@ from .misc_functions import *
 
 
 class Scholarship(scrapy.Item):
+    group = scrapy.Field()
     source_url = scrapy.Field()
     uid = scrapy.Field()
     name = scrapy.Field() #unique, like uid on courses

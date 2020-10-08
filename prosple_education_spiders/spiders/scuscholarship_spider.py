@@ -91,8 +91,10 @@ class ScuscholarshipSpiderSpider(scrapy.Spider):
         degree = response.meta['degree']
         if re.search('Undergraduate', degree, re.I):
             scholarship_item['canonical_group'] = 'The Uni Guide'
+            scholarship_item['group'] = 3
         else:
             scholarship_item['canonical_group'] = 'PostgradAustralia'
+            scholarship_item['group'] = 4
 
         eligibility = response.xpath("//*[self::h3 or self::h2][text()='Non eligibility' or text("
                                      ")='Eligibility' or text()='Eligibility criteria']/following-sibling::*").getall()
