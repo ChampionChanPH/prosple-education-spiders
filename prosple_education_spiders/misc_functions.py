@@ -48,8 +48,8 @@ def filter_html(html_string):
         "strong"
     ]
 
-    re.sub("<.*?>",)
-    all_tags = re.finditer("<.*?>",html_string)
+    re.sub("<.*?>", )
+    all_tags = re.finditer("<.*?>", html_string)
     for i in all_tags:
         print(i)
 
