@@ -39,7 +39,7 @@ def update_matches(course_item, list_to_match):
     for item in course_item['rawStudyfield']:
         matched_term = process.extract(item, list_to_match, limit=1, scorer=fuzz.token_sort_ratio)
         term, ratio = matched_term[0]
-        if ratio >= acceptable_ratio:
+        if ratio >= acceptable_ratio and item != term:
             course_item['rawStudyfield'].remove(item)
             course_item['rawStudyfield'].append(term)
-            course_item['flag'] = 'raw study field has been updated'
+            course_item.add_flag('rawStudyfield', 'Match Ratio: ' + str(ratio))

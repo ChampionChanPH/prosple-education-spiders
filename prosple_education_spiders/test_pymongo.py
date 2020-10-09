@@ -1,5 +1,5 @@
 from fuzzywuzzy import process, fuzz
-from mongodb import get_terms
+from prosple_education_spiders.mongodb import get_terms
 
 term = get_terms()
 print(term)
