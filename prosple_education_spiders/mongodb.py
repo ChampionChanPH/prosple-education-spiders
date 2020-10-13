@@ -9,6 +9,9 @@ MONGO_PASS = "oEiw$t^Zx&3w"
 
 
 def get_terms():
+    '''
+    :return: all of the terms or program_name in mongodb under collection studyfield_mapping
+    '''
     server = SSHTunnelForwarder(
         MONGO_HOST,
         ssh_username=MONGO_USER,

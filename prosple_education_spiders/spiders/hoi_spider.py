@@ -81,11 +81,14 @@ class HoiSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "CIT Bruce": "55522",
-        "CIT Fyshwick": "55523",
-        "CIT Gungahlin": "55524",
-        "CIT Reid": "55525",
-        "CIT Tuggeranong": "55526"
+        "Moorabbin": "55668",
+        "Glen Waverley": "55669",
+        "Chadstone": "55670",
+        "St Kilda Road": "55671",
+        "Eildon": "55672",
+        "North Melbourne": "55673",
+        "Drummond Street": "55674",
+        "Bourke Street": "55676",
     }
 
     teaching_periods = {
