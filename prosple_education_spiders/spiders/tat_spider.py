@@ -118,7 +118,7 @@ class TatSpiderSpider(scrapy.Spider):
 
         next_page = response.xpath("//a[contains(@class, 'pagination__link--next')]/@href").get()
         if next_page:
-            yield response.follow(item, callback=self.link_parse)
+            yield response.follow(next_page, callback=self.link_parse)
 
     def course_parse(self, response):
         course_item = Course()
