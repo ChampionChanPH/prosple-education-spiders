@@ -88,7 +88,7 @@ class HoiSpiderSpider(scrapy.Spider):
         "Eildon": "55672",
         "North Melbourne": "55673",
         "Drummond Street": "55674",
-        "Bourke Street": "55676",
+        "Bourke Street": "55676"
     }
 
     teaching_periods = {
