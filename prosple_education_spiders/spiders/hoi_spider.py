@@ -236,6 +236,8 @@ class HoiSpiderSpider(scrapy.Spider):
         if campus_holder:
             course_item['campusNID'] = '|'.join(campus_holder)
             study_holder.add('In Person')
+        if re.search('online', location, re.I):
+            study_holder.add('Online')
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
 
