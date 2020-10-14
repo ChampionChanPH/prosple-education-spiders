@@ -1,7 +1,6 @@
 from sshtunnel import SSHTunnelForwarder
 import pymongo
 from fuzzywuzzy import fuzz, process
-import re
 
 MONGO_HOST = "178.128.31.252"
 MONGO_DB = "courses_etl"
@@ -10,9 +9,9 @@ MONGO_PASS = "oEiw$t^Zx&3w"
 
 
 def get_terms():
-    '''
+    """
     :return: all of the terms or program_name in mongodb under collection studyfield_mapping
-    '''
+    """
     server = SSHTunnelForwarder(
         MONGO_HOST,
         ssh_username=MONGO_USER,
@@ -34,17 +33,17 @@ def get_terms():
 
 
 def update_matches(course_item, list_to_match):
-    '''
+    """
     :param course_item: list of study fields to check, use course_item for course_item['rawStudyfield']
     :param list_to_match: all of the terms from mongodb
     :return: None
-    '''
+    """
     acceptable_ratio = 85
     for item in course_item['rawStudyfield']:
         matched_term = process.extract(item, list_to_match, limit=1, scorer=fuzz.token_sort_ratio)
         term, ratio = matched_term[0]
         spaces = item.count(' ')
-        if spaces <= 1:
+        if spaces <= 2:
             if ratio >= acceptable_ratio + 6 and item != term:
                 course_item['rawStudyfield'].remove(item)
                 course_item['rawStudyfield'].append(term)
