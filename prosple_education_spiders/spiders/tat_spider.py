@@ -136,6 +136,19 @@ class TatSpiderSpider(scrapy.Spider):
         if course_code:
             course_item['courseCode'] = course_code.strip()
 
+        holder = []
+        summary = response.xpath("//div[@class='pb4']/h3").get()
+        if summary:
+            holder.append(summary)
+            course_item.set_summary(strip_tags(summary))
+
+        overview = response.xpath("//div[@class='pb4']/h3/following-sibling::*/*").getall()
+        for item in overview:
+            if re.search('^<p', item) or re.search('^<ul', item) or re.search('^<ol', item):
+                holder.append(item)
+        if holder:
+            course_item["overview"] = strip_tags(''.join(holder), False)
+
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
         course_item['group'] = 141
