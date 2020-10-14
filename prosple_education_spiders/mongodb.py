@@ -1,6 +1,7 @@
 from sshtunnel import SSHTunnelForwarder
 import pymongo
 from fuzzywuzzy import fuzz, process
+import re
 
 MONGO_HOST = "178.128.31.252"
 MONGO_DB = "courses_etl"
@@ -42,7 +43,14 @@ def update_matches(course_item, list_to_match):
     for item in course_item['rawStudyfield']:
         matched_term = process.extract(item, list_to_match, limit=1, scorer=fuzz.UWRatio)
         term, ratio = matched_term[0]
-        if ratio >= acceptable_ratio and item != term:
-            course_item['rawStudyfield'].remove(item)
-            course_item['rawStudyfield'].append(term)
-            course_item.add_flag('rawStudyfield', 'Token Sort, Match Ratio: ' + str(ratio))
+        spaces = item.count(' ')
+        if spaces <= 1:
+            if ratio >= acceptable_ratio and item != term:
+                course_item['rawStudyfield'].remove(item)
+                course_item['rawStudyfield'].append(term)
+                course_item.add_flag('rawStudyfield', 'Match Ratio: ' + str(ratio))
+        else:
+            if ratio >= acceptable_ratio + 6 and item != term:
+                course_item['rawStudyfield'].remove(item)
+                course_item['rawStudyfield'].append(term)
+                course_item.add_flag('rawStudyfield', 'Match Ratio: ' + str(ratio))
