@@ -40,18 +40,9 @@ def update_matches(course_item, list_to_match):
     '''
     acceptable_ratio = 85
     for item in course_item['rawStudyfield']:
-        matched_term = process.extract(item, list_to_match, limit=1, scorer=fuzz.token_sort_ratio)
+        matched_term = process.extract(item, list_to_match, limit=1, scorer=fuzz.UWRatio)
         term, ratio = matched_term[0]
-        matched_term2 = process.extract(item, list_to_match, limit=1, scorer=fuzz.token_set_ratio)
-        term2, ratio2 = matched_term2[0]
-        matched_term3 = process.extract(item, list_to_match, limit=1, scorer=fuzz.ratio)
-        term3, ratio3 = matched_term3[0]
-        matched_term4 = process.extract(item, list_to_match, limit=1, scorer=fuzz.UWRatio)
-        term4, ratio4 = matched_term4[0]
         if ratio >= acceptable_ratio and item != term:
             course_item['rawStudyfield'].remove(item)
             course_item['rawStudyfield'].append(term)
             course_item.add_flag('rawStudyfield', 'Token Sort, Match Ratio: ' + str(ratio))
-            course_item.add_flag('rawStudyfield', 'Token Set, Match Ratio: ' + str(ratio2))
-            course_item.add_flag('rawStudyfield', 'Normal Ratio, Match Ratio: ' + str(ratio3))
-            course_item.add_flag('rawStudyfield', 'UW Ratio, Match Ratio: ' + str(ratio4))
