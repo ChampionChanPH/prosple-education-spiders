@@ -80,11 +80,18 @@ class TatSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "CIT Bruce": "55522",
-        "CIT Fyshwick": "55523",
-        "CIT Gungahlin": "55524",
-        "CIT Reid": "55525",
-        "CIT Tuggeranong": "55526"
+        "Alanvale": "55686",
+        "Hunter Street": "55687",
+        "Burnie": "55688",
+        "Campbell Street": "55689",
+        "Devonport": "55690",
+        "Clarence": "55691",
+        "Bender Drive": "55692",
+        "Drysdale Hobart": "55693",
+        "Drysdale Launceston": "55694",
+        "Launceston": "55695",
+        "Inveresk": "55696",
+        "Claremont": "55697"
     }
 
     teaching_periods = {
@@ -148,6 +155,53 @@ class TatSpiderSpider(scrapy.Spider):
                 holder.append(item)
         if holder:
             course_item["overview"] = strip_tags(''.join(holder), False)
+
+        entry = response.xpath(
+            "//a[text()='Entry']/following-sibling::*[1]//*[self::p or self::ul or self::ol]").getall()
+        if entry:
+            course_item['entryRequirements'] = strip_tags(''.join(entry), False)
+
+        credit = response.xpath("//a[text()='Recognition of prior learning and skills']/following-sibling::*[1]//*["
+                                "self::p or self::ul or self::ol]").getall()
+        if credit:
+            course_item['creditTransfer'] = strip_tags(''.join(credit), False)
+
+        career = response.xpath("//*[text()='Career opportunities']/following-sibling::*").get()
+        if career:
+            course_item['careerPathways'] = strip_tags(career, False)
+
+        location = response.xpath("//*[text()='Locations']/following-sibling::*").getall()
+        campus_holder = set()
+        study_holder = set()
+        if location:
+            location = ''.join(location)
+            for campus in self.campuses:
+                if campus == 'Launceston':
+                    if re.search('(?<!Drysdale )Launceston', location, re.I):
+                        campus_holder.add(self.campuses[campus])
+                elif re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            study_holder.add('In Person')
+        if re.search('online', location, re.I):
+            study_holder.add('Online')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
+
+        dom_fee = response.xpath("//*[text()='Commercial']/following-sibling::*").get()
+        if dom_fee:
+            dom_fee = re.findall("\$\s?(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
+            if dom_fee:
+                course_item["domesticFeeAnnual"] = float(''.join(dom_fee[0]))
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+        csp_fee = response.xpath("//*[text()='Subsidised']/following-sibling::*").get()
+        if csp_fee:
+            csp_fee = re.findall("\$\s?(\d*),?(\d+)(\.\d\d)?", csp_fee, re.M)
+            if csp_fee:
+                course_item["domesticSubFeeAnnual"] = float(''.join(csp_fee[0]))
+                get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
