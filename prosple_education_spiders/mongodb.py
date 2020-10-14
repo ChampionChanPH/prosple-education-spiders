@@ -41,7 +41,7 @@ def update_matches(course_item, list_to_match):
     '''
     acceptable_ratio = 85
     for item in course_item['rawStudyfield']:
-        matched_term = process.extract(item, list_to_match, limit=1, scorer=fuzz.UWRatio)
+        matched_term = process.extract(item, list_to_match, limit=1, scorer=fuzz.token_sort_ratio())
         term, ratio = matched_term[0]
         spaces = item.count(' ')
         if spaces <= 1:
