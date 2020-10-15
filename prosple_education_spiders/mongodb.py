@@ -53,3 +53,14 @@ def update_matches(course_item, list_to_match):
                 course_item['rawStudyfield'].remove(item)
                 course_item['rawStudyfield'].append(term)
                 course_item.add_flag('rawStudyfield', 'Match Ratio: ' + str(ratio))
+
+        # if ratio >= 85 and ratio != 100:
+        #     print("Orig: ", item)
+        #     print("Match: ", term)
+        #     print("Sort: ", ratio)
+        #     matched_term = process.extract(item, list_to_match, limit=1, scorer=fuzz.token_set_ratio)
+        #     term, ratio = matched_term[0]
+        #     print("Set: ", ratio)
+        #     matched_term = process.extract(item, list_to_match, limit=1)
+        #     term, ratio = matched_term[0]
+        #     print("Default: ", ratio)

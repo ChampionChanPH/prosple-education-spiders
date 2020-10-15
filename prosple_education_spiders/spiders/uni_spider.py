@@ -2,6 +2,8 @@
 # started: October 5, 2020
 
 from ..standard_libs import *
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
 
 class UniSpiderSpider(scrapy.Spider):
     name = 'uni_spider'
@@ -18,9 +20,9 @@ class UniSpiderSpider(scrapy.Spider):
     holder = []
 
     campuses = {
-        'Waitākere': "0000",
-        'North Shore': "0000",
-        'Mt Albert': "0000"
+        'Waitākere': "55575",
+        'North Shore': "55576",
+        'Mt Albert': "55577"
     }
 
     degrees = {
@@ -41,8 +43,8 @@ class UniSpiderSpider(scrapy.Spider):
         # "non-award": "13",
         # "no match": "15"
     }
-
-
+    all_terms = get_terms()
+    # word_list = ['financial planning','commerce (financial planning)','stockbroking and financial advising','financial technologies','financial technologies (advanced)','accounting with a major in accounting and financial planning','business with a major in financial planning','business with a major in accounting and financial planning','financial planning online delivery','professional accounting /  master of financial planning','business (professional) with a major in financial planning','financial services','business (financial planning)','business (honours) (financial planning)','financial mathematics','financial analysis','financial technology management','applied financial technology and blockchain','fraud and financial crime','decision risk and financial sciences','financial technology','finance (financial planning)','financial management','financial engineering','financial management (professional)','financial markets analysis','demystifying the numbers – understanding financial concepts in healthcare','financial counselling','science (actuarial and financial science)']
     def parse(self, response):
         course_cards = response.css(".progrow:not(#progrow):not(.overview)")
         for card in course_cards:
@@ -66,6 +68,15 @@ class UniSpiderSpider(scrapy.Spider):
             course_item.set_course_name(name, self.uidPrefix)
 
         course_item.set_sf_dt(self.degrees)
+        update_matches(course_item, self.all_terms)
+        #Override canon group
+        course_item["canonicalGroup"] = "GradNewZealand"
+        course_item["group"] = 2
+
+        # for term in course_item["rawStudyfield"]:
+        #     # if "financial" in term:
+        #     print(term)
+        #     print(process.extractOne(term, self.word_list, scorer=fuzz.token_sort_ratio))
 
         campus = response.css("dl.programme-campus dd::text").getall()
         if campus:
