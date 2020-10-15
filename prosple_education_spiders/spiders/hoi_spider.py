@@ -225,7 +225,9 @@ class HoiSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item['creditTransfer'] = ''.join(holder)
+            credit = ''.join(holder)
+            credit = re.sub('</?a.*?>', '', credit)
+            course_item['creditTransfer'] = credit
 
         location = response.xpath("//div[@id='courseTab-local']//*[contains(@id, 'lblLocalCampus')]").get()
         campus_holder = set()
