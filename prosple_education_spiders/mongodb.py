@@ -43,7 +43,7 @@ def update_matches(course_item, list_to_match):
         matched_term = process.extract(item, list_to_match, limit=1, scorer=fuzz.token_sort_ratio)
         term, ratio = matched_term[0]
         spaces = item.count(' ')
-        if spaces <= 2:
+        if spaces <= 3:
             if ratio >= acceptable_ratio + 6 and item != term:
                 course_item['rawStudyfield'].remove(item)
                 course_item['rawStudyfield'].append(term)
