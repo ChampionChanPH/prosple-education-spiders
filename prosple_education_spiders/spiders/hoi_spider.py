@@ -51,6 +51,7 @@ class HoiSpiderSpider(scrapy.Spider):
         "graduate diploma": "8",
         "master": research_coursework,
         "bachelor": bachelor_honours,
+        "csu bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
         "certificate i": "4",

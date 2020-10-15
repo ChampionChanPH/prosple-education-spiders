@@ -38,21 +38,15 @@ def update_matches(course_item, list_to_match):
     :param list_to_match: all of the terms from mongodb
     :return: None
     """
-    acceptable_ratio = 85
+    acceptable_ratio = 91
     for item in course_item['rawStudyfield']:
         matched_term = process.extract(item, list_to_match, limit=1, scorer=fuzz.token_sort_ratio)
         term, ratio = matched_term[0]
         spaces = item.count(' ')
-        if spaces <= 3:
-            if ratio >= acceptable_ratio + 6 and item != term:
-                course_item['rawStudyfield'].remove(item)
-                course_item['rawStudyfield'].append(term)
-                course_item.add_flag('rawStudyfield', 'Match Ratio: ' + str(ratio))
-        else:
-            if ratio >= acceptable_ratio and item != term:
-                course_item['rawStudyfield'].remove(item)
-                course_item['rawStudyfield'].append(term)
-                course_item.add_flag('rawStudyfield', 'Match Ratio: ' + str(ratio))
+        if ratio >= acceptable_ratio + 6 and item != term:
+            course_item['rawStudyfield'].remove(item)
+            course_item['rawStudyfield'].append(term)
+            course_item.add_flag('rawStudyfield', 'Match Ratio: ' + str(ratio))
 
         # if ratio >= 85 and ratio != 100:
         #     print("Orig: ", item)
