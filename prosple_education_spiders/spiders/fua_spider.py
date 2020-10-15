@@ -227,7 +227,9 @@ class FuaSpiderSpider(scrapy.Spider):
         credit = response.xpath("//div[@id='course-recognition_of_prior_learning-expand']/*").getall()
         if credit:
             credit = [x for x in credit if strip_tags(x).strip() != '']
-            course_item["creditTransfer"] = strip_tags("".join(credit), False)
+            credit = ''.join(credit)
+            credit = re.sub('</?a.*?>', '', credit)
+            course_item["creditTransfer"] = strip_tags(credit, False)
 
         code = re.findall(r"/([0-9A-Z.]+)\b", course_item["sourceURL"])
         if code:
