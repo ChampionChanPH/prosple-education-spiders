@@ -135,8 +135,8 @@ class CitSpiderSpider(scrapy.Spider):
         course_name = response.xpath("//div[contains(@class, 'information-box')]//span").get()
         if course_name:
             course_name = re.sub('[0-9A-Z]{2,}$', '', course_name)
-            course_name = re.sub('\[', '\(', course_name)
-            course_name = re.sub('\]', '\)', course_name)
+            course_name = re.sub('\[', '(', course_name)
+            course_name = re.sub('\]', ')', course_name)
             course_item.set_course_name(strip_tags(course_name).strip(), self.uidPrefix)
 
         overview = response.xpath("//h2[@id='overview']/following-sibling::*").get()
