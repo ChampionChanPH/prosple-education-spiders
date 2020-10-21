@@ -57,6 +57,10 @@ class TasSpiderSpider(scrapy.Spider):
         "certificate ii": "4",
         "certificate iii": "4",
         "certificate iv": "4",
+        "certificate i program": "4",
+        "certificate ii program": "4",
+        "certificate iii program": "4",
+        "certificate iv program": "4",
         "advanced diploma": "5",
         "advanced diploma program": "5",
         "diploma": "5",
@@ -83,18 +87,31 @@ class TasSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Alanvale": "55686",
-        "Hunter Street": "55687",
-        "Burnie": "55688",
-        "Campbell Street": "55689",
-        "Devonport": "55690",
-        "Clarence": "55691",
-        "Bender Drive": "55692",
-        "Drysdale Hobart": "55693",
-        "Drysdale Launceston": "55694",
-        "Launceston": "55695",
-        "Inveresk": "55696",
-        "Claremont": "55697"
+        "Adelaide City": "56511",
+        "Adelaide College of the Arts": "56512",
+        "Elizabeth": "56513",
+        "Gilles Plains": "56514",
+        "Noarlunga": "56515",
+        "Regency Park": "56516",
+        "Salisbury": "56517",
+        "Tonsley": "56518",
+        "Urrbrae": "56519",
+        "Mount Barker": "56520",
+        "Victor Harbor": "56521",
+        "Barossa Valley": "56522",
+        "Berri": "56523",
+        "Murray Bridge": "56524",
+        "Coober Pedy": "56525",
+        "Port Augusta": "56526",
+        "Roxby Downs": "56527",
+        "Mount Gambier": "56528",
+        "Ceduna": "56529",
+        "Port Lincoln": "56530",
+        "Whyalla": "56532",
+        "Wudinna": "56533",
+        "Kadina": "56534",
+        "Narungga": "56535",
+        "Port Pirie": "56536",
     }
 
     teaching_periods = {
@@ -166,6 +183,47 @@ class TasSpiderSpider(scrapy.Spider):
         course_code = response.xpath("//*[@class='course-codes']/*[@class='tafesa-code']/text()").get()
         if course_code:
             course_item['courseCode'] = course_code.strip()
+            course_item['uid'] = course_item['uid'] + '-' + course_item['courseCode']
+
+        duration = response.xpath("//div[contains(@class, 'cp_cell') and contains(text(), 'Up to')]").get()
+        if duration:
+            duration = re.sub('\xa0', ' ', duration)
+            duration_full = re.findall("full.time.(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                       duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall("part.time.(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                       duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                if len(duration_full[0]) == 2:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                if len(duration_full[0]) == 3:
+                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[0][1]))
+                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[0][1]))
+                    self.get_period(duration_full[0][2].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    if len(duration_full) == 1:
+                        course_item["durationMinFull"] = float(duration_full[0][0])
+                        self.get_period(duration_full[0][1].lower(), course_item)
+                    if len(duration_full) == 2:
+                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                        self.get_period(duration_full[1][1].lower(), course_item)
+
+        entry = response.xpath("//*[contains(text(), 'Course Admission Requirements')]/following-sibling::*").getall()
+        if entry:
+            entry = [x for x in entry if strip_tags(x).strip() != '']
+            course_item["entryRequirements"] = strip_tags(''.join(entry), False)
 
         dom_fee = response.xpath("//div[contains(text(), 'Full Fee') or contains(*/text(), 'Full "
                                  "Fee')]/following-sibling::*[last()]").get()
@@ -186,9 +244,18 @@ class TasSpiderSpider(scrapy.Spider):
                 get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
 
         location = response.xpath("//a[contains(@title, 'campus information')]/text()").getall()
+        campus_holder = set()
+        study_holder = set()
         if location:
-            location = ' - '.join(location)
-            course_item['campusNID'] = location
+            location = ''.join(location)
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            study_holder.add('In Person')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
