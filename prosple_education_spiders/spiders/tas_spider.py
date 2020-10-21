@@ -42,7 +42,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class TasSpiderSpider(scrapy.Spider):
     name = 'tas_spider'
-    start_urls = ['http://a/']
+    start_urls = ['https://www.tafesa.edu.au/courses/']
     institution = "TAFE SA"
     uidPrefix = "AU-TAS-"
 
