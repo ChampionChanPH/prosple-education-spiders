@@ -58,6 +58,7 @@ class TasSpiderSpider(scrapy.Spider):
         "certificate iii": "4",
         "certificate iv": "4",
         "advanced diploma": "5",
+        "advanced diploma program": "5",
         "diploma": "5",
         "diploma program": "5",
         "dual diploma program": "5",
@@ -189,20 +190,21 @@ class TasSpiderSpider(scrapy.Spider):
             location = ' - '.join(location)
             course_item['campusNID'] = location
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+        if 'courseName' in course_item:
+            course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
-        course_item['group'] = 141
-        course_item['canonicalGroup'] = 'CareerStarter'
+            course_item['group'] = 141
+            course_item['canonicalGroup'] = 'CareerStarter'
 
-        update_matches(course_item, self.all_terms)
+            update_matches(course_item, self.all_terms)
 
-        int_link = response.xpath("//div[@class='intake_tab-wrapper']/a[text()='International']/@href").get()
-        if int_link:
-            yield response.follow(int_link, callback=self.international_parse, meta={'item': course_item})
-        elif re.search('/in/', course_item['sourceURL']):
-            yield response.follow(course_item['sourceURL'], callback=self.international_parse, meta={'item': course_item})
-        else:
-            yield course_item
+            int_link = response.xpath("//div[@class='intake_tab-wrapper']/a[text()='International']/@href").get()
+            if int_link:
+                yield response.follow(int_link, callback=self.international_parse, meta={'item': course_item})
+            elif re.search('/in/', course_item['sourceURL']):
+                yield response.follow(course_item['sourceURL'], callback=self.international_parse, meta={'item': course_item})
+            else:
+                yield course_item
 
     @staticmethod
     def international_parse(response):
