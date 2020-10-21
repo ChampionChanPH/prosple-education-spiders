@@ -59,6 +59,8 @@ class TasSpiderSpider(scrapy.Spider):
         "certificate iv": "4",
         "advanced diploma": "5",
         "diploma": "5",
+        "diploma program": "5",
+        "dual diploma program": "5",
         "associate degree": "1",
         "non-award": "13",
         "no match": "15"
@@ -126,6 +128,7 @@ class TasSpiderSpider(scrapy.Spider):
 
     def link_parse(self, response):
         courses = response.xpath("//div[contains(@class, 'study_area_course_list')]//tr//a/@href").getall()
+        courses = set([re.sub('(?<=aspx).*', '', x) for x in courses])
 
         for item in courses:
             if re.search('/xml/', item):
@@ -183,7 +186,7 @@ class TasSpiderSpider(scrapy.Spider):
 
         location = response.xpath("//a[contains(@title, 'campus information')]/text()").getall()
         if location:
-            location = ' '.join(location)
+            location = ' - '.join(location)
             course_item['campusNID'] = location
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
