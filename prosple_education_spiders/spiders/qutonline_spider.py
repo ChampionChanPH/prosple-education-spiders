@@ -49,7 +49,7 @@ class QutonlineSpiderSpider(scrapy.Spider):
     uidPrefix = 'AU-QUT-ON-'
 
     campuses = {
-        "Online": "53412"
+        "Online": "686"
     }
 
     degrees = {
