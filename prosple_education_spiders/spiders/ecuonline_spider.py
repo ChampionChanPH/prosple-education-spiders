@@ -43,8 +43,8 @@ def get_total(field_to_use, field_to_update, course_item):
 class EcuonlineSpiderSpider(scrapy.Spider):
     name = 'ecuonline_spider'
     start_urls = ['https://studyonline.ecu.edu.au/online-courses']
-    institution = "TAFE SA"
-    uidPrefix = "AU-TAS-"
+    institution = "Edith Cowan University (ECU)"
+    uidPrefix = "AU-ECU-ON-"
 
     degrees = {
         "graduate certificate": "7",
@@ -53,16 +53,7 @@ class EcuonlineSpiderSpider(scrapy.Spider):
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
-        "certificate i": "4",
-        "certificate ii": "4",
-        "certificate iii": "4",
-        "certificate iv": "4",
-        "certificate i program": "4",
-        "certificate ii program": "4",
-        "certificate iii program": "4",
-        "certificate iv program": "4",
         "advanced diploma": "5",
-        "advanced diploma program": "5",
         "diploma": "5",
         "diploma program": "5",
         "dual diploma program": "5",
@@ -170,7 +161,11 @@ class EcuonlineSpiderSpider(scrapy.Spider):
 
         entry = response.xpath("//*[contains(text(), 'Course admission requirements')]/following-sibling::*").getall()
         if entry:
-            course_item['entryRequirements'] = strip_tags(''.join(entry), False)
+            entry = ''.join(entry)
+            special_entry = response.xpath("//*[contains(text(), 'Special entry')]/following-sibling::*").getall()
+            if special_entry:
+                entry = entry + '<strong>Special entry</strong>' + ''.join(special_entry)
+            course_item['entryRequirements'] = strip_tags(entry, False)
 
         duration = response.xpath("//li[contains(text(), 'Duration')]").get()
         if duration:
