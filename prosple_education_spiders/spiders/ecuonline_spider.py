@@ -78,31 +78,7 @@ class EcuonlineSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Adelaide City": "56511",
-        "Adelaide College of the Arts": "56512",
-        "Elizabeth": "56513",
-        "Gilles Plains": "56514",
-        "Noarlunga": "56515",
-        "Regency Park": "56516",
-        "Salisbury": "56517",
-        "Tonsley": "56518",
-        "Urrbrae": "56519",
-        "Mount Barker": "56520",
-        "Victor Harbor": "56521",
-        "Barossa Valley": "56522",
-        "Berri": "56523",
-        "Murray Bridge": "56524",
-        "Coober Pedy": "56525",
-        "Port Augusta": "56526",
-        "Roxby Downs": "56527",
-        "Mount Gambier": "56528",
-        "Ceduna": "56529",
-        "Port Lincoln": "56530",
-        "Whyalla": "56532",
-        "Wudinna": "56533",
-        "Kadina": "56534",
-        "Narungga": "56535",
-        "Port Pirie": "56536",
+        "Online": "56874"
     }
 
     teaching_periods = {
@@ -217,6 +193,9 @@ class EcuonlineSpiderSpider(scrapy.Spider):
                 dom_fee = [float(''.join(x)) for x in dom_fee]
                 course_item["domesticFeeAnnual"] = max(dom_fee)
                 get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+        course_item['campusNID'] = self.campuses['Online']
+        course_item['modeOfStudy'] = 'Online'
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
