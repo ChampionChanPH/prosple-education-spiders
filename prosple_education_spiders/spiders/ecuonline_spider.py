@@ -201,7 +201,7 @@ class EcuonlineSpiderSpider(scrapy.Spider):
                         course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                         self.get_period(duration_full[1][1].lower(), course_item)
 
-        intake = response.xpath("//li[contains(text(), 'Study Intakes')]").getall()
+        intake = response.xpath("//li[contains(text(), 'Study Intakes')]").get()
         if intake:
             start_holder = []
             for item in self.months:
