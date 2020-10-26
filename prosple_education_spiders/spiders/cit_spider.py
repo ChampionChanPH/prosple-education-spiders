@@ -238,3 +238,4 @@ class CitSpiderSpider(scrapy.Spider):
         update_matches(course_item, self.all_terms)
 
         yield course_item
+
