@@ -67,18 +67,18 @@ class KaiSpiderSpider(scrapy.Spider):
     }
 
     months = {
-        "Jan": "01",
-        "Feb": "02",
-        "Mar": "03",
-        "Apr": "04",
+        "January": "01",
+        "February": "02",
+        "March": "03",
+        "April": "04",
         "May": "05",
-        "Jun": "06",
-        "Jul": "07",
-        "Aug": "08",
-        "Sep": "09",
-        "Oct": "10",
-        "Nov": "11",
-        "Dec": "12"
+        "June": "06",
+        "July": "07",
+        "August": "08",
+        "September": "09",
+        "October": "10",
+        "November": "11",
+        "December": "12"
     }
 
     campuses = {
@@ -119,6 +119,60 @@ class KaiSpiderSpider(scrapy.Spider):
         course_name = response.xpath("//*[@class='h2_text']/text()").get()
         if course_name:
             course_item.set_course_name(make_proper(course_name.strip()), self.uidPrefix)
+
+        course_code = response.xpath(
+            "//div[contains(text(), 'Course Code')]/following-sibling::*[last()]/*/text()").get()
+        if course_code:
+            course_item['courseCode'] = course_code.strip()
+
+        location = response.xpath("//div[contains(text(), 'Campus')]/following-sibling::*[last()]/*/text()").get()
+        if location:
+            course_item['campusNID'] = location
+
+        duration = response.xpath(
+            "//div[contains(text(), 'Course Length')]/following-sibling::*[last()]/*/text()").get()
+        if duration:
+            duration_full = re.findall("(?<=full.time\()(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                       duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall("(?<=part.time.day\()(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                       duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                if len(duration_full[0]) == 2:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                if len(duration_full[0]) == 3:
+                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[0][1]))
+                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[0][1]))
+                    self.get_period(duration_full[0][2].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    if len(duration_full) == 1:
+                        course_item["durationMinFull"] = float(duration_full[0][0])
+                        self.get_period(duration_full[0][1].lower(), course_item)
+                    if len(duration_full) == 2:
+                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                        self.get_period(duration_full[1][1].lower(), course_item)
+
+        intake = response.xpath("//td[contains(text(), 'Start Date') or contains(*/text(), 'Start "
+                                "Date')]/following-sibling::*").get()
+        if intake:
+            start_holder = []
+            for item in self.months:
+                if re.search(item, intake, re.M):
+                    start_holder.append(self.months[item])
+            if start_holder:
+                course_item['startMonths'] = '|'.join(start_holder)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
