@@ -22,7 +22,7 @@ def get_terms():
     server.daemon_forward_servers = True
     server.start()
 
-    client = pymongo.MongoClient('127.0.0.1', 27017)  # server.local_bind_port is assigned local port
+    client = pymongo.MongoClient('127.0.0.1', server.local_bind_port)  # server.local_bind_port is assigned local port
     db = client[MONGO_DB]
     coll = db['studyfield_mapping']
     term = coll.distinct("program_name")
