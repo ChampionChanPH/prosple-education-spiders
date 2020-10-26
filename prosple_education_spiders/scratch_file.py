@@ -29,3 +29,41 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
         if phrase:
             phrase = clean_html(phrase)
         return phrase.strip()
+
+
+def check_alpha(word):
+    """
+    :param word: word to check if first character is a symbol or not
+    :return: same word but already in proper case
+    """
+    if len(word) == 1:
+        return word
+    elif word[0].isalpha():
+        return word[0].upper() + word[1:].lower()
+    else:
+        return word[0:2].upper() + word[2:].lower()
+
+
+def make_proper(sentence):
+    """
+    :param sentence: any sentence you wanted to make a proper case for titles, course names, etc.
+    :return: same sentence in proper case
+    """
+    all_upper = ['I', 'II', 'III', 'IV', 'VCAL']
+    all_lower = ['in', 'to', 'and', 'the', 'of', 'by']
+
+    word_split = re.split(' ', sentence)
+    word_split = [x for x in word_split if x != '']
+
+    new_word = []
+    for index, item in enumerate(word_split):
+        if index == 0:
+            new_word.append(check_alpha(item))
+        elif item.upper() in all_upper:
+            new_word.append(item.upper())
+        elif item.lower() in all_lower:
+            new_word.append(item.lower())
+        else:
+            new_word.append(check_alpha(item))
+
+    return ' '.join(new_word)
