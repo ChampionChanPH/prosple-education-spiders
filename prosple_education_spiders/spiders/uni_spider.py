@@ -88,12 +88,12 @@ class UniSpiderSpider(scrapy.Spider):
                     holder.append(self.campuses[i])
                 else:
                     course_item.add_flag("campusNID", "New campus found: "+i)
-            course_item["campusNID"] = "'"+"|".join(holder)
+            course_item["campusNID"] = "|".join(holder)
 
         dates = response.css("dl.programme-dates dd::text").get()
         if dates:
             months = convert_months(dates.replace(",", "").split(" "))
-            course_item["startMonths"] = "'"+"|".join(months)
+            course_item["startMonths"] = "|".join(months)
 
         duration = response.css("dl.programme-duration dd::text").get()
 
