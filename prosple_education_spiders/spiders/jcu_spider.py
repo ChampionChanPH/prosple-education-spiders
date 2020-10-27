@@ -12,7 +12,7 @@ def bachelor(course_item):
 class JcuSpiderSpider(scrapy.Spider):
     name = 'jcu_spider'
     # allowed_domains = ['https://www.jcu.edu.au/courses-and-study/study-areas']
-    start_urls = ['https://www.jcu.edu.au/courses-and-study/study-areas/']
+    start_urls = ['https://www.jcu.edu.au/courses/study']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     blacklist_urls = []
     scraped_urls = []
@@ -40,12 +40,12 @@ class JcuSpiderSpider(scrapy.Spider):
     }
 
     def parse(self, response):
-        categories = response.css("div.column a::attr(href)").getall()
+        categories = response.css("li.jcu-v1__ct__link-list__item a::attr(href)").getall()
         for category in categories:
-            yield response.follow(category+r"/courses", callback=self.category_parse)
+            yield response.follow(category, callback=self.category_parse)
 
     def category_parse(self, response):
-        courses = response.css("div.column a::attr(href)").getall()
+        courses = response.css("a.jcu-v1__course-table--name__link::attr(href)").getall()
         for course in courses:
             if course not in self.blacklist_urls and course not in self.scraped_urls:
                 if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
@@ -82,9 +82,9 @@ class JcuSpiderSpider(scrapy.Spider):
             value = re.findall("[\d\.]+", duration)
             if value:
                 if "part-time" in duration:
-                    course_item["durationMinPart"] = value
+                    course_item["durationMinPart"] = value[0]
                 else:
-                    course_item["durationMinFull"] = value
+                    course_item["durationMinFull"] = value[0]
             if "month" in duration.lower():
                 course_item["teachingPeriod"] = 12
             else:
