@@ -123,6 +123,49 @@ class KaiSpiderSpider(scrapy.Spider):
         if course_code:
             course_item['courseCode'] = course_code.strip()
 
+        overview = response.xpath(
+            "//p[@class='title_txt'][*/text()='Course Overview']/following-sibling::*/*/*").getall()
+        holder = []
+        for item in overview:
+            if re.search('Click here for course modules', item, re.I | re.M):
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item.set_summary(strip_tags(holder[0]))
+            course_item["overview"] = strip_tags(''.join(holder), False)
+
+        career = response.xpath(
+            "//*[contains(*/text(), 'What employment opportunities will I have')]/following-sibling::*/*").getall()
+        holder = []
+        for item in career:
+            if re.search('lblquestion', item, re.I | re.M):
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item["careerPathways"] = strip_tags(''.join(holder), False)
+
+        entry = response.xpath("//*[contains(*/text(), 'Can I apply')]/following-sibling::*/*").getall()
+        holder = []
+        for item in entry:
+            if re.search('lblquestion', item, re.I | re.M):
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item["entryRequirements"] = strip_tags(''.join(holder), False)
+
+        apply = response.xpath("//*[contains(*/text(), 'How do I apply')]/following-sibling::*/*").getall()
+        holder = []
+        for item in apply:
+            if re.search('lblquestion', item, re.I | re.M):
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item["howToApply"] = strip_tags(''.join(holder), False)
+
         location = response.xpath("//div[contains(text(), 'Campus')]/following-sibling::*[last()]/*/text()").get()
         if location:
             course_item['campusNID'] = location
