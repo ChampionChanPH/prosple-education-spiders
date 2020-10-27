@@ -102,8 +102,6 @@ class HoiSpiderSpider(scrapy.Spider):
         "day": 365
     }
 
-    all_terms = get_terms()
-
     def get_period(self, string_to_use, course_item):
         for item in self.teaching_periods:
             if re.search(item, string_to_use):
@@ -274,7 +272,5 @@ class HoiSpiderSpider(scrapy.Spider):
 
         course_item['group'] = 141
         course_item['canonicalGroup'] = 'CareerStarter'
-
-        update_matches(course_item, self.all_terms)
 
         yield course_item

@@ -95,8 +95,6 @@ class KaiSpiderSpider(scrapy.Spider):
         "day": 365
     }
 
-    all_terms = get_terms()
-
     def get_period(self, string_to_use, course_item):
         for item in self.teaching_periods:
             if re.search(item, string_to_use):
@@ -175,7 +173,5 @@ class KaiSpiderSpider(scrapy.Spider):
                 course_item['startMonths'] = '|'.join(start_holder)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
-
-        # update_matches(course_item, self.all_terms)
 
         yield course_item
