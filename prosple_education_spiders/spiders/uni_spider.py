@@ -43,7 +43,7 @@ class UniSpiderSpider(scrapy.Spider):
         # "non-award": "13",
         # "no match": "15"
     }
-    all_terms = get_terms()
+    # all_terms = get_terms()
     # word_list = ['financial planning','commerce (financial planning)','stockbroking and financial advising','financial technologies','financial technologies (advanced)','accounting with a major in accounting and financial planning','business with a major in financial planning','business with a major in accounting and financial planning','financial planning online delivery','professional accounting /  master of financial planning','business (professional) with a major in financial planning','financial services','business (financial planning)','business (honours) (financial planning)','financial mathematics','financial analysis','financial technology management','applied financial technology and blockchain','fraud and financial crime','decision risk and financial sciences','financial technology','finance (financial planning)','financial management','financial engineering','financial management (professional)','financial markets analysis','demystifying the numbers – understanding financial concepts in healthcare','financial counselling','science (actuarial and financial science)']
     def parse(self, response):
         course_cards = response.css(".progrow:not(#progrow):not(.overview)")
@@ -68,7 +68,7 @@ class UniSpiderSpider(scrapy.Spider):
             course_item.set_course_name(name, self.uidPrefix)
 
         course_item.set_sf_dt(self.degrees)
-        update_matches(course_item, self.all_terms)
+        # update_matches(course_item, self.all_terms)
         #Override canon group
         course_item["canonicalGroup"] = "GradNewZealand"
         course_item["group"] = 2
