@@ -65,7 +65,7 @@ class JcuSpiderSpider(scrapy.Spider):
         name = response.css("figure h1::text").get()
         if name:
             course_item.set_course_name(name, self.uidPrefix)
-        course_item.set_sf_dt(self.degrees, degree_delims=["-"])
+        course_item.set_sf_dt(self.degrees, degree_delims=["-", ","])
         course_item["modeOfStudy"] = "Online"
 
         overview = response.css(".stuckright p::text").getall()
@@ -108,7 +108,7 @@ class JcuSpiderSpider(scrapy.Spider):
         if name:
             course_item.set_course_name(cleanspace(name), self.uidPrefix)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["-"])
+        course_item.set_sf_dt(self.degrees, degree_delims=["-", ","])
 
         code = response.xpath("//td[preceding-sibling::td/p/strong/text()='Course code']/p/text()").get()
         if code:
