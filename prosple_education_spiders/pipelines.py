@@ -29,6 +29,7 @@ class CoursesPipeline(object):
             "courseName",
             "uid",
             "specificStudyField",
+            'howToApply',
             'app_process',
             'summary',
             'name',
