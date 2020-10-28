@@ -231,7 +231,7 @@ class Course(scrapy.Item):
         final_ranges = []
         if self["courseName"].lower() in list(degrees_map.keys()):
             self["degreeType"] = degrees_map[self["courseName"].lower()]
-            self["rawStudyfield  "] = [self["courseName"].lower()]
+            self["rawStudyfield"] = [self["courseName"].lower()]
             self["specificStudyField"] = self["courseName"]
 
         else:
