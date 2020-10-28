@@ -82,7 +82,13 @@ class KaiSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Online": "56874"
+        "Broadmeadows": "57027",
+        "Essendon": "57028",
+        "Docklands": "57029",
+        "Moonee Ponds": "57030",
+        "Richmond": "57031",
+        "Online": "57032",
+        "Workplace Delivery": "57033"
     }
 
     teaching_periods = {
@@ -132,7 +138,10 @@ class KaiSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item.set_summary(strip_tags(holder[0]))
+            if re.search('Due to current COVID', holder[0], re.I | re.M):
+                course_item.set_summary(strip_tags(holder[3]))
+            else:
+                course_item.set_summary(strip_tags(holder[0]))
             course_item["overview"] = strip_tags(''.join(holder), False)
 
         career = response.xpath(
@@ -167,8 +176,22 @@ class KaiSpiderSpider(scrapy.Spider):
             course_item["howToApply"] = strip_tags(''.join(holder), False)
 
         location = response.xpath("//div[contains(text(), 'Campus')]/following-sibling::*[last()]/*/text()").get()
+        campus_holder = set()
+        study_holder = set()
         if location:
-            course_item['campusNID'] = location
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        if self.campuses['Online'] in campus_holder:
+            study_holder.add('Online')
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            if len(campus_holder) == 1 and self.campuses['Online'] in campus_holder:
+                pass
+            else:
+                study_holder.add('In Person')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         duration = response.xpath(
             "//div[contains(text(), 'Course Length')]/following-sibling::*[last()]/*/text()").get()
