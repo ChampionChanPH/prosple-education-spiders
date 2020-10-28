@@ -139,7 +139,10 @@ class KaiSpiderSpider(scrapy.Spider):
                 holder.append(item)
         if holder:
             if re.search('Due to current COVID', holder[0], re.I | re.M):
-                course_item.set_summary(strip_tags(holder[3]))
+                for item in holder:
+                    if not re.search('<strong', item):
+                        course_item.set_summary(strip_tags(item))
+                        break
             else:
                 course_item.set_summary(strip_tags(holder[0]))
             course_item["overview"] = strip_tags(''.join(holder), False)
