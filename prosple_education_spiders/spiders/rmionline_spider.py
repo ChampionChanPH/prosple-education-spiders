@@ -203,6 +203,7 @@ class RmionlineSpiderSpider(scrapy.Spider):
 
         course_item['campusNID'] = self.campuses['Online']
         course_item['modeOfStudy'] = 'Online'
+        course_item['internationalApps'] = 1
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
