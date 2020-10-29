@@ -42,7 +42,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class MepSpiderSpider(scrapy.Spider):
     name = 'mep_spider'
-    start_urls = ['https://www.melbournepolytechnic.edu.au/study/foundation-skills/work-education/']
+    start_urls = ['https://www.melbournepolytechnic.edu.au/study/']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "Melbourne Polytechnic"
     uidPrefix = "AU-MEP-"
