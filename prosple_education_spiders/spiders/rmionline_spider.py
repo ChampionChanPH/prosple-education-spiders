@@ -43,7 +43,7 @@ def get_total(field_to_use, field_to_update, course_item):
 class RmionlineSpiderSpider(scrapy.Spider):
     name = 'rmionline_spider'
     start_urls = ['https://studyonline.rmit.edu.au/online-programs']
-    institution = "	RMIT University"
+    institution = "RMIT University"
     uidPrefix = "AU-RMI-ON-"
 
     degrees = {
