@@ -183,6 +183,12 @@ class AcuSpiderSpider(scrapy.Spider):
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
+        atar = response.xpath("//dt[contains(text(), 'ATAR')]/following-sibling::dd").get()
+        if atar:
+            atar = re.findall('\((\d{2}\.\d{2})\)', atar, re.M)
+            atar = [float(x) for x in atar]
+            course_item['guaranteedEntryScore'] = min(atar)
+
         course_code = response.xpath("//dt[contains(text(), 'Course code:')]/following-sibling::dd").get()
         if not course_code:
             course_code = response.xpath("//div[contains(*/*/text(), 'Course code:')]/following-sibling::div").get()
