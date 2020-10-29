@@ -136,6 +136,22 @@ class MepSpiderSpider(scrapy.Spider):
         if course_name:
             course_item.set_course_name(strip_tags(course_name.strip()), self.uidPrefix)
 
+        if 'courseName' in course_item:
+            term = re.sub('(.*\s(in|of)\s)', '', course_item['courseName'])
+            term = re.sub('\s[(-].*', '', term)
+            term = re.sub(' ', '-', term.lower())
+        url_term = re.split('/', course_item['sourceURL'])
+        url_term = url_term[len(url_term) - 2]
+        if not re.search(term, url_term):
+            url_term = re.sub('-local-students', '', url_term)
+            course_item['uid'] = course_item['uid'] + '-' + url_term
+            course_item['courseName'] = course_item['courseName'] + '-' + make_proper(url_term)
+
+        check_international = response.xpath("//section[@data-type='international']").get()
+        if check_international:
+            if not re.search('not available for international students', check_international, re.I):
+                course_item['internationalApps'] = 1
+
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
         course_item['group'] = 141
