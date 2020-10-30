@@ -83,13 +83,16 @@ class MepSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Broadmeadows": "57027",
-        "Essendon": "57028",
-        "Docklands": "57029",
-        "Moonee Ponds": "57030",
-        "Richmond": "57031",
-        "Online": "57032",
-        "Workplace Delivery": "57033"
+        "Heidelberg": "57293",
+        "Epping": "57292",
+        "Fairfield": "57291",
+        "Preston": "57290",
+        "Greensborough": "57294",
+        "Prahran": "57295",
+        "Collingwood": "57296",
+        "Eden Park at Northern Lodge": "57297",
+        "Yan Yean at Northern Lodge": "57299",
+        "Online": "57300",
     }
 
     teaching_periods = {
@@ -175,8 +178,22 @@ class MepSpiderSpider(scrapy.Spider):
                                   "contains(text(), 'Campus')]/following-sibling::*/*/text()").getall()
         if not location:
             location = response.xpath("//*[text()='LOCATION']/following-sibling::*/text()").getall()
+        campus_holder = set()
+        study_holder = set()
         if location:
-            course_item['campusNID'] = ', '.join(location)
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        if self.campuses['Online'] in campus_holder:
+            study_holder.add('Online')
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            if len(campus_holder) == 1 and self.campuses['Online'] in campus_holder:
+                pass
+            else:
+                study_holder.add('In Person')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         duration = response.xpath("//*[@class='course-overview__infos']//*[@class='course-overview__info-title']["
                                   "contains(text(), 'Duration')]/following-sibling::*").get()
@@ -274,7 +291,7 @@ class MepSpiderSpider(scrapy.Spider):
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
 
-        dom_fee = response.xpath("//*[@class='mp-course-fees__amount']").getall()
+        dom_fee = response.xpath("//*[@class='mp-course-fees__amount']").get()
         if dom_fee:
             dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
             dom_fee = [float(''.join(x)) for x in dom_fee]
