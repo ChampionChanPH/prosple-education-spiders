@@ -105,7 +105,7 @@ class AcuSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        yield SplashRequest(response.request.url, callback=self.main_parse, args={'wait': 15})
+        yield SplashRequest(response.request.url, callback=self.main_parse, args={'wait': 20})
 
     def main_parse(self, response):
         courses = response.xpath("//section[contains(@class, 'search-results-scholarships')]//input["
