@@ -205,10 +205,10 @@ class MepSpiderSpider(scrapy.Spider):
             duration = response.xpath("//*[text()='DURATION']/following-sibling::*/text()").get()
         if duration:
             duration_full = re.findall(
-                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?.*?full.time)",
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
                 duration, re.I | re.M | re.DOTALL)
             duration_part = re.findall(
-                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?.*?part.time)",
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
                 duration, re.I | re.M | re.DOTALL)
             if not duration_full and duration_part:
                 self.get_period(duration_part[0][1].lower(), course_item)
