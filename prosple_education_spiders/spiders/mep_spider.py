@@ -153,15 +153,15 @@ class MepSpiderSpider(scrapy.Spider):
             course_item.set_course_name(course_item['courseName'].strip(), self.uidPrefix)
 
         overview = response.xpath("//*[@class='course-overview__text']/*").getall()
-        holder = []
-        for index, item in enumerate(overview):
-            if index == 0 and re.search('^<p', item):
-                pass
-            else:
-                holder.append(item)
-        if holder:
-            course_item.set_summary(strip_tags(holder[1]))
+        if overview:
             course_item["overview"] = strip_tags(''.join(holder), False)
+            if re.search('<strong>', course_item["overview"], re.M):
+                for index, item in enumerate(overview):
+                    if re.search('<strong>', item, re.M):
+                        course_item.set_summary(strip_tags(overview[index + 1]))
+                        break
+            else:
+                course_item.set_summary(strip_tags(course_item["overview"]))
 
         if 'overview' not in course_item:
             overview = response.xpath("//*[contains(text(), 'Suitable For:')][1]/following-sibling::*[1]/*").getall()
@@ -247,7 +247,7 @@ class MepSpiderSpider(scrapy.Spider):
 
         holder = []
         career1 = response.xpath("//*[contains(text(), 'Where will this take me')]/following-sibling::text()").get()
-        if career1:
+        if strip_tags(career1) != '':
             holder.append(career1)
         career2 = response.xpath("//*[contains(text(), 'Where will this take me')]/following-sibling::ul/li").getall()
         if career2:
