@@ -145,9 +145,9 @@ class MepSpiderSpider(scrapy.Spider):
         url_term = url_term[len(url_term) - 2]
         if not re.search(term, url_term):
             url_term = re.sub('-local-students', '', url_term)
-            course_item['uid'] = course_item['uid'] + '-' + url_term
             url_term = re.sub('-', ' ', url_term)
             course_item['courseName'] = course_item['courseName'] + ' - ' + make_proper(url_term)
+            course_item.set_course_name(course_item['courseName'].strip(), self.uidPrefix)
 
         overview = response.xpath("//*[@class='course-overview__text']/*").getall()
         holder = []
