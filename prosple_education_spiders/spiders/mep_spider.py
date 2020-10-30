@@ -263,13 +263,13 @@ class MepSpiderSpider(scrapy.Spider):
             course_item['creditTransfer'] = strip_tags(''.join(credit), False)
 
         entry = response.xpath("//*[text()='Requirements']/following-sibling::*[@data-type='local']").getall()
-        if not entry:
+        if entry:
+            course_item['entryRequirements'] = strip_tags(''.join(entry), False)
+        if 'entryRequirements' not in course_item:
             entry = response.xpath("//*[text()='Requirements']/following-sibling::text()").getall()
             entry = [strip_tags(x) for x in entry if strip_tags(x) != '']
             if entry:
-                entry = ' '.join(entry)
-        if entry:
-            course_item['entryRequirements'] = strip_tags(''.join(entry), False)
+                course_item['entryRequirements'] = strip_tags(' '.join(entry), False)
 
         learn = response.xpath("//*[contains(text(), 'Topics Covered:')][1]/following-sibling::*[1]/*").getall()
         if learn:
