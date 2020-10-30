@@ -247,8 +247,9 @@ class MepSpiderSpider(scrapy.Spider):
 
         holder = []
         career1 = response.xpath("//*[contains(text(), 'Where will this take me')]/following-sibling::text()").get()
-        if strip_tags(career1) != '':
-            holder.append(career1)
+        if career1:
+            if strip_tags(career1) != '':
+                holder.append(career1)
         career2 = response.xpath("//*[contains(text(), 'Where will this take me')]/following-sibling::ul/li").getall()
         if career2:
             holder.append('<ul>' + ''.join(career2) + '</ul>')
