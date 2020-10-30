@@ -160,13 +160,28 @@ class MepSpiderSpider(scrapy.Spider):
             course_item.set_summary(strip_tags(holder[1]))
             course_item["overview"] = strip_tags(''.join(holder), False)
 
+        if 'overview' not in course_item:
+            overview = response.xpath("//*[contains(text(), 'Suitable For:')][1]/following-sibling::*[1]/*").getall()
+            course_item["overview"] = strip_tags('<p>Suitable For:</p><ul>' + ''.join(overview) + '</ul>', False)
+
+        if 'overviewSummary' not in course_item:
+            summary = response.xpath("//*[contains(text(), 'Suitable For:')][1]/following-sibling::*[1]/*").getall()
+            holder = ['Suitable For:']
+            for index, item in enumerate(summary):
+                holder.append(str(index + 1) + ') ' + strip_tags(item))
+            course_item['overviewSummary'] = ' '.join(holder)
+
         location = response.xpath("//*[@class='course-overview__infos']//*[@class='course-overview__info-title']["
                                   "contains(text(), 'Campus')]/following-sibling::*/*/text()").getall()
+        if not location:
+            location = response.xpath("//*[text()='LOCATION']/following-sibling::*/text()").getall()
         if location:
             course_item['campusNID'] = ', '.join(location)
 
         duration = response.xpath("//*[@class='course-overview__infos']//*[@class='course-overview__info-title']["
                                   "contains(text(), 'Duration')]/following-sibling::*").get()
+        if not duration:
+            duration = response.xpath("//*[text()='DURATION']/following-sibling::*/text()").get()
         if duration:
             duration_full = re.findall(
                 "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?.*?full.time)",
@@ -221,20 +236,36 @@ class MepSpiderSpider(scrapy.Spider):
             holder.append('<ul>' + ''.join(career2) + '</ul>')
         if holder:
             course_item['careerPathways'] = strip_tags(''.join(holder), False)
+        if 'careerPathways' not in course_item:
+            career = response.xpath("//*[contains(text(), 'Course Outcomes:')][1]/following-sibling::*[1]/*").getall()
+            course_item['careerPathways'] = strip_tags('<ul>' + ''.join(career) + '</ul>', False)
 
         credit = response.xpath("//*[contains(text(), 'Recognition of Prior Learning')]/following-sibling::*").getall()
         if credit:
             course_item['creditTransfer'] = strip_tags(''.join(credit), False)
 
         entry = response.xpath("//*[text()='Requirements']/following-sibling::*[@data-type='local']").getall()
+        if not entry:
+            entry = response.xpath("//*[text()='Requirements']/following-sibling::text()").getall()
+            entry = [strip_tags(x) for x in entry if strip_tags(x) != '']
+            if entry:
+                entry = ' '.join(entry)
         if entry:
             course_item['entryRequirements'] = strip_tags(''.join(entry), False)
+
+        learn = response.xpath("//*[contains(text(), 'Topics Covered:')][1]/following-sibling::*[1]/*").getall()
+        if learn:
+            course_item['whatLearn'] = strip_tags('<ul>' + ''.join(learn) + '</ul>', False)
 
         course_code = response.xpath("//*[@class='course-hero__spacer'][contains(text(), 'Code:')]/text()").get()
         if course_code:
             course_code = re.findall('(?<=Code: ).*', course_code.strip(), re.DOTALL)
             if course_code:
                 course_item['courseCode'] = course_code[0]
+        if 'courseCode' not in course_item:
+            course_code = response.xpath("//*[text()='CODE']/following-sibling::*/text()").get()
+            if course_code:
+                course_item['courseCode'] = course_code
 
         cricos = response.xpath("//*[@class='course-hero__spacer'][contains(text(), 'Cricos:')]/text()").get()
         if cricos:
@@ -242,6 +273,13 @@ class MepSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
+
+        dom_fee = response.xpath("//*[@class='mp-course-fees__amount']").getall()
+        if dom_fee:
+            dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
+            dom_fee = [float(''.join(x)) for x in dom_fee]
+            if dom_fee:
+                course_item["domesticFeeTotal"] = max(dom_fee)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
