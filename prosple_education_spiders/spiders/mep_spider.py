@@ -144,8 +144,8 @@ class MepSpiderSpider(scrapy.Spider):
             term = re.sub('(.*\s(in|of)\s)', '', course_item['courseName'], re.DOTALL)
             term = re.sub('\s[(-].*', '', term, re.DOTALL)
             term = re.sub(' ', '-', term.lower())
-        url_term = re.split('/', course_item['sourceURL'])
-        url_term = url_term[len(url_term) - 2]
+            url_term = re.split('/', course_item['sourceURL'])
+            url_term = url_term[len(url_term) - 2]
         if not re.search(term, url_term):
             url_term = re.sub('-local-students', '', url_term)
             url_term = re.sub('-', ' ', url_term)
@@ -156,18 +156,19 @@ class MepSpiderSpider(scrapy.Spider):
         if overview:
             course_item["overview"] = strip_tags(''.join(overview), False)
             if len(overview) == 1:
-                course_item.set_summary(strip_tags(course_item["overview"]))
+                course_item.set_summary(strip_tags(overview[0]))
             elif re.search('<strong>', course_item["overview"], re.M):
                 for index, item in enumerate(overview):
                     if re.search('^<h', item, re.M):
                         course_item.set_summary(strip_tags(overview[index + 1]))
                         break
             else:
-                course_item.set_summary(strip_tags(course_item["overview"]))
+                course_item.set_summary(strip_tags(overview[0]))
 
         if 'overview' not in course_item:
             overview = response.xpath("//*[contains(text(), 'Suitable For:')][1]/following-sibling::*[1]/*").getall()
-            course_item["overview"] = strip_tags('<p>Suitable For:</p><ul>' + ''.join(overview) + '</ul>', False)
+            if overview:
+                course_item["overview"] = strip_tags('<p>Suitable For:</p><ul>' + ''.join(overview) + '</ul>', False)
 
         if 'overviewSummary' not in course_item:
             summary = response.xpath("//*[contains(text(), 'Suitable For:')][1]/following-sibling::*[1]/*").getall()
