@@ -181,6 +181,7 @@ class MepSpiderSpider(scrapy.Spider):
         campus_holder = set()
         study_holder = set()
         if location:
+            location = ', '.join(location)
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.add(self.campuses[campus])
