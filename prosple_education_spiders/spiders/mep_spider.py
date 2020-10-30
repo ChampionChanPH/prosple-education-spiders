@@ -154,7 +154,7 @@ class MepSpiderSpider(scrapy.Spider):
 
         overview = response.xpath("//*[@class='course-overview__text']/*").getall()
         if overview:
-            course_item["overview"] = strip_tags(''.join(holder), False)
+            course_item["overview"] = strip_tags(''.join(overview), False)
             if re.search('<strong>', course_item["overview"], re.M):
                 for index, item in enumerate(overview):
                     if re.search('<strong>', item, re.M):
