@@ -12,21 +12,21 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
     """
 
     if remove_all_tags:
-        phrase = re.sub("(\r\n\t)", "", phrase, re.M)
-        phrase = re.sub("</?.*?>", "", phrase, re.M)
+        phrase = re.sub("(\r\n\t)", "", phrase, re.M | re.DOTALL)
+        phrase = re.sub("</?.*?>", "", phrase, re.M | re.DOTALL)
         return phrase.strip()
     else:
-        phrase = re.sub("</[h]{1}[1-4]{1}.*?>", "</strong>", phrase, re.DOTALL)
-        phrase = re.sub("<[h]{1}[1-4]{1}.*?>", "<strong>", phrase, re.DOTALL)
-        phrase = re.sub("</[h]{1}[5-6]{1}.*?>", "</p>", phrase, re.DOTALL)
-        phrase = re.sub("<[h]{1}[5-6]{1}.*?>", "<p>", phrase, re.DOTALL)
-        phrase = re.sub("</(span|div).*?>", "</div>", phrase, re.DOTALL)
-        phrase = re.sub("<(span|div).*?>", "<div>", phrase, re.DOTALL)
-        phrase = re.sub("</p.*?>", "</p>", phrase, re.DOTALL)
-        phrase = re.sub("<p.*?>", "<p>", phrase, re.DOTALL)
-        phrase = re.sub("<img.*?>", "", phrase, re.DOTALL)
+        phrase = re.sub("</[h]{1}[1-4]{1}.*?>", "</strong>", phrase, re.M | re.DOTALL)
+        phrase = re.sub("<[h]{1}[1-4]{1}.*?>", "<strong>", phrase, re.M | re.DOTALL)
+        phrase = re.sub("</[h]{1}[5-6]{1}.*?>", "</p>", phrase, re.M | re.DOTALL)
+        phrase = re.sub("<[h]{1}[5-6]{1}.*?>", "<p>", phrase, re.M | re.DOTALL)
+        phrase = re.sub("</(span|div).*?>", "</div>", phrase, re.M | re.DOTALL)
+        phrase = re.sub("<(span|div).*?>", "<div>", phrase, re.M | re.DOTALL)
+        phrase = re.sub("</p.*?>", "</p>", phrase, re.M | re.DOTALL)
+        phrase = re.sub("<p.*?>", "<p>", phrase, re.M | re.DOTALL)
+        phrase = re.sub("<img.*?>", "", phrase, re.M | re.DOTALL)
         if remove_hyperlinks:
-            phrase = re.sub("</?a.*?>", "", phrase, re.DOTALL)
+            phrase = re.sub("</?a.*?>", "", phrase, re.M | re.DOTALL)
         if phrase:
             phrase = clean_html(phrase)
         return phrase.strip()
