@@ -166,16 +166,13 @@ class MepSpiderSpider(scrapy.Spider):
                 course_item.set_summary(strip_tags(overview[0]))
 
         if 'overview' not in course_item:
-            overview = response.xpath("//*[contains(text(), 'Suitable For:')][1]/following-sibling::*[1]/*").getall()
+            overview = response.xpath(
+                "//*[contains(text(), 'Suitable For:') or contains(text(), 'Suitable for:')]").get()
             if overview:
-                course_item["overview"] = strip_tags('<p>Suitable For:</p><ul>' + ''.join(overview) + '</ul>', False)
-
-        if 'overviewSummary' not in course_item:
-            summary = response.xpath("//*[contains(text(), 'Suitable For:')][1]/following-sibling::*[1]/*").getall()
-            holder = ['Suitable For:']
-            for index, item in enumerate(summary):
-                holder.append(str(index + 1) + ') ' + strip_tags(item))
-            course_item['overviewSummary'] = ' '.join(holder)
+                overview2 = response.xpath("//*[contains(text(), 'Suitable For:') or contains(text(), 'Suitable "
+                                           "for:')][1]/following-sibling::*").get()
+                course_item["overview"] = strip_tags(overview + overview2, False)
+                course_item.set_summary(strip_tags(overview + overview2))
 
         location = response.xpath("//*[@class='course-overview__infos']//*[@class='course-overview__info-title']["
                                   "contains(text(), 'Campus')]/following-sibling::*/*/text()").getall()
@@ -259,8 +256,10 @@ class MepSpiderSpider(scrapy.Spider):
         if holder:
             course_item['careerPathways'] = strip_tags(''.join(holder), False)
         if 'careerPathways' not in course_item:
-            career = response.xpath("//*[contains(text(), 'Course Outcomes:')][1]/following-sibling::*[1]/*").getall()
-            course_item['careerPathways'] = strip_tags('<ul>' + ''.join(career) + '</ul>', False)
+            career = response.xpath("//*[contains(text(), 'Course Outcomes:') or contains(text(), 'Course "
+                                    "outcomes:')][1]/following-sibling::*").get()
+            if career:
+                course_item['careerPathways'] = strip_tags(career, False)
 
         credit = response.xpath("//*[contains(text(), 'Recognition of Prior Learning')]/following-sibling::*").getall()
         if credit:
@@ -275,9 +274,10 @@ class MepSpiderSpider(scrapy.Spider):
             if entry:
                 course_item['entryRequirements'] = strip_tags(' '.join(entry), False)
 
-        learn = response.xpath("//*[contains(text(), 'Topics Covered:')][1]/following-sibling::*[1]/*").getall()
+        learn = response.xpath("//*[contains(text(), 'Topics Covered:') or contains(text(), 'Topics covered:')]["
+                               "1]/following-sibling::*").get()
         if learn:
-            course_item['whatLearn'] = strip_tags('<ul>' + ''.join(learn) + '</ul>', False)
+            course_item['whatLearn'] = strip_tags(learn, False)
 
         course_code = response.xpath("//*[@class='course-hero__spacer'][contains(text(), 'Code:')]/text()").get()
         if course_code:
