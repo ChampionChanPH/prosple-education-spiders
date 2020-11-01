@@ -296,7 +296,7 @@ class MepSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item['whatLearn'] = strip_tags(learn, False)
+            course_item['whatLearn'] = strip_tags(''.join(holder), False)
 
         course_code = response.xpath("//*[@class='course-hero__spacer'][contains(text(), 'Code:')]/text()").get()
         if course_code:
