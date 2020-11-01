@@ -169,8 +169,8 @@ class MepSpiderSpider(scrapy.Spider):
             overview = response.xpath(
                 "//*[contains(text(), 'Suitable For') or contains(text(), 'Suitable for')]").get()
             if overview:
-                overview2 = response.xpath("//*[contains(text(), 'Suitable For:') or contains(text(), 'Suitable "
-                                           "for:')][1]/following-sibling::*").get()
+                overview2 = response.xpath("//*[contains(text(), 'Suitable For') or contains(text(), 'Suitable "
+                                           "for')][1]/following-sibling::*").get()
                 course_item["overview"] = strip_tags(overview + overview2, False, True)
                 course_item.set_summary(strip_tags(overview + overview2))
 
@@ -289,7 +289,13 @@ class MepSpiderSpider(scrapy.Spider):
 
         learn = response.xpath("//*[contains(text(), 'Topics Covered:') or contains(text(), 'Topics covered:')]["
                                "1]/following-sibling::*").getall()
-        if learn:
+        holder = []
+        for item in learn:
+            if re.search(':', item, re.M):
+                break
+            else:
+                holder.append(item)
+        if holder:
             course_item['whatLearn'] = strip_tags(learn, False)
 
         course_code = response.xpath("//*[@class='course-hero__spacer'][contains(text(), 'Code:')]/text()").get()
