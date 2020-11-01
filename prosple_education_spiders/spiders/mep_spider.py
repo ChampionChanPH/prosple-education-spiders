@@ -147,14 +147,14 @@ class MepSpiderSpider(scrapy.Spider):
             url_term = re.split('/', course_item['sourceURL'])
             url_term = url_term[len(url_term) - 2]
         if not re.search(term, url_term):
-            url_term = re.sub('-local-students', '', url_term)
+            url_term = re.sub('(-local-students|-eveningflexible)', '', url_term)
             url_term = re.sub('-', ' ', url_term)
             course_item['courseName'] = course_item['courseName'] + ' - ' + make_proper(url_term)
             course_item.set_course_name(course_item['courseName'].strip(), self.uidPrefix)
 
         overview = response.xpath("//*[@class='course-overview__text']/*").getall()
         if overview:
-            course_item["overview"] = strip_tags(''.join(overview), False)
+            course_item["overview"] = strip_tags(''.join(overview), False, True)
             if len(overview) == 1:
                 course_item.set_summary(strip_tags(overview[0]))
             elif re.search('<strong>', course_item["overview"], re.M):
@@ -167,12 +167,25 @@ class MepSpiderSpider(scrapy.Spider):
 
         if 'overview' not in course_item:
             overview = response.xpath(
-                "//*[contains(text(), 'Suitable For:') or contains(text(), 'Suitable for:')]").get()
+                "//*[contains(text(), 'Suitable For') or contains(text(), 'Suitable for')]").get()
             if overview:
                 overview2 = response.xpath("//*[contains(text(), 'Suitable For:') or contains(text(), 'Suitable "
                                            "for:')][1]/following-sibling::*").get()
-                course_item["overview"] = strip_tags(overview + overview2, False)
+                course_item["overview"] = strip_tags(overview + overview2, False, True)
                 course_item.set_summary(strip_tags(overview + overview2))
+
+        if 'overview' not in course_item:
+            overview = response.xpath(
+                "//*[@class='mp-short-course__heading'][text()='Overview']/following-sibling::*/*").getall()
+            if overview:
+                course_item["overview"] = strip_tags(''.join(overview), False, True)
+                course_item.set_summary(strip_tags(''.join(overview)))
+
+        if 'overview' not in course_item:
+            overview = response.xpath("//*[@class='course-overview__text']").get()
+            if overview:
+                course_item["overview"] = strip_tags(overview, False, True)
+                course_item.set_summary(strip_tags(overview))
 
         location = response.xpath("//*[@class='course-overview__infos']//*[@class='course-overview__info-title']["
                                   "contains(text(), 'Campus')]/following-sibling::*/*/text()").getall()
@@ -275,7 +288,7 @@ class MepSpiderSpider(scrapy.Spider):
                 course_item['entryRequirements'] = strip_tags(' '.join(entry), False)
 
         learn = response.xpath("//*[contains(text(), 'Topics Covered:') or contains(text(), 'Topics covered:')]["
-                               "1]/following-sibling::*").get()
+                               "1]/following-sibling::*").getall()
         if learn:
             course_item['whatLearn'] = strip_tags(learn, False)
 
