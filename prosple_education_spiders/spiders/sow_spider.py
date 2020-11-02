@@ -43,7 +43,7 @@ def get_total(field_to_use, field_to_update, course_item):
 class SowSpiderSpider(scrapy.Spider):
     name = 'sow_spider'
     start_urls = ['https://www.swtafe.edu.au/courses/free-tafe-courses']
-    institution = "South West TAFE"
+    institution = "South West Institute of TAFE"
     uidPrefix = "AU-SOW-"
 
     degrees = {
@@ -80,16 +80,26 @@ class SowSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Heidelberg": "57293",
-        "Epping": "57292",
-        "Fairfield": "57291",
-        "Preston": "57290",
-        "Greensborough": "57294",
-        "Prahran": "57295",
-        "Collingwood": "57296",
-        "Eden Park at Northern Lodge": "57297",
-        "Yan Yean at Northern Lodge": "57299",
-        "Online": "57300",
+        "Warrnambool": "57355",
+        "Portland": "57356",
+        "Hamilton": "57357",
+        "Colac": "57358",
+        "Sherwood Park": "57359",
+        "Workplace Training": "57360",
+        "Glenormiston": "57361",
+    }
+
+    numbers = {
+        'one': '1',
+        'two': '2',
+        'three': '3',
+        'four': '4',
+        'five': '5',
+        'six': '6',
+        'seven': '7',
+        'eight': '8',
+        'nine': '9',
+        'ten': '10',
     }
 
     teaching_periods = {
@@ -197,20 +207,73 @@ class SowSpiderSpider(scrapy.Spider):
             course_item["howToApply"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         location = response.xpath("//td[text()='Locations']/following-sibling::*/text()").get()
+        campus_holder = set()
         if location:
-            course_item['campusNID'] = location.strip()
+            for campus in self.campuses:
+                if campus == 'Warrnambool':
+                    if re.search('(?<!\()Warrnambool', location, re.I):
+                        campus_holder.add(self.campuses[campus])
+                elif re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
 
         study = response.xpath("//td[text()='Study Mode']/following-sibling::*/text()").get()
-        if study:
-            course_item['modeOfStudy'] = study.strip()
+        if study == 'Online':
+            course_item['modeOfStudy'] = 'Online'
+        else:
+            course_item['modeOfStudy'] = 'In Person|Online'
 
         intake = response.xpath("//td[text()='Commencement']/following-sibling::*/text()").get()
         if intake:
-            course_item['startMonths'] = intake.strip()
+            start_holder = []
+            for item in self.months:
+                if re.search(item, intake, re.M):
+                    start_holder.append(self.months[item])
+            if start_holder:
+                course_item['startMonths'] = '|'.join(start_holder)
+            if re.search('any.?time', intake, re.DOTALL):
+                course_item['startMonths'] = '01|02|03|04|05|06|07|08|09|10|11|12'
 
         duration = response.xpath("//td[text()='Length']/following-sibling::*/text()").get()
         if duration:
-            course_item['teachingPeriod'] = duration.strip()
+            duration_full = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
+                duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
+                duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                if len(duration_full[0]) == 2:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                if len(duration_full[0]) == 3:
+                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[0][1]))
+                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[0][1]))
+                    self.get_period(duration_full[0][2].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                for item in self.numbers:
+                    duration = duration.replace(item, self.numbers[item])
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 1:
+                    #     course_item["durationMinFull"] = float(duration_full[0][0])
+                    #     self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 2:
+                    #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     self.get_period(duration_full[1][1].lower(), course_item)
 
         dom_fee = response.xpath("//td[contains(text(), 'Full fee rate')]/following-sibling::*").get()
         if dom_fee:
