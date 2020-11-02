@@ -157,7 +157,8 @@ class SowSpiderSpider(scrapy.Spider):
         if holder:
             course_item["whatLearn"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        career = response.xpath("//div[contains(@class, 'content-heading-secondary')][text()='Course Outcomes and Career Opportunities']/following-sibling::*").getall()
+        career = response.xpath("//div[contains(@class, 'content-heading-secondary')][text()='Course Outcomes and "
+                                "Career Opportunities']/following-sibling::*").getall()
         holder = []
         if career:
             career = [x for x in career if strip_tags(x) != '']
@@ -169,7 +170,8 @@ class SowSpiderSpider(scrapy.Spider):
         if holder:
             course_item["careerPathways"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        entry = response.xpath("//div[contains(@class, 'content-heading-secondary')][text()='Entrance requirements & pre-requisites']/following-sibling::*").getall()
+        entry = response.xpath("//div[contains(@class, 'content-heading-secondary')][text()='Entrance requirements & "
+                               "pre-requisites']/following-sibling::*").getall()
         holder = []
         if entry:
             entry = [x for x in entry if strip_tags(x) != '']
@@ -180,6 +182,19 @@ class SowSpiderSpider(scrapy.Spider):
                     holder.append(item)
         if holder:
             course_item["entryRequirements"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        apply = response.xpath("//div[contains(@class, 'content-heading-secondary')][text()='How to "
+                               "apply']/following-sibling::*").getall()
+        holder = []
+        if apply:
+            apply = [x for x in apply if strip_tags(x) != '']
+            for item in apply:
+                if not re.search('^<(p|o|u)', item):
+                    break
+                else:
+                    holder.append(item)
+        if holder:
+            course_item["howToApply"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         location = response.xpath("//td[text()='Locations']/following-sibling::*/text()").get()
         if location:
