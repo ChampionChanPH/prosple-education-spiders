@@ -6,8 +6,6 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 import re
 from .taxonomy import *
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
 
 class CoursesPipeline(object):
     def process_item(self, item, spider):
@@ -41,8 +39,5 @@ class CoursesPipeline(object):
             for char in list(special_chars.keys()):
                 item[field] = item[field].replace(char, special_chars[char])
 
-        #Add fuzzywuzzy here
-        #compare rawstudyfield to mongodb mapping list
-        #if closest term passes 85, replace rawstudyfield. otherwise, retain.
 
         return item
