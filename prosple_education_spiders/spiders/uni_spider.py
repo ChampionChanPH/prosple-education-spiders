@@ -2,8 +2,6 @@
 # started: October 5, 2020
 
 from ..standard_libs import *
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
 
 class UniSpiderSpider(scrapy.Spider):
     name = 'uni_spider'
