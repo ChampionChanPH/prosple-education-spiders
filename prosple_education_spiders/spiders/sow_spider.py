@@ -138,7 +138,7 @@ class SowSpiderSpider(scrapy.Spider):
 
         course_code = response.xpath("//td[text()='Course Code']/following-sibling::*/text()").get()
         if course_code:
-            course_item['courseCode'] = course_code
+            course_item['courseCode'] = course_code.strip()
 
         overview = response.xpath(
             "//div[contains(@class, 'content-heading-secondary')][text()='Introduction']/following-sibling::*").getall()
