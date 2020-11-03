@@ -280,16 +280,16 @@ class SowSpiderSpider(scrapy.Spider):
             dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
             dom_fee = [float(''.join(x)) for x in dom_fee]
             if dom_fee:
-                course_item["domesticFeeAnnual"] = max(dom_fee)
-                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+                course_item["domesticFeeTotal"] = max(dom_fee)
+                # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         csp_fee = response.xpath("//td[contains(text(), 'Government subsidised rate')]/following-sibling::*").get()
         if csp_fee:
             csp_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", csp_fee, re.M)
             csp_fee = [float(''.join(x)) for x in csp_fee]
             if csp_fee:
-                course_item["domesticSubFeeAnnual"] = max(csp_fee)
-                get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
+                course_item["domesticSubFeeTotal"] = max(csp_fee)
+                # get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
