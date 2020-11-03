@@ -1,3 +1,5 @@
+# by Christian Anasco
+
 import re
 from lxml.html.clean import clean_html
 
@@ -58,7 +60,11 @@ def make_proper(sentence):
 
     new_word = []
     for index, item in enumerate(word_split):
-        if index == 0:
+        if len(item) > 1 and re.search('-', item):
+            item_split = re.split('-', item)
+            item_split = [check_alpha(x) for x in item_split]
+            new_word.append('-'.join(item_split))
+        elif index == 0:
             new_word.append(check_alpha(item))
         elif item.upper() in all_upper:
             new_word.append(item.upper())
