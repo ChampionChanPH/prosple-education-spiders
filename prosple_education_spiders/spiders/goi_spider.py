@@ -139,7 +139,56 @@ class GoiSpiderSpider(scrapy.Spider):
         duration = response.xpath("//div[*/text()='Course Length']/following-sibling::*/*//text()").getall()
         if duration:
             duration = ' '.join(duration)
-            course_item['durationMinFull'] = duration
+            duration = re.sub('mth', 'month', duration)
+            duration = re.sub('yr', 'year', duration)
+        if duration:
+            duration_full = re.findall("full.time.\s(\d*?)?\s?-?\s?(\d+)(?=\s("
+                                       "year|month|semester|trimester|quarter|week|day))", duration, re.I | re.M |
+                                       re.DOTALL)
+            duration_part = re.findall("part.time.\s(\d*?)?\s?-?\s?(\d+)(?=\s("
+                                       "year|month|semester|trimester|quarter|week|day))", duration, re.I | re.M |
+                                       re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                if duration_full[0] == '':
+                    course_item["durationMinFull"] = float(duration_full[0][1])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                else:
+                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[0][1]))
+                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[0][1]))
+                    self.get_period(duration_full[0][2].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    if duration_part[0] == '':
+                        course_item["durationMinPart"] = float(duration_part[0][1])
+                    else:
+                        course_item["durationMinPart"] = min(float(duration_part[0][0]), float(duration_part[0][1]))
+                        course_item["durationMaxPart"] = max(float(duration_part[0][0]), float(duration_part[0][1]))
+                else:
+                    if duration_part[0] == '':
+                        course_item["durationMinPart"] = float(duration_part[0][1]) * course_item["teachingPeriod"] \
+                                                         / self.teaching_periods[duration_part[0][2].lower()]
+                    else:
+                        course_item["durationMinPart"] = min(float(duration_part[0][0]), float(duration_part[0][1])) * \
+                                                         course_item["teachingPeriod"] / \
+                                                         self.teaching_periods[duration_part[0][2].lower()]
+                        course_item["durationMaxPart"] = max(float(duration_part[0][0]), float(duration_part[0][1])) * \
+                                                         course_item["teachingPeriod"] / \
+                                                         self.teaching_periods[duration_part[0][2].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 1:
+                    #     course_item["durationMinFull"] = float(duration_full[0][0])
+                    #     self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 2:
+                    #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     self.get_period(duration_full[1][1].lower(), course_item)
 
         dom_fee = response.xpath("//*[text()='Full Fee:']/following-sibling::*//text()").get()
         if dom_fee:
