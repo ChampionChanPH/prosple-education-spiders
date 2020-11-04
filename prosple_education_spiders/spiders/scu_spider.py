@@ -1,15 +1,86 @@
-import scrapy
-import re
-from ..items import Course
-from ..scratch_file import strip_tags
-from datetime import date
+# -*- coding: utf-8 -*-
+# by Christian Anasco
+
+from ..standard_libs import *
+from ..scratch_file import *
+
+
+def research_coursework(course_item):
+    if re.search("research", course_item["courseName"], re.I):
+        return "12"
+    else:
+        return "11"
+
+
+def bachelor_honours(course_item):
+    if re.search("honours", course_item["courseName"], re.I):
+        return "3"
+    else:
+        return "2"
+
+
+def get_total(field_to_use, field_to_update, course_item):
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
+        if course_item["teachingPeriod"] == 1:
+            if float(course_item["durationMinFull"]) < 1:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 52
 
 
 class ScuSpiderSpider(scrapy.Spider):
     name = 'scu_spider'
-    allowed_domains = ['www.scu.edu.au', 'scu.edu.au']
-    start_urls = ['https://www.scu.edu.au/study-at-scu/course-search/?mkeyword=&year=2020&keyword=']
-    courses = []
+    start_urls = ['https://course-search.scu.edu.au/']
+    institution = "Southern Cross University (SCU)"
+    uidPrefix = "AU-SCU-"
+
+    degrees = {
+        "graduate certificate": "7",
+        "graduate diploma": "8",
+        "master": research_coursework,
+        "bachelor": bachelor_honours,
+        "doctor": "6",
+        "certificate": "4",
+        "certificate i": "4",
+        "certificate ii": "4",
+        "certificate iii": "4",
+        "certificate iv": "4",
+        "advanced diploma": "5",
+        "diploma": "5",
+        "associate degree": "1",
+        "vcal in victorian certificate": "9",
+        "vcal in": "9",
+        "non-award": "13",
+        "no match": "15"
+    }
+
+    months = {
+        "January": "01",
+        "February": "02",
+        "March": "03",
+        "April": "04",
+        "May": "05",
+        "June": "06",
+        "July": "07",
+        "August": "08",
+        "September": "09",
+        "October": "10",
+        "November": "11",
+        "December": "12"
+    }
+
     campuses = {
         "Melbourne": "701",
         "Lismore": "695",
@@ -20,46 +91,46 @@ class ScuSpiderSpider(scrapy.Spider):
         "Coffs Harbour": "697",
         "National Marine Science Centre": "694"
     }
+
     key_dates = {
         "1": "03",
         "2": "07",
         "3": "11"
     }
-    degrees = {
-        "Graduate Certificate": "Graduate Certificate",
-        "Graduate Diploma": "Graduate Diploma",
-        "Honours": "Bachelor (Honours)",
-        "Research": "Masters (Research)",
-        "Master": "Masters (Coursework)",
-        "Doctor": "Doctorate (PhD)",
-        "Bachelor": "Bachelor",
-        "Associate Degree": "Associate Degree",
-        "Certificate": "Certificate",
-        "Diploma": "Diploma"
+
+    teaching_periods = {
+        "year": 1,
+        "semester": 2,
+        "trimester": 3,
+        "quarter": 4,
+        "month": 12,
+        "week": 52,
+        "day": 365
     }
-    group = [["Postgraduate", 4, "PostgradAustralia"], ["Undergraduate", 3, "The Uni Guide"]]
+
+    def get_period(self, string_to_use, course_item):
+        for item in self.teaching_periods:
+            if re.search(item, string_to_use):
+                course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        self.courses.extend(response.xpath("//div[@class='courses-table-wrap']//td/a/@href").getall())
+        courses = response.xpath("//div[@class='row results']//a[contains(@class, 'text-primary')]/@href").getall()
 
-        next_page = response.xpath("//ul[@class='pagination']//a[@class='pbc-pag-next']/@href").get()
+        for item in courses:
+            yield response.follow(item.strip(), callback=self.course_parse)
 
-        if next_page is not None:
+        next_page = response.xpath("//a[@class='page-link'][contains(*/@class, 'angle-right')]/@href").getall()
+
+        if next_page:
             yield response.follow(next_page, callback=self.parse)
 
-        for course in self.courses:
-            yield response.follow(course, callback=self.course_parse)
-
     def course_parse(self, response):
-        institution = "Southern Cross University (SCU)"
-        uidPrefix = "AU-SCU-"
-
         course_item = Course()
 
-        course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
-        course_item["sourceURL"] = response.request.url
-        course_item["published"] = 1
-        course_item["institution"] = institution
+        course_item['lastUpdate'] = date.today().strftime("%m/%d/%y")
+        course_item['sourceURL'] = response.request.url
+        course_item['published'] = 1
+        course_item['institution'] = self.institution
         # course_item["internationalApplyURL"] = response.request.url
         # course_item["domesticApplyURL"] = response.request.url
 
@@ -221,5 +292,7 @@ class ScuSpiderSpider(scrapy.Spider):
             if re.search(r"career opportunities", header, re.I | re.M):
                 career = strip_tags(content, False)
                 course_item["careerPathways"] = career
+
+        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
         yield course_item
