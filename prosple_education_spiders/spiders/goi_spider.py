@@ -142,10 +142,10 @@ class GoiSpiderSpider(scrapy.Spider):
             duration = re.sub('mth', 'month', duration)
             duration = re.sub('yr', 'year', duration)
         if duration:
-            duration_full = re.findall("full.time.\s(\d*?)?\s?-?\s?(\d+)(?=\s("
+            duration_full = re.findall("full.time.*?(\d*?\.?\d*?)?\s?-?\s?(\d*\.?\d+)(?=\s("
                                        "year|month|semester|trimester|quarter|week|day))", duration, re.I | re.M |
                                        re.DOTALL)
-            duration_part = re.findall("part.time.\s(\d*?)?\s?-?\s?(\d+)(?=\s("
+            duration_part = re.findall("part.time.*?(\d*?\.?\d*?)?\s?-?\s?(\d*\.?\d+)(?=\s("
                                        "year|month|semester|trimester|quarter|week|day))", duration, re.I | re.M |
                                        re.DOTALL)
             if not duration_full and duration_part:
