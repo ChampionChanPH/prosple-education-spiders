@@ -139,6 +139,7 @@ class GoiSpiderSpider(scrapy.Spider):
         duration = response.xpath("//div[*/text()='Course Length']/following-sibling::*/*//text()").getall()
         if duration:
             duration = ' '.join(duration)
+            course_item['durationMinFull'] = duration
 
         dom_fee = response.xpath("//*[text()='Full Fee:']/following-sibling::*//text()").get()
         if dom_fee:
