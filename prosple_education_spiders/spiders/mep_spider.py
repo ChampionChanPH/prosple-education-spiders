@@ -149,7 +149,7 @@ class MepSpiderSpider(scrapy.Spider):
         if not re.search(term, url_term):
             url_term = re.sub('(-local-students|-eveningflexible)', '', url_term)
             url_term = re.sub('-', ' ', url_term)
-            course_item['courseName'] = course_item['courseName'] + ' - ' + make_proper(url_term)
+            course_item['courseName'] = course_item['courseName'] + ' - ' + url_term.title()
             course_item.set_course_name(course_item['courseName'].strip(), self.uidPrefix)
 
         overview = response.xpath("//*[@class='course-overview__text']/*").getall()
