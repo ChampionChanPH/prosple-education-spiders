@@ -86,7 +86,7 @@ class CduSpiderSpider(scrapy.Spider):
                     self.scraped_urls.append(course)
                     yield response.follow(course, callback=self.course_parse, meta={"campus": campus, "durations": durations})
 
-        next_page = response.css("a[rel='next']::attr(href)").get()
+        next_page = response.css("li.pagination__next a::attr(href)").get()
         if next_page:
             yield response.follow(next_page, callback=self.parse)
 
@@ -96,7 +96,7 @@ class CduSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.request.url
+        # course_item["domesticApplyURL"] = response.request.url
 
         name = response.css("h1::text").get()
         if name:
