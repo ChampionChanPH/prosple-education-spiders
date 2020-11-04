@@ -149,17 +149,17 @@ class GoiSpiderSpider(scrapy.Spider):
                                        "year|month|semester|trimester|quarter|week|day))", duration, re.I | re.M |
                                        re.DOTALL)
             if not duration_full and duration_part:
-                self.get_period(duration_part[0][1].lower(), course_item)
+                self.get_period(duration_part[0][2].lower(), course_item)
             if duration_full:
                 if duration_full[0][0] == '':
                     course_item["durationMinFull"] = float(duration_full[0][1])
-                    self.get_period(duration_full[0][1].lower(), course_item)
+                    self.get_period(duration_full[0][2].lower(), course_item)
                 else:
                     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[0][1]))
                     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[0][1]))
                     self.get_period(duration_full[0][2].lower(), course_item)
             if duration_part:
-                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                if self.teaching_periods[duration_part[0][2].lower()] == course_item["teachingPeriod"]:
                     if duration_part[0][0] == '':
                         course_item["durationMinPart"] = float(duration_part[0][1])
                     else:
