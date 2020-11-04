@@ -151,7 +151,7 @@ class GoiSpiderSpider(scrapy.Spider):
             if not duration_full and duration_part:
                 self.get_period(duration_part[0][1].lower(), course_item)
             if duration_full:
-                if duration_full[0] == '':
+                if duration_full[0][0] == '':
                     course_item["durationMinFull"] = float(duration_full[0][1])
                     self.get_period(duration_full[0][1].lower(), course_item)
                 else:
@@ -160,13 +160,13 @@ class GoiSpiderSpider(scrapy.Spider):
                     self.get_period(duration_full[0][2].lower(), course_item)
             if duration_part:
                 if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
-                    if duration_part[0] == '':
+                    if duration_part[0][0] == '':
                         course_item["durationMinPart"] = float(duration_part[0][1])
                     else:
                         course_item["durationMinPart"] = min(float(duration_part[0][0]), float(duration_part[0][1]))
                         course_item["durationMaxPart"] = max(float(duration_part[0][0]), float(duration_part[0][1]))
                 else:
-                    if duration_part[0] == '':
+                    if duration_part[0][0] == '':
                         course_item["durationMinPart"] = float(duration_part[0][1]) * course_item["teachingPeriod"] \
                                                          / self.teaching_periods[duration_part[0][2].lower()]
                     else:
