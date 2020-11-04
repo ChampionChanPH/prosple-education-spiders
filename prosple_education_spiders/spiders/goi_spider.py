@@ -127,6 +127,63 @@ class GoiSpiderSpider(scrapy.Spider):
         if course_code:
             course_item['courseCode'] = course_code.strip()
 
+        overview = response.xpath("//*[text()='Course Overview']/following-sibling::*").getall()
+        if overview:
+            course_item.set_summary(strip_tags(''.join(overview)))
+            course_item["overview"] = strip_tags(''.join(overview), False)
+
+        career = response.xpath("//*[text()='Career Pathways']/following-sibling::*").getall()
+        if career:
+            course_item["careerPathways"] = strip_tags(''.join(career), False)
+
+        duration = response.xpath("//div[*/text()='Course Length']/following-sibling::*/*//text()").getall()
+        if duration:
+            duration = ' '.join(duration)
+
+        dom_fee = response.xpath("//*[text()='Full Fee:']/following-sibling::*//text()").get()
+        if dom_fee:
+            dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
+            dom_fee = [float(''.join(x)) for x in dom_fee]
+            if dom_fee:
+                course_item["domesticFeeTotal"] = max(dom_fee)
+                # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+        csp_fee = response.xpath("//*[text()='Subsidised Standard:']/following-sibling::*//text()").get()
+        if csp_fee:
+            csp_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", csp_fee, re.M)
+            csp_fee = [float(''.join(x)) for x in csp_fee]
+            if csp_fee:
+                course_item["domesticSubFeeTotal"] = max(csp_fee)
+                # get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
+
+        location = response.xpath("//*[*/text()='Campuses'][*/circle]/following-sibling::*//text()").getall()
+        if location:
+            location = [strip_tags(x) for x in location if strip_tags(x) != '']
+            if location:
+                course_item['campusNID'] = '|'.join(location)
+
+        study = response.xpath("//*[*/text()='Delivery Mode'][*/circle]/following-sibling::*//text()").getall()
+        if study:
+            study = [strip_tags(x) for x in study if strip_tags(x) != '']
+            if study:
+                course_item['modeOfStudy'] = '|'.join(study)
+
+        entry = response.xpath("//div[contains(*/text(), 'Entry Requirements')]/following-sibling::*/*["
+                               "@class='accordion-content']/*").getall()
+        if entry:
+            course_item["entryRequirements"] = strip_tags(''.join(entry), remove_all_tags=False,
+                                                          remove_hyperlinks=True)
+
+        credit = response.xpath("//div[contains(*/text(), 'Skills Recognition')]/following-sibling::*/*["
+                                "@class='accordion-content']/*").getall()
+        if credit:
+            course_item['creditTransfer'] = strip_tags(''.join(credit), remove_all_tags=False, remove_hyperlinks=True)
+
+        apply = response.xpath("//div[contains(*/text(), 'Enrolment')]/following-sibling::*/*["
+                               "@class='accordion-content']/*").getall()
+        if apply:
+            course_item['howToApply'] = strip_tags(''.join(apply), remove_all_tags=False, remove_hyperlinks=True)
+
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by", "Of"])
 
         course_item['group'] = 141
