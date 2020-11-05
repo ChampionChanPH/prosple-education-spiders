@@ -152,7 +152,8 @@ class SowSpiderSpider(scrapy.Spider):
                     holder.append(item)
         if holder:
             course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
-            course_item.set_summary(strip_tags(''.join(holder)))
+            summary = [strip_tags(x) for x in holder]
+            course_item.set_summary(' '.join(summary))
 
         learn = response.xpath(
             "//div[contains(@class, 'content-heading-secondary')][text()='What will I Learn?']/following-sibling::*").getall()

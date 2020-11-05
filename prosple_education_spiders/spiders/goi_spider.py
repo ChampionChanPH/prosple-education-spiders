@@ -131,7 +131,8 @@ class GoiSpiderSpider(scrapy.Spider):
 
         overview = response.xpath("//*[text()='Course Overview']/following-sibling::*").getall()
         if overview:
-            course_item.set_summary(strip_tags(''.join(overview)))
+            summary = [strip_tags(x) for x in overview]
+            course_item.set_summary(' '.join(summary))
             course_item["overview"] = strip_tags(''.join(overview), False)
 
         career = response.xpath("//*[text()='Career Pathways']/following-sibling::*").getall()
@@ -201,6 +202,8 @@ class GoiSpiderSpider(scrapy.Spider):
                 # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         csp_fee = response.xpath("//*[text()='Subsidised Standard:']/following-sibling::*//text()").get()
+        if not csp_fee:
+            csp_fee = response.xpath("//*[text()='Subsidised Trainee:']/following-sibling::*//text()").get()
         if csp_fee:
             csp_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", csp_fee, re.M)
             csp_fee = [float(''.join(x)) for x in csp_fee]
@@ -227,12 +230,6 @@ class GoiSpiderSpider(scrapy.Spider):
                 study_holder.add('In Person')
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
-
-        study = response.xpath("//*[*/text()='Delivery Mode'][*/circle]/following-sibling::*//text()").getall()
-        if study:
-            study = [strip_tags(x) for x in study if strip_tags(x) != '']
-            if study:
-                course_item['modeOfStudy'] = '|'.join(study)
 
         entry = response.xpath("//div[contains(*/text(), 'Entry Requirements')]/following-sibling::*/*["
                                "@class='accordion-content']/*").getall()
