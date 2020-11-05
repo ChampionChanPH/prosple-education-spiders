@@ -221,7 +221,7 @@ class GoiSpiderSpider(scrapy.Spider):
             study_holder.add('Online')
         if campus_holder:
             course_item['campusNID'] = '|'.join(campus_holder)
-            if len(campus_holder) == 1 and self.campuses['Online'] in campus_holder:
+            if len(campus_holder) == 1 and self.campuses['Online Campus'] in campus_holder:
                 pass
             else:
                 study_holder.add('In Person')
