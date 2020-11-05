@@ -209,10 +209,24 @@ class GoiSpiderSpider(scrapy.Spider):
                 # get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
 
         location = response.xpath("//*[*/text()='Campuses'][*/circle]/following-sibling::*//text()").getall()
+        campus_holder = set()
+        study_holder = set()
         if location:
             location = [strip_tags(x) for x in location if strip_tags(x) != '']
-            if location:
-                course_item['campusNID'] = '|'.join(location)
+            location = '|'.join(location)
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        if self.campuses['Online Campus'] in campus_holder:
+            study_holder.add('Online')
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            if len(campus_holder) == 1 and self.campuses['Online'] in campus_holder:
+                pass
+            else:
+                study_holder.add('In Person')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         study = response.xpath("//*[*/text()='Delivery Mode'][*/circle]/following-sibling::*//text()").getall()
         if study:
