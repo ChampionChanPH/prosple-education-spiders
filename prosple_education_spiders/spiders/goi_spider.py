@@ -81,13 +81,15 @@ class GoiSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Warrnambool": "57355",
-        "Portland": "57356",
-        "Hamilton": "57357",
-        "Colac": "57358",
-        "Sherwood Park": "57359",
-        "Workplace Training": "57360",
-        "Glenormiston": "57361",
+        'Benalla - Samaria Road': '57669',
+        'Seymour - Wallis Street': '57670',
+        'Shepparton - Archer Street': '57671',
+        'Shepparton - Fryers Street': '57672',
+        'Shepparton - William Orr': '57673',
+        'Wallan - High Street': '57674',
+        'Wangaratta - Docker Street': '57675',
+        'Wangaratta - Tone Road': '57676',
+        'Online Campus': '57677',
     }
 
     teaching_periods = {
