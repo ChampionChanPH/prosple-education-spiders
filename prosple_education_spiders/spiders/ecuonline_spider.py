@@ -193,7 +193,6 @@ class EcuonlineSpiderSpider(scrapy.Spider):
                 get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         course_item['campusNID'] = self.campuses['Online']
-        course_item['modeOfStudy'] = 'Online'
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
