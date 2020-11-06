@@ -97,7 +97,8 @@ class EcuonlineSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//div[@class='content']//footer//li/a/@href").getall()
+        courses = response.xpath(
+            "//section[contains(*/text(), 'Choose a course')]/following-sibling::*//li/a/@href").getall()
 
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
@@ -116,8 +117,13 @@ class EcuonlineSpiderSpider(scrapy.Spider):
 
         overview = response.xpath("//*[contains(text(), 'Course') and contains(text(), "
                                   "'overview')]/following-sibling::*").getall()
-        if overview:
-            course_item["overview"] = strip_tags(''.join(overview), False)
+        holder = []
+        for item in overview:
+            holder.append(item)
+            if re.search('Course code', item):
+                break
+        if holder:
+            course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False)
 
         summary = response.xpath("//ul[@class='progdetails']/preceding-sibling::*[1]").get()
         if summary:
@@ -192,7 +198,7 @@ class EcuonlineSpiderSpider(scrapy.Spider):
                 course_item["domesticFeeAnnual"] = max(dom_fee)
                 get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-        course_item['campusNID'] = self.campuses['Online']
+        course_item['modeOfStudy'] = 'Online'
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
