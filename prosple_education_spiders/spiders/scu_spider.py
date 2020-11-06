@@ -89,7 +89,7 @@ class ScuSpiderSpider(scrapy.Spider):
         "Sydney": "699",
         "Tweed Heads": "698",
         "Coffs Harbour": "697",
-        "National Marine Science Centre": "694"
+        "National Marine Science Centre": "694",
     }
 
     key_dates = {
@@ -135,164 +135,127 @@ class ScuSpiderSpider(scrapy.Spider):
         # course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1[@class='pageTitleFixSource']/text()").get()
-        course_item["courseName"] = course_name.strip()
-        course_item["uid"] = uidPrefix + re.sub(" ", "-", course_item["courseName"])
+        if course_name:
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        degree_holder =[]
-        for degree in self.degrees:
-            if re.search(degree, course_item["courseName"], re.IGNORECASE):
-                degree_holder.append(self.degrees[degree])
-        if len(degree_holder) > 0:
-            course_item["degreeType"] = max(degree_holder)
-        if "degreeType" not in course_item:
-            course_item["degreeType"] = "Non-Award"
-            course_item.add_flag("degreeType", "assigned non-award")
-        if course_item["degreeType"] in ["Graduate Certificate", "Graduate Diploma", "Bachelor (Honours)",
-                                         "Masters (Research)", "Masters (Coursework)", "Doctorate (PhD)"]:
-            course_item["courseLevel"] = self.group[0][0]
-            course_item["group"] = self.group[0][1]
-            course_item["canonicalGroup"] = self.group[0][2]
-        elif course_item["degreeType"] in ["Bachelor", "Certificate", "Diploma", "Associate Degree"]:
-            course_item["courseLevel"] = self.group[1][0]
-            course_item["group"] = self.group[1][1]
-            course_item["canonicalGroup"] = self.group[1][2]
-        else:
-            course_item["courseLevel"] = ""
-            course_item["group"] = self.group[1][1]
-            course_item["canonicalGroup"] = self.group[1][2]
-        separate_holder = re.split("\s?[,/]\s?(?=Bachelor|Graduate|Diploma|Masters|Doctor|Associate|Certificate)",
-                                   course_item["courseName"], re.I | re.M)
-        if len(separate_holder) > 1:
-            course_item["doubleDegree"] = 1
-        holder = []
-        for item in separate_holder:
-            if re.search("\s(in|of)\s", item):
-                holder.append(re.findall("(?<=[in|of]\s)(.+)", item, re.DOTALL)[0])
-            else:
-                holder.append(item)
-        course_item["specificStudyField"] = "/".join(holder)
-        lower_holder = []
-        for item in holder:
-            lower_holder.append(item.lower())
-        course_item["rawStudyfield"] = lower_holder[:]
+        course_code = response.xpath(
+            "//h1[@class='pageTitleFixSource']/following-sibling::*[contains(text(), 'Course Code')]").get()
+        if course_code:
+            course_code = re.findall("(?<=Course Code: )\w+", course_code, re.I)
+            if course_code:
+                course_item["courseCode"] = course_code[0]
 
-        course_code = response.xpath("//div[@class='standard-banner__wrapper']//p[contains(text(), 'Course "
-                                     "Code')]/text()").get()
-        course_code = re.findall("(?<=Course Code: )\w+", course_code, re.I)
-        if len(course_code) > 0:
-            course_item["courseCode"] = course_code[0]
-        summary = response.xpath("//div[@class='col-migrate-lg-6']/div[contains(@class, 'summary')]/div/p").getall()
-        summary = "".join(summary)
-        course_item["overview"] = strip_tags(summary, False)
+        overview = response.xpath("//*[text()='Course summary']/following-sibling::*/*").getall()
+        if overview:
+            summary = [strip_tags(x) for x in overview]
+            course_item.set_summary(' '.join(summary))
+            course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False)
 
-        check_dom = response.xpath("//ul[@id='sub_menu']/li[contains(@class, 'yes-t4show')]/a[contains(text(), "
-                                   "'Domestic')]").getall()
-        check_int = response.xpath("//ul[@id='sub_menu']/li[contains(@class, 'yes-t4show')]/a[contains(text(), "
-                                   "'International')]").getall()
-
-        if len(check_dom) > 0:
-            get_details = response.xpath("//div[@id='domestic']//tbody").get()
-            session = response.xpath("//div[@id='domestic']//tbody/tr/td[2]//tbody/tr/td[2]/text()").getall()
-        elif len(check_int) > 0:
-            get_details = response.xpath("//div[@id='international']//tbody").get()
-            session = response.xpath("//div[@id='international']//tbody/tr/td[2]//tbody/tr/td[2]/text()").getall()
-        duration_full = re.findall("(\d?\.?\d+?)(?=.?(years|year|weeks|week).?full.?time)", get_details,
-                                   re.MULTILINE | re.IGNORECASE)
-        duration_part = re.findall("(\d?\.?\d+?)(?=.?(years|year|weeks|week).?part.?time)", get_details,
-                                   re.MULTILINE | re.IGNORECASE)
-        session = ", ".join(session)
-        start_months = []
-        for item in self.key_dates:
-            if re.search(item, session):
-                start_months.append(self.key_dates[item])
-        course_item["startMonths"] = "|".join(start_months)
-
-        if len(duration_full) > 0:
-            course_item["durationMinFull"] = duration_full[0][0]
-            if re.search("years?", duration_full[0][1]):
-                course_item["teachingPeriod"] = 1
-            if re.search("weeks?", duration_full[0][1]):
-                course_item["teachingPeriod"] = 52
-        elif len(duration_part) > 0:
-            if re.search("years?", duration_part[0][1]):
-                course_item["teachingPeriod"] = 1
-            if re.search("weeks?", duration_part[0][1]):
-                course_item["teachingPeriod"] = 52
-        if len(duration_part) > 0:
-            course_item["durationMinPart"] = duration_part[0][0]
-
-        get_int_details = ""
-        get_dom_details = ""
-        if len(check_int) > 0:
-            course_item["internationalApps"] = 1
-            get_int_details = response.xpath("//div[@id='international']//tbody/tr/td[contains(text(), "
-                                             "'Availability')]/following-sibling::td").get()
-        if len(check_dom) > 0:
-            get_dom_details = response.xpath("//div[@id='domestic']//tbody/tr/td[contains(text(), "
-                                             "'Availability')]/following-sibling::td").get()
-        campus_holder = []
-        study_holder = []
-        if len(get_dom_details) > 0:
-            for campus in self.campuses:
-                if re.search(campus, get_dom_details, re.I | re.M):
-                        campus_holder.append(self.campuses[campus])
-            if re.search("Online", get_dom_details, re.I | re.M):
-                study_holder.append("Online")
-        elif len(get_int_details) > 0:
-            for campus in self.campuses:
-                if re.search(campus, get_dom_details, re.I | re.M):
-                    campus_holder.append(self.campuses[campus])
-            if re.search("Online", get_dom_details, re.I | re.M):
-                study_holder.append("Online")
-        if len(campus_holder) > 0:
-            course_item["campusNID"] = "|".join(campus_holder)
-        if "campusNID" in course_item:
-            study_holder.append("In Person")
-        course_item["modeOfStudy"] = "|".join(study_holder)
-
-        if len(get_dom_details) > 0:
-            dom_fee = re.findall("\$(\d+),?(\d{3})", get_dom_details, re.M)
-            fee_holder = []
-            for item in dom_fee:
-                fee_holder.append(float("".join(item)))
-            if len(fee_holder) > 0:
-                course_item["domesticFeeAnnual"] = max(fee_holder)
-        if len(get_int_details) > 0:
-            int_fee = re.findall("\$(\d+),?(\d{3})", get_int_details, re.M)
-            fee_holder = []
-            for item in int_fee:
-                fee_holder.append(float("".join(item)))
-            if len(fee_holder) > 0:
-                course_item["internationalFeeAnnual"] = max(fee_holder)
-
-        if "durationMinFull" in course_item and "teachingPeriod" in course_item and "domesticFeeAnnual" in course_item:
-            if course_item["teachingPeriod"] == 1:
-                if float(course_item["durationMinFull"]) < 1:
-                    course_item["domesticFeeTotal"] = course_item["domesticFeeAnnual"]
+        duration = response.xpath("//div[@id='domestic']//td[text()='Duration']/following-sibling::*").get()
+        if not duration:
+            duration = response.xpath("//div[@id='international']//td[text()='Duration']/following-sibling::*").get()
+        if duration:
+            duration_full = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
+                duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
+                duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
                 else:
-                    course_item["domesticFeeTotal"] = float(course_item["durationMinFull"]) * course_item["domesticFeeAnnual"]
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 1:
+                    #     course_item["durationMinFull"] = float(duration_full[0][0])
+                    #     self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 2:
+                    #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     self.get_period(duration_full[1][1].lower(), course_item)
 
-        if "durationMinFull" in course_item and "teachingPeriod" in course_item and "internationalFeeAnnual" in course_item:
-            if course_item["teachingPeriod"] == 1:
-                if float(course_item["durationMinFull"]) < 1:
-                    course_item["internationalFeeTotal"] = course_item["internationalFeeAnnual"]
-                else:
-                    course_item["internationalFeeTotal"] = float(course_item["durationMinFull"]) * course_item["internationalFeeAnnual"]
+        location = response.xpath("//td[text()='Availability details']/following-sibling::*").getall()
+        campus_holder = set()
+        study_holder = set()
+        if location:
+            location = [strip_tags(x) for x in location if strip_tags(x) != '']
+            location = '|'.join(location)
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+            if re.search('online', location, re.I):
+                study_holder.add('Online')
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            study_holder.add('In Person')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
-        if len(get_int_details) > 0:
-            cricos = re.findall("\d{6}[0-9a-zA-Z]", get_int_details, re.M)
-            cricos = set(cricos)
-            cricos = ", ".join(cricos)
-            course_item["cricosCode"] = cricos
+        dom_fee = response.xpath(
+            "//div[@id='domestic']//td[text()='Availability details']/following-sibling::*").getall()
+        if dom_fee:
+            dom_fee = ''.join(dom_fee)
+            dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
+            dom_fee = [float(''.join(x)) for x in dom_fee]
+            if dom_fee:
+                course_item["domesticFeeAnnual"] = max(dom_fee)
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-        for header, content in zip(
-                response.xpath("//div[@role='tablist' and @class='accordion']//div/h3/text()").getall(),
-                response.xpath("//div[@role='tablist' and @class='accordion']/div["
-                               "@class='accordion-group']/div/div").getall()):
-            if re.search(r"career opportunities", header, re.I | re.M):
-                career = strip_tags(content, False)
-                course_item["careerPathways"] = career
+        int_fee = response.xpath(
+            "//div[@id='international']//td[text()='Availability details']/following-sibling::*").getall()
+        if int_fee:
+            int_fee = ''.join(int_fee)
+            int_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
+            int_fee = [float(''.join(x)) for x in int_fee]
+            if int_fee:
+                course_item["internationalFeeAnnual"] = max(int_fee)
+                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+        cricos = response.xpath(
+            "//div[@id='international']//td[text()='Availability details']/following-sibling::*").getall()
+        if cricos:
+            cricos = ''.join(cricos)
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if cricos:
+                course_item["cricosCode"] = ", ".join(cricos)
+                course_item["internationalApps"] = 1
+
+        atar = response.xpath("//td[contains(text(), 'ATAR')]/following-sibling::*/text()").get()
+        if atar:
+            atar = re.findall('\d+?(?= /)', atar, re.M)
+            if atar:
+                course_item['guaranteedEntryScore'] = float(atar)
+
+        career = response.xpath("//div[@id='collapseCrsCO']/div[@class='card-body']/*").getall()
+        if career:
+            course_item["careerPathways"] = strip_tags(''.join(career), remove_all_tags=False)
+
+        learn = response.xpath("//div[@id='collapseCrsMAS']/div[@class='card-body']/*").getall()
+        if learn:
+            course_item["whatLearn"] = strip_tags(''.join(learn), remove_all_tags=False, remove_hyperlinks=True)
+
+        structure = response.xpath(
+            "//*[text()='Course requirements']/following-sibling::div[@class='req-list'][1]/*").getall()
+        if structure:
+            course_item["courseStructure"] = strip_tags(''.join(structure), remove_all_tags=False)
+
+        entry = response.xpath(
+            "//*[text()='Admission requirements']/following-sibling::div[@class='req-list'][1]/*").getall()
+        if entry:
+            course_item["entryRequirements"] = strip_tags(''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
+
+        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/", ","], type_delims=["of", "in", "by"])
 
         yield course_item
