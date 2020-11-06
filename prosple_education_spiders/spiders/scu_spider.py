@@ -256,6 +256,7 @@ class ScuSpiderSpider(scrapy.Spider):
         if entry:
             course_item["entryRequirements"] = strip_tags(''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/", ","], type_delims=["of", "in", "by"])
+        if 'courseName' in course_item:
+            course_item.set_sf_dt(self.degrees, degree_delims=["and", "/", ","], type_delims=["of", "in", "by"])
 
-        yield course_item
+            yield course_item
