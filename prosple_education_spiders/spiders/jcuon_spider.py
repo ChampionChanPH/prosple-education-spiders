@@ -44,12 +44,21 @@ class JcuonSpiderSpider(scrapy.Spider):
 
         overview = response.css(".stuckright p::text").getall()
         if overview:
-            course_item["overview"] = "\n".join(overview[:-1])
-            course_item.set_summary(" ".join(overview[:-1]))
+            course_item["overview"] = "\n".join(overview)
+            course_item.set_summary(" ".join(overview))
 
         start = response.css(".views-field-field-course-study-periods div::text").get()
         if start:
             course_item["startMonths"] = "|".join(convert_months([cleanspace(x) for x in start.split(",")]))
+
+        fee = response.css(".views-field-field-course-fees .field-content::text").get()
+        if fee:
+            per_subject = re.findall("\$([\d\.,]+)\sper subject", fee)
+            if per_subject:
+                subjects = response.css(".views-field-field-course-subjects .field-content::text").get()
+                if subjects:
+                    course_item["domesticFeeTotal"] = float(per_subject[0].replace(",", "")) * float(subjects)
+                    course_item["internationalFeeTotal"] = float(per_subject[0].replace(",", "")) * float(subjects)
 
         duration = response.css(".views-field-field-course-duration div::text").get()
         if duration:
@@ -64,4 +73,14 @@ class JcuonSpiderSpider(scrapy.Spider):
             else:
                 course_item.add_flag("teachingPeriod", "New period found: " + duration)
 
+        rpl = response.xpath("//section/div[preceding-sibling::header/h2[contains(text(),'Recognition of Prior Learning')]]/p/text()").getall()
+        if rpl:
+            course_item["creditTransfer"] = "\n".join([cleanspace(x) for x in rpl])
+
+        entry = response.xpath("//section/div/ul[preceding-sibling::h2[contains(text(),'Entry')]]").get()
+        if entry:
+            entry = re.sub('(<\w+)(\s[^>]+)', r"\1", entry)
+            course_item["entryRequirements"] = cleanspace(entry)
+
         yield course_item
+
