@@ -119,7 +119,7 @@ class ScuSpiderSpider(scrapy.Spider):
         for item in courses:
             yield response.follow(item.strip(), callback=self.course_parse)
 
-        next_page = response.xpath("//a[@class='page-link'][contains(*/@class, 'angle-right')]/@href").getall()
+        next_page = response.xpath("//a[@class='page-link'][contains(*/@class, 'angle-right')]/@href").get()
 
         if next_page:
             yield response.follow(next_page, callback=self.parse)
@@ -236,7 +236,7 @@ class ScuSpiderSpider(scrapy.Spider):
         if atar:
             atar = re.findall('\d+?(?= /)', atar, re.M)
             if atar:
-                course_item['guaranteedEntryScore'] = float(atar)
+                course_item['guaranteedEntryScore'] = float(atar[0])
 
         career = response.xpath("//div[@id='collapseCrsCO']/div[@class='card-body']/*").getall()
         if career:
