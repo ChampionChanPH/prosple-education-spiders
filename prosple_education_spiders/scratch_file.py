@@ -26,6 +26,8 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
         phrase = re.sub("<(span|div).*?>", "<div>", phrase, re.M | re.DOTALL)
         phrase = re.sub("</p.*?>", "</p>", phrase, re.M | re.DOTALL)
         phrase = re.sub("<p.*?>", "<p>", phrase, re.M | re.DOTALL)
+        phrase = re.sub("</li.*?>", "</li>", phrase, re.M | re.DOTALL)
+        phrase = re.sub("<li.*?>", "<li>", phrase, re.M | re.DOTALL)
         phrase = re.sub("<img.*?>", "", phrase, re.M | re.DOTALL)
         if remove_hyperlinks:
             phrase = re.sub("</?a.*?>", "", phrase, re.M | re.DOTALL)

@@ -147,7 +147,7 @@ class EcuonlineSpiderSpider(scrapy.Spider):
                 entry = entry + '<strong>Special entry</strong>' + ''.join(special_entry)
             course_item['entryRequirements'] = strip_tags(entry, False)
 
-        duration = response.xpath("//li[contains(text(), 'Duration')]").get()
+        duration = response.xpath("//li[contains(text(), 'Duration') or contains(*/text(), 'Duration')]").get()
         if duration:
             duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?.*?full.time)",
                                        duration, re.I | re.M | re.DOTALL)
@@ -181,7 +181,7 @@ class EcuonlineSpiderSpider(scrapy.Spider):
                         course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                         self.get_period(duration_full[1][1].lower(), course_item)
 
-        intake = response.xpath("//li[contains(text(), 'Study Intakes')]").get()
+        intake = response.xpath("//li[contains(text(), 'Study Intakes') or contains(*/text(), 'Study Intakes')]").get()
         if intake:
             start_holder = []
             for item in self.months:
@@ -190,7 +190,7 @@ class EcuonlineSpiderSpider(scrapy.Spider):
             if start_holder:
                 course_item['startMonths'] = '|'.join(start_holder)
 
-        dom_fee = response.xpath("//li[contains(text(), 'Fees')]").get()
+        dom_fee = response.xpath("//li[contains(text(), 'Fees') or contains(*/text(), 'Fees')]").get()
         if dom_fee:
             dom_fee = re.findall("\$\s?(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
             if dom_fee:
