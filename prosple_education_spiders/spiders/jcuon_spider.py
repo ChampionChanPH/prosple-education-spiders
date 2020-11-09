@@ -1,3 +1,5 @@
+# by: Johnel Bacani
+
 from ..standard_libs import *
 
 class JcuonSpiderSpider(scrapy.Spider):
