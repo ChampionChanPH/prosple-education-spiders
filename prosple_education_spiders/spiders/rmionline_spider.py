@@ -201,7 +201,7 @@ class RmionlineSpiderSpider(scrapy.Spider):
         if entry:
             course_item["entryRequirements"] = strip_tags(entry, False)
 
-        course_item['campusNID'] = self.campuses['Online']
+        # course_item['campusNID'] = self.campuses['Online']
         course_item['modeOfStudy'] = 'Online'
         course_item['internationalApps'] = 1
 
