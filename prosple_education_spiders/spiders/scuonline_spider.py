@@ -135,11 +135,11 @@ class ScuonlineSpiderSpider(scrapy.Spider):
         if learn:
             course_item['whatLearn'] = strip_tags(''.join(learn), remove_all_tags=False)
 
-        duration = response.xpath("//div[@class='vp-header'][*/text()='Duration']/following-sibling::*").getall()
+        duration = response.xpath("//div[@class='vp-header'][*/text()='Duration']/following-sibling::*").get()
         if duration:
-            course_item['durationRaw'] = strip_tags(''.join(duration), remove_all_tags=False)
+            course_item['durationRaw'] = strip_tags(duration, remove_all_tags=False)
 
-        intake = response.xpath("//div[@class='vp-header'][*/text()='Intakes']/following-sibling::*").getall()
+        intake = response.xpath("//div[@class='vp-header'][*/text()='Intakes']/following-sibling::*").get()
         if intake:
             start_holder = []
             for item in self.months:
@@ -148,17 +148,17 @@ class ScuonlineSpiderSpider(scrapy.Spider):
             if start_holder:
                 course_item['startMonths'] = '|'.join(start_holder)
 
-        unit = response.xpath("//div[@class='vp-header'][*/text()='Units']/following-sibling::*").getall()
+        unit = response.xpath("//div[@class='vp-header'][*/text()='Units']/following-sibling::*").get()
         if unit:
-            course_item['feesRaw'] = strip_tags(''.join(unit), remove_all_tags=False)
+            course_item['feesRaw'] = strip_tags(unit, remove_all_tags=False)
 
-        fee = response.xpath("//div[@class='vp-header'][*/text()='Fees']/following-sibling::*").getall()
+        fee = response.xpath("//div[@class='vp-header'][*/text()='Fees']/following-sibling::*").get()
         if fee:
-            course_item['domesticFeeAnnual'] = strip_tags(''.join(fee), remove_all_tags=False)
+            course_item['domesticFeeAnnual'] = strip_tags(fee, remove_all_tags=False)
 
-        study = response.xpath("//div[@class='vp-header'][*/text()='Study mode']/following-sibling::*").getall()
+        study = response.xpath("//div[@class='vp-header'][*/text()='Study mode']/following-sibling::*").get()
         if study:
-            course_item['modeOfStudy'] = strip_tags(''.join(study), remove_all_tags=False)
+            course_item['modeOfStudy'] = strip_tags(study, remove_all_tags=False)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/", ","], type_delims=["of", "in", "by"])
 
