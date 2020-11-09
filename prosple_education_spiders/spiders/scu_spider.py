@@ -145,6 +145,8 @@ class ScuSpiderSpider(scrapy.Spider):
             course_code = re.findall("(?<=Course Code: )\w+", course_code, re.I)
             if course_code:
                 course_item["courseCode"] = course_code[0]
+                if 'uid' in course_item:
+                    course_item['uid'] = course_item['uid'] + '-' + course_item['courseCode']
 
         overview = response.xpath("//*[text()='Course summary']/following-sibling::*/*").getall()
         if overview:
@@ -190,9 +192,12 @@ class ScuSpiderSpider(scrapy.Spider):
         location = response.xpath("//td[text()='Availability details']/following-sibling::*").getall()
         campus_holder = set()
         study_holder = set()
+        online_course_only = False
         if location:
             location = [strip_tags(x) for x in location if strip_tags(x) != '']
             location = '|'.join(location)
+            if re.search('SCU Online', location, re.I):
+                online_course_only = True
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.add(self.campuses[campus])
@@ -257,7 +262,7 @@ class ScuSpiderSpider(scrapy.Spider):
         if entry:
             course_item["entryRequirements"] = strip_tags(''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
 
-        if 'courseName' in course_item:
+        if 'courseName' in course_item and not online_course_only:
             course_item.set_sf_dt(self.degrees, degree_delims=["and", "/", ","], type_delims=["of", "in", "by"])
 
             yield course_item

@@ -379,18 +379,24 @@ class Course(scrapy.Item):
         self["uid"] = prefix + re.sub(" ", "-", self["courseName"])
 
     def set_summary(self, text):
-        text = re.split("(?<=[\.\?])\s", text)
+        max_characters = 300
+        summary = None
+
+        text = re.split('(?<=[.?!])\s', text)
         if len(text) == 1:
-            if len(text[0]) < 250:
-                self["overviewSummary"] = text[0]
+            if len(text[0]) < max_characters:
+                summary = text[0]
             else:
-                cut_summary = text[0][:250]
-                last_space = cut_summary.rindex(" ")
-                self["overviewSummary"] = cut_summary[:last_space] + "..."
+                cut_summary = text[0][:max_characters + 1]
+                last_space = cut_summary.rindex(' ')
+                summary = cut_summary[:last_space] + '...'
         if len(text) > 1:
-            if len(text[0] + " " + text[1]) < 250:
-                self["overviewSummary"] = text[0] + " " + text[1]
-            else:
-                cut_summary = (text[0] + " " + text[1])[:250]
-                last_space = cut_summary.rindex(" ")
-                self["overviewSummary"] = cut_summary[:last_space] + "..."
+            temp_holder = []
+            char_count = 0
+            for item in text:
+                if char_count + len(item) < max_characters:
+                    char_count += len(item) + 1
+                    temp_holder.append(item)
+            summary = ' '.join(temp_holder).strip()
+
+        self["overviewSummary"] = summary
