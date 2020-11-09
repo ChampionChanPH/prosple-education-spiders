@@ -131,13 +131,60 @@ class ScuonlineSpiderSpider(scrapy.Spider):
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
+        overview1 = response.xpath("//div[*/*/*/*/text()='Quick facts']/following-sibling::*//h2").get()
+        holder = []
+        if overview1:
+            holder.append(overview1)
+            overview2 = response.xpath(
+                "//div[*/*/*/*/text()='Quick facts']/following-sibling::*//h2/following-sibling::*").getall()
+            if overview2:
+                holder.extend(overview2)
+                summary = [strip_tags(x) for x in overview2]
+                course_item.set_summary(' '.join(summary))
+        if holder:
+            course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False)
+
         learn = response.xpath("//div[@class='learning-outcomes right']/*").getall()
         if learn:
             course_item['whatLearn'] = strip_tags(''.join(learn), remove_all_tags=False)
 
+        entry = response.xpath(
+            "//*[contains(@class, 'tab-pane')]/*[contains(@class, 'paragraph--type--bp-simple')]/*/*/*").getall()
+        if entry:
+            course_item['entryRequirements'] = strip_tags(''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
+
         duration = response.xpath("//div[@class='vp-header'][*/text()='Duration']/following-sibling::*").get()
         if duration:
-            course_item['durationRaw'] = strip_tags(duration, remove_all_tags=False)
+            duration_full = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
+                duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
+                duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 1:
+                    #     course_item["durationMinFull"] = float(duration_full[0][0])
+                    #     self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 2:
+                    #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     self.get_period(duration_full[1][1].lower(), course_item)
 
         intake = response.xpath("//div[@class='vp-header'][*/text()='Intakes']/following-sibling::*").get()
         if intake:
@@ -148,17 +195,23 @@ class ScuonlineSpiderSpider(scrapy.Spider):
             if start_holder:
                 course_item['startMonths'] = '|'.join(start_holder)
 
-        unit = response.xpath("//div[@class='vp-header'][*/text()='Units']/following-sibling::*").get()
-        if unit:
-            course_item['feesRaw'] = strip_tags(unit, remove_all_tags=False)
+        total_unit = response.xpath("//div[@class='vp-header'][*/text()='Units']/following-sibling::*").get()
+        if total_unit:
+            total_unit = re.findall('\d+', total_unit)
+            total_unit = [float(x) for x in total_unit]
+            if total_unit:
+                total_unit = max(total_unit)
 
         fee = response.xpath("//div[@class='vp-header'][*/text()='Fees']/following-sibling::*").get()
         if fee:
-            course_item['domesticFeeAnnual'] = strip_tags(fee, remove_all_tags=False)
+            fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", fee, re.M)
+            fee = [float(''.join(x)) for x in fee]
+            if fee and total_unit:
+                course_item["domesticFeeTotal"] = max(fee) * total_unit
+                course_item["internationalFeeTotal"] = max(fee) * total_unit
+                # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-        study = response.xpath("//div[@class='vp-header'][*/text()='Study mode']/following-sibling::*").get()
-        if study:
-            course_item['modeOfStudy'] = strip_tags(study, remove_all_tags=False)
+        course_item['modeOfStudy'] = 'Online'
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/", ","], type_delims=["of", "in", "by"])
 
