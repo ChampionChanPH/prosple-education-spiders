@@ -156,10 +156,10 @@ class ScuonlineSpiderSpider(scrapy.Spider):
         duration = response.xpath("//div[@class='vp-header'][*/text()='Duration']/following-sibling::*").get()
         if duration:
             duration_full = re.findall(
-                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?,?\s+?full)",
                 duration, re.I | re.M | re.DOTALL)
             duration_part = re.findall(
-                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?,?\s+?part)",
                 duration, re.I | re.M | re.DOTALL)
             if not duration_full and duration_part:
                 self.get_period(duration_part[0][1].lower(), course_item)
@@ -210,6 +210,10 @@ class ScuonlineSpiderSpider(scrapy.Spider):
                 course_item["domesticFeeTotal"] = max(fee) * total_unit
                 course_item["internationalFeeTotal"] = max(fee) * total_unit
                 # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+        career = response.xpath("//ul[@class='blue-bullets']/*").getall()
+        if career:
+            course_item['careerPathways'] = '<ul>' + ''.join(career) + '</ul>'
 
         course_item['modeOfStudy'] = 'Online'
 
