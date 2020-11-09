@@ -44,8 +44,12 @@ class JcuonSpiderSpider(scrapy.Spider):
 
         overview = response.css(".stuckright p::text").getall()
         if overview:
-            course_item["overview"] = "\n".join(overview)
+            course_item["overview"] = "<br><br>".join([cleanspace(x) for x in overview])
             course_item.set_summary(" ".join(overview))
+
+        learn = response.xpath("//div[preceding-sibling::header/h2[contains(text(),'you will study')]]/p/text()").getall()
+        if learn:
+            course_item["whatLearn"] = "<br><br>".join([cleanspace(x) for x in learn])
 
         start = response.css(".views-field-field-course-study-periods div::text").get()
         if start:
