@@ -127,9 +127,9 @@ class ScuonlineSpiderSpider(scrapy.Spider):
         course_item['published'] = 1
         course_item['institution'] = self.institution
 
-        course_name = response.xpath("//h1/text()").get()
+        course_name = response.xpath("//span[@id='system-breadcrumb']/following-sibling::*/*[last()]/text()").get()
         if course_name:
-            course_item.set_course_name(make_proper(course_name.strip()), self.uidPrefix)
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         learn = response.xpath("//div[@class='learning-outcomes right']/*").getall()
         if learn:
