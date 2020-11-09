@@ -42,10 +42,23 @@ class JcuonSpiderSpider(scrapy.Spider):
         course_item.set_sf_dt(self.degrees)
         course_item["modeOfStudy"] = "Online"
 
-        overview = response.css(".stuckright p::text").getall()
+        summary = response.css(".stuckright p::text").getall()
+        if summary:
+            course_item.set_summary(" ".join(summary))
+
+        overview = response.css(".stuckright div").get()
         if overview:
-            course_item["overview"] = "\n".join(overview)
-            course_item.set_summary(" ".join(overview))
+            overview = re.sub("<\/?div.*?>", "", overview)
+            overview = re.sub("<\/?a.*?>", "", overview)
+            overview = re.sub("<p.*?Download Course Guide</p>", "", overview)
+            overview = re.sub("<p id=\"duration.*?</p>", "", overview)
+            # print(cleanspace(overview))
+            course_item["overview"] = cleanspace(overview)
+
+
+        learn = response.xpath("//div[preceding-sibling::header/h2[contains(text(),'you will study')]]/p/text()").getall()
+        if learn:
+            course_item["whatLearn"] = "<br><br>".join([cleanspace(x) for x in learn])
 
         start = response.css(".views-field-field-course-study-periods div::text").get()
         if start:
