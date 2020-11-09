@@ -1,3 +1,5 @@
+# by: Johnel Bacani
+
 from ..standard_libs import *
 
 class JcuonSpiderSpider(scrapy.Spider):
@@ -33,7 +35,7 @@ class JcuonSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["campusNID"] = "57650"
+        # course_item["campusNID"] = "57650"
 
         name = response.css("figure h1::text").get()
         if name:
