@@ -13,21 +13,27 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
     :return: cleaned phrase
     """
 
+    tag_conversion = {
+        'h1': 'strong',
+        'h2': 'strong',
+        'h3': 'strong',
+        'h4': 'strong',
+        'h5': 'p',
+        'h6': 'p',
+        'span': 'div',
+        'div': 'div',
+        'p': 'p',
+        'li': 'li',
+    }
+
     if remove_all_tags:
         phrase = re.sub("(\r\n\t)", "", phrase, re.M | re.DOTALL)
         phrase = re.sub("</?.*?>", "", phrase, re.M | re.DOTALL)
         return phrase.strip()
     else:
-        phrase = re.sub("</[h]{1}[1-4]{1}.*?>", "</strong>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("<[h]{1}[1-4]{1}.*?>", "<strong>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("</[h]{1}[5-6]{1}.*?>", "</p>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("<[h]{1}[5-6]{1}.*?>", "<p>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("</(span|div).*?>", "</div>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("<(span|div).*?>", "<div>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("</p.*?>", "</p>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("<p.*?>", "<p>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("</li.*?>", "</li>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("<li.*?>", "<li>", phrase, re.M | re.DOTALL)
+        for key, value in tag_conversion.items():
+            phrase = re.sub('</' + key + '.*?>', '</' + value + '>', phrase, re.M | re.DOTALL)
+            phrase = re.sub('<' + key + '.*?>', '<' + value + '>', phrase, re.M | re.DOTALL)
         phrase = re.sub("<img.*?>", "", phrase, re.M | re.DOTALL)
         if remove_hyperlinks:
             phrase = re.sub("</?a.*?>", "", phrase, re.M | re.DOTALL)
