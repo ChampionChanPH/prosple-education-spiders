@@ -137,10 +137,10 @@ class SuiSpiderSpider(scrapy.Spider):
         if name_with_code:
             course_code = re.findall('^[0-9A-Z]+', name_with_code)
             if course_code:
-                course_item['courseCode'] = course_code
+                course_item['courseCode'] = course_code[0]
             course_name = re.findall('(?<=[0-9A-Z]+\s).*', name_with_code)
             if course_name:
-                course_item.set_course_name(course_name.strip(), self.uidPrefix)
+                course_item.set_course_name(course_name[0].strip(), self.uidPrefix)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
