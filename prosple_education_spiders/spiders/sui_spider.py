@@ -82,20 +82,8 @@ class SuiSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Melbourne": "701",
-        "Lismore": "695",
-        "Gold Coast": "696",
-        "Perth": "700",
-        "Sydney": "699",
-        "Tweed Heads": "698",
-        "Coffs Harbour": "697",
-        "National Marine Science Centre": "694",
-    }
-
-    key_dates = {
-        "1": "03",
-        "2": "07",
-        "3": "11"
+        "Mildura": "58005",
+        "Swan Hill": "58006",
     }
 
     teaching_periods = {
@@ -216,9 +204,31 @@ class SuiSpiderSpider(scrapy.Spider):
                 course_item["domesticSubFeeTotal"] = max(csp_fee)
                 # get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
 
+        intake = response.xpath("//*[@id='intake-body']//td[1]/text()").getall()
+        if intake:
+            intake = '|'.join(intake)
+            start_holder = []
+            for item in self.months:
+                if re.search(item, intake, re.M):
+                    start_holder.append(self.months[item])
+            if start_holder:
+                course_item['startMonths'] = '|'.join(start_holder)
+
         location = response.xpath("//*[@id='intake-body']//td[2]/text()").getall()
+        campus_holder = set()
+        study_holder = set()
         if location:
-            course_item['campusNID'] = '|'.join(location)
+            location = '|'.join(location)
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+            if re.search('online', location, re.I):
+                study_holder.add('Online')
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            study_holder.add('In Person')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
