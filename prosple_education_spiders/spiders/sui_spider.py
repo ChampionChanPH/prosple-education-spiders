@@ -42,9 +42,9 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class SuiSpiderSpider(scrapy.Spider):
     name = 'sui_spider'
-    start_urls = ['http://a/']
-    institution = "Southern Cross University (SCU)"
-    uidPrefix = "AU-SCU-ON-"
+    start_urls = ['https://www.sunitafe.edu.au/courses/']
+    institution = "Sunraysia Institute of TAFE"
+    uidPrefix = "AU-SUI-"
 
     degrees = {
         "graduate certificate": "7",
