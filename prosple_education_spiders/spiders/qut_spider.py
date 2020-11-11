@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
-# Update course level of "University Certificate in Tertiary Preparation for Postgraduate Studies" to Postgraduate
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
@@ -47,14 +46,14 @@ class QutSpiderSpider(scrapy.Spider):
     start_urls = ['https://www.qut.edu.au/study/undergraduate-study',
                   'https://www.qut.edu.au/study/postgraduate']
     banned_urls = ['https://www.qut.edu.au/law/study/professional-development',
-        'https://www.qut.edu.au/law/research/study',
-        'https://www.qut.edu.au/law/study/scholarships-and-support',
-        'https://www.qut.edu.au/law/study/real-world-learning',
-        'https://www.qut.edu.au/study/professional-and-executive-education/single-unit-study/law-and-justice',
-        'https://www.qut.edu.au/law/research/our-experts',
-        'https://www.qut.edu.au/law/study/international-experience',
-        'https://www.qut.edu.au/law/study/work-experience'
-    ]
+                   'https://www.qut.edu.au/law/research/study',
+                   'https://www.qut.edu.au/law/study/scholarships-and-support',
+                   'https://www.qut.edu.au/law/study/real-world-learning',
+                   'https://www.qut.edu.au/study/professional-and-executive-education/single-unit-study/law-and-justice',
+                   'https://www.qut.edu.au/law/research/our-experts',
+                   'https://www.qut.edu.au/law/study/international-experience',
+                   'https://www.qut.edu.au/law/study/work-experience'
+                   ]
     institution = "QUT (Queensland University of Technology)"
     uidPrefix = "AU-QUT-"
 
@@ -284,7 +283,8 @@ class QutSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees)
 
-        if course_item["courseName"].strip() == "University Certificate in Tertiary Preparation for Postgraduate Studies":
+        if course_item["courseName"].strip() == "University Certificate in Tertiary Preparation for Postgraduate " \
+                                                "Studies":
             course_item["group"] = 4
             course_item["courseLevel"] = "Postgraduate"
             course_item["canonicalGroup"] = "PostgradAustralia"
