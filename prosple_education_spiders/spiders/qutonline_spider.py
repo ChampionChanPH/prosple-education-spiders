@@ -118,15 +118,15 @@ class QutonlineSpiderSpider(scrapy.Spider):
 
         overview = response.xpath("//div[@id='entry_the_copy']/*").getall()
         if overview:
-            overview = [x for x in overview if strip_tags(x).strip() != '']
+            overview = [x for x in overview if strip_tags(x) != '']
             if overview:
-                summary = [strip_tags(x) for x in overview if strip_tags(x) != '']
                 holder = []
-                for item in summary:
+                for item in overview:
                     if re.search('^<(p|o|u)', item):
                         holder.append(item)
                 if holder:
-                    course_item.set_summary(' '.join(holder))
+                    summary = [strip_tags(x) for x in holder]
+                    course_item.set_summary(' '.join(summary))
                 course_item['overview'] = strip_tags(''.join(overview), False)
 
         entry = response.xpath(
