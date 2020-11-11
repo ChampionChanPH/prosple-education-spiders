@@ -146,7 +146,6 @@ class QutonlineSpiderSpider(scrapy.Spider):
                 break
 
         course_item['modeOfStudy'] = 'Online'
-        course_item['campusNID'] = self.campuses['Online']
 
         duration = response.xpath("//*[contains(text(), 'Duration')]/following-sibling::*").get()
         if duration:
