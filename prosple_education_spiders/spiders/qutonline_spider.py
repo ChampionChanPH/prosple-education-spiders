@@ -120,7 +120,8 @@ class QutonlineSpiderSpider(scrapy.Spider):
         if overview:
             overview = [x for x in overview if strip_tags(x).strip() != '']
             if overview:
-                course_item.set_summary(strip_tags(overview[0]))
+                summary = [strip_tags(x) for x in overview]
+                course_item.set_summary(' '.join(summary))
                 course_item['overview'] = strip_tags(''.join(overview), False)
 
         entry = response.xpath(
