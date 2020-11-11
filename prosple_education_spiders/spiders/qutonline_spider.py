@@ -201,8 +201,8 @@ class QutonlineSpiderSpider(scrapy.Spider):
         if learn:
             course_item['whatLearn'] = strip_tags(''.join(learn), False)
 
-        course_item['howToApply'] = '''Apply online by filling out our application form 
-            or speak to a Course Consultant on 1300 703 988.'''
+        course_item['howToApply'] = "Apply online by filling out our application form or speak to a Course " \
+                                    "Consultant on 1300 703 988."
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
