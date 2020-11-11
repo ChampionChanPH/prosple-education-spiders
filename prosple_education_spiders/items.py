@@ -379,10 +379,10 @@ class Course(scrapy.Item):
         self["uid"] = prefix + re.sub(" ", "-", self["courseName"])
 
     def set_summary(self, text):
-        '''
+        """
         :param text: sentence or paragraph you wanted to set as overview summary for the course.
         :return: None. It will automatically assign the transformed overview summary.
-        '''
+        """
         max_characters = 300
         summary = None
 
