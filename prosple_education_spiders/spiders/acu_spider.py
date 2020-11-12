@@ -256,6 +256,11 @@ class AcuSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
+        if 'courseName' in ['General English', 'IELTS Test Preparation', 'English for the Workplace',
+                            'English for Academic Purposes (20 weeks)', 'English for Academic Purposes (10 weeks)']:
+            if 'durationMinFull' in course_item:
+                course_item['uid'] = course_item['uid'] + '-' + course_item['durationMinFull']
+
         if "courseName" in course_item:
             if re.search("postgraduate", course_item["courseName"], re.I):
                 course_item["courseLevel"] = "Postgraduate"
