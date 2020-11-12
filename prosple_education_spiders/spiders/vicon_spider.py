@@ -41,7 +41,7 @@ class ViconSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees)
         course_item["modeOfStudy"] = "Online"
-        course_item["campusNID"] = "57342"
+        # course_item["campusNID"] = "57342"
 
         overview = response.css(".overviewbody p::text").getall()
         if overview:
@@ -57,7 +57,7 @@ class ViconSpiderSpider(scrapy.Spider):
         units = response.css("span.units p::text").get()
         if fees and units:
             fee = re.findall("\$([\d\.\,]+)", fees)[0]
-            unit = re.findall("^(\d)+", units)[0]
+            unit = re.findall("^(\d+)", units)[0]
             course_item["domesticFeeTotal"] = float(fee.replace(",", ""))*float(unit)
             course_item["internationalFeeTotal"] = float(fee.replace(",", ""))*float(unit)
 
