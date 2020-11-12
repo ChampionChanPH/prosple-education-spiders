@@ -43,7 +43,7 @@ class AcpSpiderSpider(scrapy.Spider):
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
-        course_item["institution"] = self.institutio
+        course_item["institution"] = self.institution
 
         name = response.css("h1::text").get()
         if name:
