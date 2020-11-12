@@ -49,6 +49,13 @@ class AcpSpiderSpider(scrapy.Spider):
         if name:
             course_item.set_course_name(name, self.uidPrefix)
             course_item.set_sf_dt(self.degrees)
+        else:
+            name = response.css("h1 span::text").get()
+            if name:
+                course_item.set_course_name(name, self.uidPrefix)
+                course_item.set_sf_dt(self.degrees)
+            else:
+                course_item.add_flag("courseName", "Can't find course name.")
 
         if response.meta["summary"]:
             course_item.set_summary(response.meta["summary"])
