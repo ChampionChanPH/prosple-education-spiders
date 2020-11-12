@@ -52,7 +52,8 @@ class QutSpiderSpider(scrapy.Spider):
                    'https://www.qut.edu.au/study/professional-and-executive-education/single-unit-study/law-and-justice',
                    'https://www.qut.edu.au/law/research/our-experts',
                    'https://www.qut.edu.au/law/study/international-experience',
-                   'https://www.qut.edu.au/law/study/work-experience'
+                   'https://www.qut.edu.au/law/study/work-experience',
+                   'https://www.qut.edu.au/study/fees-and-scholarships/scholarships/excellence-scholarship-academic'
                    ]
     institution = "QUT (Queensland University of Technology)"
     uidPrefix = "AU-QUT-"
@@ -189,9 +190,11 @@ class QutSpiderSpider(scrapy.Spider):
 
         cricos = response.xpath("//dt[contains(text(), 'CRICOS')]/following-sibling::dd").get()
         if cricos:
-            course_item["cricosCode"] = cricos.strip()
-            course_item["internationalApps"] = 1
-            course_item["internationalApplyURL"] = response.request.url
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if cricos:
+                course_item["cricosCode"] = ", ".join(cricos)
+                course_item["internationalApps"] = 1
+                course_item["internationalApplyURL"] = response.request.url
 
         course_code = response.xpath("//dt[contains(text(), 'Course code')]/following-sibling::dd/text()").get()
         if course_code:
