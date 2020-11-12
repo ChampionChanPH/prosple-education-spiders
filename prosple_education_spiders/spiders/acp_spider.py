@@ -12,7 +12,7 @@ class AcpSpiderSpider(scrapy.Spider):
     scraped_urls = []
     superlist_urls = []
 
-    institution = "James Cook University (JCU)"
+    institution = "The Australian College of Physical Education"
     uidPrefix = "AU-ACP-"
 
     degrees = {
@@ -43,7 +43,7 @@ class AcpSpiderSpider(scrapy.Spider):
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
-        course_item["institution"] = self.institution
+        course_item["institution"] = self.institutio
 
         name = response.css("h1::text").get()
         if name:
@@ -85,6 +85,7 @@ class AcpSpiderSpider(scrapy.Spider):
 
             if "mixed mode" in quick_info.lower():
                 course_item["modeOfStudy"] = "In Person|Online"
+                course_item["campusNID"] = "58238"
             elif "online" in quick_info.lower():
                 course_item["modeOfStudy"] = "Online"
 
