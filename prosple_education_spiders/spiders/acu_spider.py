@@ -132,8 +132,6 @@ class AcuSpiderSpider(scrapy.Spider):
             overview = response.xpath(
                 "//h2[contains(text(), 'Key features of the course')]/preceding-sibling::*").getall()
         if overview:
-            summary = [strip_tags(x) for x in overview if re.search('[.!?]', x, re.M)]
-            course_item.set_summary(' '.join(summary))
             holder = []
             for item in overview:
                 if not re.search("^<(p|u|o)", item):
@@ -143,6 +141,8 @@ class AcuSpiderSpider(scrapy.Spider):
                 else:
                     holder.append(item)
             if holder:
+                summary = [strip_tags(x) for x in holder if re.search('[.!?]', x, re.M)]
+                course_item.set_summary(' '.join(summary))
                 course_item["overview"] = strip_tags("".join(holder), False)
         if 'overview' not in course_item:
             overview = response.xpath("//div[@id='main-content']//section/*").getall()
@@ -211,13 +211,13 @@ class AcuSpiderSpider(scrapy.Spider):
             atar = [float(x) for x in atar]
             course_item['guaranteedEntryScore'] = min(atar)
 
-        course_code = response.xpath("//dt[contains(text(), 'Course code:')]/following-sibling::dd").get()
+        course_code = response.xpath("//dt[contains(text(), 'Course code:')]/following-sibling::dd/text()").get()
         if not course_code:
-            course_code = response.xpath("//div[contains(*/*/text(), 'Course code:')]/following-sibling::div").get()
+            course_code = response.xpath(
+                "//div[contains(*/*/text(), 'Course code:')]/following-sibling::div//text()").get()
         if course_code:
-            course_code = re.findall("[0-9a-zA-Z]+?", course_code, re.M)
-            if course_code:
-                course_item["courseCode"] = ", ".join(course_code)
+            if strip_tags(course_code) != '':
+                course_item["courseCode"] = course_code.strip()
 
         duration = response.xpath("//dt[contains(text(), 'Duration:')]/following-sibling::dd").get()
         if not duration:
