@@ -118,9 +118,15 @@ class QutonlineSpiderSpider(scrapy.Spider):
 
         overview = response.xpath("//div[@id='entry_the_copy']/*").getall()
         if overview:
-            overview = [x for x in overview if strip_tags(x).strip() != '']
+            overview = [x for x in overview if strip_tags(x) != '']
             if overview:
-                course_item.set_summary(strip_tags(overview[0]))
+                holder = []
+                for item in overview:
+                    if re.search('^<(p|o|u)', item):
+                        holder.append(item)
+                if holder:
+                    summary = [strip_tags(x) for x in holder]
+                    course_item.set_summary(' '.join(summary))
                 course_item['overview'] = strip_tags(''.join(overview), False)
 
         entry = response.xpath(
@@ -140,7 +146,6 @@ class QutonlineSpiderSpider(scrapy.Spider):
                 break
 
         course_item['modeOfStudy'] = 'Online'
-        course_item['campusNID'] = self.campuses['Online']
 
         duration = response.xpath("//*[contains(text(), 'Duration')]/following-sibling::*").get()
         if duration:
@@ -195,8 +200,8 @@ class QutonlineSpiderSpider(scrapy.Spider):
         if learn:
             course_item['whatLearn'] = strip_tags(''.join(learn), False)
 
-        course_item['howToApply'] = '''Apply online by filling out our application form 
-            or speak to a Course Consultant on 1300 703 988.'''
+        course_item['howToApply'] = "Apply online by filling out our application form or speak to a Course " \
+                                    "Consultant on 1300 703 988."
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 

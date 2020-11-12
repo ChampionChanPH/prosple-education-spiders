@@ -13,21 +13,27 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
     :return: cleaned phrase
     """
 
+    tag_conversion = {
+        'h1': 'strong',
+        'h2': 'strong',
+        'h3': 'strong',
+        'h4': 'strong',
+        'h5': 'p',
+        'h6': 'p',
+        'span': 'div',
+        'div': 'div',
+        'p': 'p',
+        'li': 'li',
+    }
+
     if remove_all_tags:
         phrase = re.sub("(\r\n\t)", "", phrase, re.M | re.DOTALL)
         phrase = re.sub("</?.*?>", "", phrase, re.M | re.DOTALL)
         return phrase.strip()
     else:
-        phrase = re.sub("</[h]{1}[1-4]{1}.*?>", "</strong>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("<[h]{1}[1-4]{1}.*?>", "<strong>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("</[h]{1}[5-6]{1}.*?>", "</p>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("<[h]{1}[5-6]{1}.*?>", "<p>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("</(span|div).*?>", "</div>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("<(span|div).*?>", "<div>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("</p.*?>", "</p>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("<p.*?>", "<p>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("</li.*?>", "</li>", phrase, re.M | re.DOTALL)
-        phrase = re.sub("<li.*?>", "<li>", phrase, re.M | re.DOTALL)
+        for key, value in tag_conversion.items():
+            phrase = re.sub('</' + key + '.*?>', '</' + value + '>', phrase, re.M | re.DOTALL)
+            phrase = re.sub('<' + key + '.*?>', '<' + value + '>', phrase, re.M | re.DOTALL)
         phrase = re.sub("<img.*?>", "", phrase, re.M | re.DOTALL)
         if remove_hyperlinks:
             phrase = re.sub("</?a.*?>", "", phrase, re.M | re.DOTALL)
@@ -36,7 +42,7 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
         return phrase.strip()
 
 
-def check_alpha(word):
+def __check_alpha(word):
     """
     :param word: word to check if first character is a symbol or not
     :return: same word but already in proper case
@@ -64,15 +70,15 @@ def make_proper(sentence):
     for index, item in enumerate(word_split):
         if len(item) > 1 and re.search('-', item):
             item_split = re.split('-', item)
-            item_split = [check_alpha(x) for x in item_split]
+            item_split = [__check_alpha(x) for x in item_split]
             new_word.append('-'.join(item_split))
         elif index == 0:
-            new_word.append(check_alpha(item))
+            new_word.append(__check_alpha(item))
         elif item.upper() in all_upper:
             new_word.append(item.upper())
         elif item.lower() in all_lower:
             new_word.append(item.lower())
         else:
-            new_word.append(check_alpha(item))
+            new_word.append(__check_alpha(item))
 
     return ' '.join(new_word)
