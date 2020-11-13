@@ -213,6 +213,14 @@ class UnsSpiderSpider(scrapy.Spider):
             course_item["internationalApps"] = 1
             # course_item["internationalApplyURL"] = re.sub("domestic$", "international", response.request.url)
 
+        min_atar = response.xpath("//dd[preceding-sibling::*/text()= '2021 Guaranteed Entry']/div/p/text()").get()
+        if min_atar:
+            try:
+                min_atar = float(min_atar)
+                course_item["lowestScore"] = min_atar
+            except:
+                pass
+
         #international
         # international = re.sub("domestic$","international", response.request.url)
         # yield SplashRequest(international, callback=self.int_course_parse, args={'wait': 10}, meta={'url': international, "item": course_item})
