@@ -42,7 +42,6 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class GitSpiderSpider(scrapy.Spider):
     name = 'git_spider'
-    allowed_domains = ['a']
     start_urls = [
         'https://www.thegordon.edu.au/courses/international-courses',
         'https://www.thegordon.edu.au/courses/all-courses'
@@ -112,7 +111,7 @@ class GitSpiderSpider(scrapy.Spider):
         if response.request.url == self.start_urls[0]:
             self.international_courses.extend(response.xpath("//*[@id='pageCourseSearchDiv']//a/text()").getall())
         else:
-            courses = response.xpath("//*[@id='pageCourseSearchDiv']//a/text()").getall()
+            courses = response.xpath("//*[@id='pageCourseSearchDiv']//a/@href").getall()
 
             for item in courses:
                 yield response.follow(item, callback=self.course_parse)
@@ -132,8 +131,7 @@ class GitSpiderSpider(scrapy.Spider):
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
         if course_name in self.international_courses:
-            international_link = response.urljoin(response.request.url, '?i=1')
-            yield response.follow(international_link, callback=self.int_parse, meta={'item': course_item})
+            yield response.follow(response.request.url + '?i=1', callback=self.int_parse, meta={'item': course_item})
         else:
             yield course_item
 
