@@ -134,14 +134,14 @@ class GitSpiderSpider(scrapy.Spider):
                 course_item.set_course_name(course_name[0].strip(), self.uidPrefix)
 
         overview = response.xpath("//*[text()='Course Description']/following-sibling::*").get()
-        if strip_tags(overview) == '':
+        if overview and strip_tags(overview) == '':
             overview = response.xpath("//*[text()='Course Description']/following-sibling::*").getall()
             if overview:
                 holder = []
                 for index, item in enumerate(overview):
-                    if not re.search('^<(p|o|u)') and index != 0:
+                    if not re.search('^<(p|o|u)', item) and index != 0:
                         break
-                    elif not re.search('^<(p|o|u)'):
+                    elif not re.search('^<(p|o|u)', item):
                         pass
                     else:
                         holder.append(item)
