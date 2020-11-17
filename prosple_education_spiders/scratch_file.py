@@ -42,43 +42,64 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
         return phrase.strip()
 
 
-def __check_alpha(word):
+def __check_alpha(word, exclude=False, upper_extend=[], lower_extend=[]):
     """
     :param word: word to check if first character is a symbol or not
+    :param lower_extend: list of words that you want to include on the all_lower list
+    :param upper_extend: list of words that you want to include on the all_upper list
     :return: same word but already in proper case
     """
+    all_upper = ['I', 'II', 'III', 'IV', 'VCAL', 'VCE', 'TAFE']
+    all_lower = ['in', 'to', 'and', 'the', 'of', 'by']
+
+    if upper_extend:
+        all_upper.extend(upper_extend)
+    if lower_extend:
+        all_lower.extend(lower_extend)
+
     if len(word) == 1:
         return word
+    elif word.upper() in all_upper and not exclude:
+        return word.upper()
+    elif word.lower() in all_lower and not exclude:
+        return word.lower()
     elif word[0].isalpha():
         return word[0].upper() + word[1:].lower()
     else:
         return word[0:2].upper() + word[2:].lower()
 
 
-def make_proper(sentence):
+def __word_symbols(word, symbol, upper_extend=[], lower_extend=[]):
+    word_split = re.split(symbol, word)
+    word_split = [__check_alpha(x, False, upper_extend, lower_extend) for x in word_split if x != '']
+    word_split = '-'.join(word_split)
+    if re.search('-$', word):
+        word_split += '-'
+    if re.search('^-', word):
+        word_split = '-' + word_split
+
+    return word_split
+
+
+def make_proper(sentence, upper_extend=[], lower_extend=[]):
     """
     :param sentence: any sentence you wanted to make a proper case for titles, course names, etc.
+    :param lower_extend: list of words that you want to include on the all_lower list in __check_alpha function
+    :param upper_extend: list of words that you want to include on the all_upper list in __check_alpha function
     :return: same sentence in proper case
     """
-    all_upper = ['I', 'II', 'III', 'IV', 'VCAL']
-    all_lower = ['in', 'to', 'and', 'the', 'of', 'by']
-
     word_split = re.split(' ', sentence)
     word_split = [x for x in word_split if x != '']
 
     new_word = []
     for index, item in enumerate(word_split):
         if len(item) > 1 and re.search('-', item):
-            item_split = re.split('-', item)
-            item_split = [__check_alpha(x) for x in item_split]
-            new_word.append('-'.join(item_split))
+            new_word.append(__word_symbols(item, '-', upper_extend, lower_extend))
+        elif len(item) > 1 and re.search('/', item):
+            new_word.append(__word_symbols(item, '/', upper_extend, lower_extend))
         elif index == 0:
-            new_word.append(__check_alpha(item))
-        elif item.upper() in all_upper:
-            new_word.append(item.upper())
-        elif item.lower() in all_lower:
-            new_word.append(item.lower())
+            new_word.append(__check_alpha(item, True, upper_extend, lower_extend))
         else:
-            new_word.append(__check_alpha(item))
+            new_word.append(__check_alpha(item, False, upper_extend, lower_extend))
 
     return ' '.join(new_word)

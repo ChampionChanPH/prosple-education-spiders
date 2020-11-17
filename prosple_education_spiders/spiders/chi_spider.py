@@ -45,6 +45,7 @@ class ChiSpiderSpider(scrapy.Spider):
     start_urls = ['https://www.chisholm.edu.au/courses']
     institution = "Chisholm Institute"
     uidPrefix = "AU-CHI-"
+    all_upper = ['WTIA', 'EAL', 'SLR', 'STEM', 'OSHC', 'LET', 'RSA', 'SWP', 'MIG', 'ARC', 'LEP', 'AS1796', 'HSR']
 
     degrees = {
         "graduate certificate": "7",
@@ -60,7 +61,8 @@ class ChiSpiderSpider(scrapy.Spider):
         "advanced diploma": "5",
         "diploma": "5",
         "associate degree": "1",
-        "vcal- victorian certificate": "9",
+        "vcal - victorian certificate": "9",
+        "vce - victorian certificate": "9",
         "vce- victorian certificate": "9",
         "non-award": "13",
         "no match": "15"
@@ -126,7 +128,7 @@ class ChiSpiderSpider(scrapy.Spider):
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
-            course_item.set_course_name(course_name.strip(), self.uidPrefix)
+            course_item.set_course_name(make_proper(course_name.strip(), self.all_upper), self.uidPrefix)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
