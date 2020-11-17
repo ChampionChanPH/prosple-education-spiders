@@ -102,13 +102,13 @@ class ChiSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        categories = response.xpath("//a[contains(@id, 'rptCareerList_hypCareerLink')]/@href").getall()
+        categories = response.xpath("//a[contains(@id, 'rptCareerList_hypCareerLink')]/@href")
 
         yield response.follow_all(categories, callback=self.link_parse)
 
     def link_parse(self, response):
         courses = response.xpath("//div[contains(@class, 'main-content-wrapper')]//ul[contains(@class, "
-                                 "'primary-item-list')]//a[not(@class='shortlist')]/@href").getall()
+                                 "'primary-item-list')]//a[not(@class='shortlist')]/@href")
 
         yield response.follow_all(courses, callback=self.course_parse)
 
