@@ -45,7 +45,8 @@ class ChiSpiderSpider(scrapy.Spider):
     start_urls = ['https://www.chisholm.edu.au/courses']
     institution = "Chisholm Institute"
     uidPrefix = "AU-CHI-"
-    all_upper = ['WTIA', 'EAL', 'SLR', 'STEM', 'OSHC', 'LET', 'RSA', 'SWP', 'MIG', 'ARC', 'LEP', 'AS1796', 'HSR']
+    all_upper = ['WTIA', 'EAL', 'SLR', 'STEM', 'OSHC', 'LET', 'RSA', 'SWP', 'MIG', 'ARC', 'LEP', 'AS1796', 'HSR', 'CPR',
+                 'MYOB', 'OHS']
 
     degrees = {
         "graduate certificate": "7",

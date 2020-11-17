@@ -49,7 +49,7 @@ def __check_alpha(word, exclude=False, upper_extend=[], lower_extend=[]):
     :param upper_extend: list of words that you want to include on the all_upper list
     :return: same word but already in proper case
     """
-    all_upper = ['I', 'II', 'III', 'IV', 'VCAL', 'VCE', 'TAFE']
+    all_upper = ['I', 'II', 'III', 'IV', 'VCAL', 'VCE', 'TAFE', 'TESOL', 'ELICOS']
     all_lower = ['in', 'to', 'and', 'the', 'of', 'by']
 
     if upper_extend:
