@@ -155,7 +155,7 @@ class GitSpiderSpider(scrapy.Spider):
                             holder.append(item)
         if holder:
             overview = ''.join(holder)
-        if overview:
+        if overview and strip_tags(overview) != '':
             course_item.set_summary(strip_tags(overview))
             course_item["overview"] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
         if 'overview' not in course_item:
