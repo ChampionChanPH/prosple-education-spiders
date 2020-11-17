@@ -66,8 +66,8 @@ class GitSpiderSpider(scrapy.Spider):
         "advanced diploma": "5",
         "diploma": "5",
         "associate degree": "1",
-        "vcal victorian certificate": "9",
-        "vcal in": "9",
+        "vcal- victorian certificate": "9",
+        "vce- victorian certificate": "9",
         "non-award": "13",
         "no match": "15"
     }
@@ -124,13 +124,98 @@ class GitSpiderSpider(scrapy.Spider):
         course_item['published'] = 1
         course_item['institution'] = self.institution
 
-        course_name = response.xpath("//h1/text()").get()
-        if course_name:
-            course_item.set_course_name(course_name.strip(), self.uidPrefix)
+        name_with_code = response.xpath("//h1/text()").get()
+        if name_with_code:
+            course_code = re.findall('^[0-9A-Z]+', name_with_code)
+            if course_code:
+                course_item['courseCode'] = course_code[0]
+            course_name = re.findall('[0-9A-Z]+?\s(.*)', name_with_code, re.DOTALL)
+            if course_name:
+                course_item.set_course_name(course_name[0].strip(), self.uidPrefix)
+
+        overview = response.xpath("//*[text()='Course Description']/following-sibling::*").get()
+        if overview:
+            course_item.set_summary(strip_tags(overview))
+            course_item["overview"] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
+
+        career = response.xpath("//*[text()='Possible Career Outcomes']/following-sibling::*").get()
+        if career:
+            course_item['careerPathways'] = strip_tags(career, remove_all_tags=False)
+
+        intake = response.xpath("//div[@id='IntakesTable']").get()
+        if intake:
+            holder = []
+            for item in self.months:
+                if re.search(item, intake, re.M):
+                    holder.append(self.months[item])
+            if holder:
+                course_item['startMonths'] = '|'.join(holder)
+
+            duration = re.sub('yr', 'year', intake)
+            duration_full = re.findall("(?<=full.time.\s)(\d*\.?\d+)(?=\s("
+                                       "year|month|semester|trimester|quarter|week|day))", duration, re.I | re.M |
+                                       re.DOTALL)
+            duration_part = re.findall("(?<=part.time.\s)(\d*\.?\d+)(?=\s("
+                                       "year|month|semester|trimester|quarter|week|day))", duration, re.I | re.M |
+                                       re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 1:
+                    #     course_item["durationMinFull"] = float(duration_full[0][0])
+                    #     self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 2:
+                    #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     self.get_period(duration_full[1][1].lower(), course_item)
+
+        location = response.xpath("//div[@id='IntakesTable']/div[@class='row']/span[2]/text()").getall()
+        if location:
+            course_item['campusNID'] = '|'.join(set(location))
+
+        entry = response.xpath("//*[contains(@class, 'accordionHeader')][contains(text(), 'Entrance "
+                               "Requirements')]/following-sibling::*/*/*/*[@style='display: block;']/*[text("
+                               ")='Entrance Requirements / Pre-requisites']/following-sibling::*").getall()
+        if entry:
+            entry = [x for x in entry if strip_tags(x) != '']
+            if entry:
+                course_item['entryRequirements'] = strip_tags(''.join(entry), remove_all_tags=False)
+
+        dom_fee = response.xpath("//div[@id='FeeTable']/div[@class='row']/*[contains(text(), 'Full Fee "
+                                 "Tuition')]/following-sibling::*[last()-1]").get()
+        if dom_fee:
+            dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
+            dom_fee = [float(''.join(x)) for x in dom_fee]
+            if dom_fee:
+                course_item["domesticFeeTotal"] = max(dom_fee)
+                # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+        csp_fee = response.xpath("//div[@id='FeeTable']/div[@class='row']/*[contains(text(), 'Standard "
+                                 "Tuition')]/following-sibling::*[last()]").get()
+        if csp_fee:
+            csp_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", csp_fee, re.M)
+            csp_fee = [float(''.join(x)) for x in csp_fee]
+            if csp_fee:
+                course_item["domesticSubFeeTotal"] = max(csp_fee)
+                # get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
-        if course_name in self.international_courses:
+        if course_item['courseName'] in self.international_courses:
             yield response.follow(response.request.url + '?i=1', callback=self.int_parse, meta={'item': course_item})
         else:
             yield course_item
@@ -143,6 +228,14 @@ class GitSpiderSpider(scrapy.Spider):
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
                 course_item["cricosCode"] = ", ".join(set(cricos))
+
+        int_fee = response.xpath("//*[contains(text(), 'Annual Tuition Fee')]/following-sibling::*").get()
+        if int_fee:
+            int_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
+            int_fee = [float(''.join(x)) for x in int_fee]
+            if int_fee:
+                course_item["internationalFeeAnnual"] = max(int_fee)
+                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
         course_item["internationalApps"] = 1
 
