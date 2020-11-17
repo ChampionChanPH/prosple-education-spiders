@@ -42,10 +42,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class GitSpiderSpider(scrapy.Spider):
     name = 'git_spider'
-    start_urls = [
-        'https://www.thegordon.edu.au/courses/international-courses',
-        'https://www.thegordon.edu.au/courses/all-courses'
-    ]
+    start_urls = ['https://www.thegordon.edu.au/courses/international-courses']
 
     international_courses = []
 
@@ -108,13 +105,16 @@ class GitSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        if response.request.url == self.start_urls[0]:
-            self.international_courses.extend(response.xpath("//*[@id='pageCourseSearchDiv']//a/text()").getall())
-        else:
-            courses = response.xpath("//*[@id='pageCourseSearchDiv']//a/@href").getall()
+        self.international_courses.extend(response.xpath("//*[@id='pageCourseSearchDiv']//a/text()").getall())
 
-            for item in courses:
-                yield response.follow(item, callback=self.course_parse)
+        courses_link = 'https://www.thegordon.edu.au/courses/all-courses'
+        yield response.follow(courses_link, callback=self.link_parse)
+
+    def link_parse(self, response):
+        courses = response.xpath("//*[@id='pageCourseSearchDiv']//a/@href").getall()
+
+        for item in courses:
+            yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -134,9 +134,27 @@ class GitSpiderSpider(scrapy.Spider):
                 course_item.set_course_name(course_name[0].strip(), self.uidPrefix)
 
         overview = response.xpath("//*[text()='Course Description']/following-sibling::*").get()
+        if strip_tags(overview) == '':
+            overview = response.xpath("//*[text()='Course Description']/following-sibling::*").getall()
+            if overview:
+                holder = []
+                for index, item in enumerate(overview):
+                    if not re.search('^<(p|o|u)') and index != 0:
+                        break
+                    elif not re.search('^<(p|o|u)'):
+                        pass
+                    else:
+                        holder.append(item)
+                if holder:
+                    overview = ''.join(holder)
         if overview:
             course_item.set_summary(strip_tags(overview))
             course_item["overview"] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
+        if overview not in course_item:
+            overview = response.xpath("//*[text()='Course Description']/following-sibling::text()").get()
+            if overview:
+                course_item.set_summary(overview.strip())
+                course_item["overview"] = overview.strip()
 
         career = response.xpath("//*[text()='Possible Career Outcomes']/following-sibling::*").get()
         if career:
