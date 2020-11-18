@@ -46,7 +46,7 @@ class GitSpiderSpider(scrapy.Spider):
 
     international_courses = []
 
-    institution = "Gordon Institute of TAFE"
+    institution = "The Gordon"
     uidPrefix = "AU-GIT-"
 
     degrees = {
@@ -63,8 +63,8 @@ class GitSpiderSpider(scrapy.Spider):
         "advanced diploma": "5",
         "diploma": "5",
         "associate degree": "1",
-        "vcal- victorian certificate": "9",
-        "vce- victorian certificate": "9",
+        "vcal - victorian certificate": "9",
+        "vce - victorian certificate": "9",
         "non-award": "13",
         "no match": "15"
     }
@@ -85,8 +85,13 @@ class GitSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Mildura": "58005",
-        "Swan Hill": "58006",
+        "Geelong City Campus": "58312",
+        "East Geelong Campus": "58313",
+        "Werribee": "58314",
+        "Hoppers Crossing Trades Campus": "58314",
+        "Colac Trade Training Centre": "58315",
+        "Workplace": "58316",
+        "Off Campus": "58316",
     }
 
     teaching_periods = {
@@ -210,8 +215,18 @@ class GitSpiderSpider(scrapy.Spider):
                     #     self.get_period(duration_full[1][1].lower(), course_item)
 
         location = response.xpath("//div[@id='IntakesTable']/div[@class='row']/span[2]/text()").getall()
+        campus_holder = set()
+        study_holder = set()
         if location:
-            course_item['campusNID'] = '|'.join(set(location))
+            location = '|'.join(location)
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            study_holder.add('In Person')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         entry = response.xpath("//*[contains(@class, 'accordionHeader')][contains(text(), 'Entrance "
                                "Requirements')]/following-sibling::*/*/*/*[@style='display: block;']/*[text("
@@ -240,6 +255,14 @@ class GitSpiderSpider(scrapy.Spider):
                 # get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+
+        course_item['group'] = 141
+        course_item['canonicalGroup'] = 'CareerStarter'
+
+        if 'courseName' in course_item:
+            if re.search('\smaster\s', course_item['courseName'], re.I):
+                course_item['courseLevel'] = 'Undergraduate'
+                course_item['degreeType'] = 'Non-Award'
 
         if course_item['courseName'] in self.international_courses:
             yield response.follow(response.request.url + '?i=1', callback=self.int_parse, meta={'item': course_item})
