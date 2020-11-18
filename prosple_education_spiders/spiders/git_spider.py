@@ -160,7 +160,6 @@ class GitSpiderSpider(scrapy.Spider):
                 overview = ''.join(holder)
             else:
                 overview = ''
-        print(overview)
         if overview and strip_tags(overview) != '':
             course_item.set_summary(strip_tags(overview))
             course_item["overview"] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
