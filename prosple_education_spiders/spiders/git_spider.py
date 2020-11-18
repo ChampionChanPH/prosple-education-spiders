@@ -137,6 +137,7 @@ class GitSpiderSpider(scrapy.Spider):
                 course_item.set_course_name(course_name[0].strip(), self.uidPrefix)
 
         overview = response.xpath("//*[text()='Course Description']/following-sibling::*").get()
+        summary = overview
         if overview and strip_tags(overview) == '':
             overview = response.xpath("//*[text()='Course Description']/following-sibling::*").getall()
             holder = []
@@ -158,10 +159,12 @@ class GitSpiderSpider(scrapy.Spider):
                             holder.append(item)
             if holder:
                 overview = ''.join(holder)
+                summary = [strip_tags(x) for x in holder if strip_tags(x) != '']
+                summary = ' '.join(summary)
             else:
                 overview = ''
         if overview and strip_tags(overview) != '':
-            course_item.set_summary(strip_tags(overview))
+            course_item.set_summary(summary)
             course_item["overview"] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
         if 'overview' not in course_item:
             overview = response.xpath("//div[@id='courseDiv']/div[@style='display: block;']/div[@style='display: "
@@ -171,6 +174,12 @@ class GitSpiderSpider(scrapy.Spider):
                 if overview:
                     course_item.set_summary(' '.join(overview))
                     course_item["overview"] = ' '.join(overview)
+        if 'overview' not in course_item:
+            overview = response.xpath(
+                "//div[@id='courseDiv']//*[text()='Course Description']/following-sibling::text()").get()
+            if overview:
+                course_item.set_summary(overview.strip())
+                course_item["overview"] = overview.strip()
 
         career = response.xpath("//*[text()='Possible Career Outcomes']/following-sibling::*").get()
         if career:
