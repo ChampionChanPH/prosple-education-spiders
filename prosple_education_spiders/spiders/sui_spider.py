@@ -232,6 +232,9 @@ class SuiSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
+        course_item['group'] = 141
+        course_item['canonicalGroup'] = 'CareerStarter'
+
         international_link = response.xpath(
             "//a[@class='s-course-details-page__sidebar-item'][contains(text(), 'International Students')]/@href").get()
         if international_link:
