@@ -43,6 +43,8 @@ def get_total(field_to_use, field_to_update, course_item):
 class ChiSpiderSpider(scrapy.Spider):
     name = 'chi_spider'
     start_urls = ['https://www.chisholm.edu.au/courses']
+    banned_urls = ['https://www.chisholm.edu.au/courses/short-course/course-in-introduction-to-the-national'
+                   '-disability-insurance-scheme']
     institution = "Chisholm Institute"
     uidPrefix = "AU-CHI-"
     all_upper = ['WTIA', 'EAL', 'SLR', 'STEM', 'OSHC', 'LET', 'RSA', 'SWP', 'MIG', 'ARC', 'LEP', 'AS1796', 'HSR', 'CPR',
@@ -121,7 +123,8 @@ class ChiSpiderSpider(scrapy.Spider):
                                  "'primary-item-list')]//a[not(@class='shortlist')]/@href").getall()
         courses = set([re.sub('/online$', '', x) for x in courses])
         for item in courses:
-            yield response.follow(item, callback=self.course_parse)
+            if item not in self.banned_urls:
+                yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
