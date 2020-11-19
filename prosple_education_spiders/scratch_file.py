@@ -28,7 +28,7 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
 
     if remove_all_tags:
         phrase = re.sub("[\r\n\t]", " ", phrase, re.M | re.DOTALL)
-        phrase = re.sub("</?.*?>", "", phrase, re.M | re.DOTALL)
+        phrase = re.sub("</.*?>", "", phrase, re.M | re.DOTALL)
         phrase = re.sub("<.*?>", "", phrase, re.M | re.DOTALL)
         phrase = re.sub("\s+", " ", phrase, re.M | re.DOTALL)
         return phrase.strip()
