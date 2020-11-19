@@ -144,9 +144,9 @@ class GitSpiderSpider(scrapy.Spider):
                 "//div[@id='courseDiv']/*[text()='Course Description']/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(overview):
-            if not re.search('^<(p|o|u)', item) and index != 0:
+            if not re.search('^<(p|o|u|d)', item) and index != 0 and index != 1:
                 break
-            elif not re.search('^<(p|o|u)', item):
+            elif not re.search('^<(p|o|u|d)', item):
                 pass
             else:
                 holder.append(item)
