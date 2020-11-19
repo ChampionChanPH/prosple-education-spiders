@@ -59,7 +59,7 @@ def __check_alpha(word, exclude=False, upper_extend=[], lower_extend=[]):
 
     if len(word) == 1:
         return word
-    elif word.upper() in all_upper and not exclude:
+    elif word.upper() in all_upper:
         return word.upper()
     elif word.lower() in all_lower and not exclude:
         return word.lower()

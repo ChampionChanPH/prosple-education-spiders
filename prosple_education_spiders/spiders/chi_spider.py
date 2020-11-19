@@ -112,10 +112,10 @@ class ChiSpiderSpider(scrapy.Spider):
 
     def link_parse(self, response):
         courses = response.xpath("//div[contains(@class, 'main-content-wrapper')]//ul[contains(@class, "
-                                 "'primary-item-list')]//a[not(@class='shortlist')]")
-        yield from response.follow_all(courses, callback=self.course_parse)
-        # for item in courses:
-        #     yield response.follow(item, callback=self.course_parse)
+                                 "'primary-item-list')]//a[not(@class='shortlist')]/@href").getall()
+        courses = [re.sub('/online$', x) for x in courses]
+        for item in courses:
+            yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -130,8 +130,13 @@ class ChiSpiderSpider(scrapy.Spider):
             course_item.set_course_name(make_proper(course_name.strip(), self.all_upper), self.uidPrefix)
 
         name = response.xpath("//*[@class='stream']/text()").get()
-        if name:
-            course_item['durationRaw'] = name.strip()
+        if name and 'courseName' in course_item:
+            sub_name = re.split('[.-]', name)
+            sub_name = sub_name[0]
+            if sub_name:
+                course_item['courseName'] = course_item['courseName'] + ' - ' + make_proper(sub_name, self.all_upper)
+            if re.search('VET', name):
+                course_item['courseName'] = course_item['courseName'] + ' - VET'
 
         course_code = response.xpath("//dt[text()='Course code']/following-sibling::*/text()").get()
         if course_code:
@@ -153,12 +158,22 @@ class ChiSpiderSpider(scrapy.Spider):
                 course_item["domesticFeeTotal"] = max(dom_fee)
                 # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-        location = response.xpath("//dt[text()='On campus']/following-sibling::*[1]/a/text()").getall()
+        location = response.xpath("//dt[text()='On campus']/following-sibling::*").get()
+        campus_holder = set()
+        study_holder = set()
         if location:
-            course_item['campusNID'] = '|'.join(location)
-        online = response.xpath("//dt[text()='Online']/following-sibling::*//text()").get()
+            location = '|'.join(location)
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        online = response.xpath("//*[@class='course-tabs']//a[@title='Online']/@href").get()
         if online:
-            course_item['modeOfStudy'] = online.strip()
+            study_holder.add('Online')
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            study_holder.add('In Person')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         duration = response.xpath("//dt[text()='Length']/following-sibling::*/text()").get()
         if duration:
@@ -245,7 +260,7 @@ class ChiSpiderSpider(scrapy.Spider):
 
         int_fee = response.xpath("//*[@id='fees-navigation']/*[@id='fees']").get()
         if int_fee:
-            int_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
+            int_fee = re.findall("\$(\d*)[,\s]?(\d+)(\.\d\d)?", int_fee, re.M)
             int_fee = [float(''.join(x)) for x in int_fee]
             if int_fee:
                 course_item["internationalFeeTotal"] = max(int_fee)
