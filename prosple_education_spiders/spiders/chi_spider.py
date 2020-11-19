@@ -85,8 +85,14 @@ class ChiSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Mildura": "58005",
-        "Swan Hill": "58006",
+        "Dandenong": "58339",
+        "Frankston": "58340",
+        "Berwick": "58341",
+        "Cranbourne": "58342",
+        "Chisholm at 311": "58343",
+        "Bass Coast": "58344",
+        "Mornington Peninsula": "58345",
+        "Workplace": "58346",
     }
 
     teaching_periods = {
@@ -132,7 +138,8 @@ class ChiSpiderSpider(scrapy.Spider):
         name = response.xpath("//*[@class='stream']/text()").get()
         if name and 'courseName' in course_item:
             sub_name = re.split('[.-]', name)
-            sub_name = sub_name[0]
+            sub_name = [x for x in sub_name if strip_tags(x) != '']
+            sub_name = sub_name[0].strip()
             if sub_name:
                 course_item['courseName'] = course_item['courseName'] + ' - ' + make_proper(sub_name, self.all_upper)
             if re.search('VET', name):
