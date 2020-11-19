@@ -176,6 +176,19 @@ class GitSpiderSpider(scrapy.Spider):
                 summary = [strip_tags(x) for x in holder if strip_tags(x) != '']
                 course_item.set_summary(' '.join(summary))
                 course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+        if 'overview' not in course_item:
+            overview = response.xpath(
+                "//div[@id='courseDiv']/*[text()='Course Description']/following-sibling::node()").getall()
+            holder = []
+            for index, item in enumerate(overview):
+                if re.search('^<(a|s)', item) and index != 0 and index != 1:
+                    break
+                else:
+                    holder.append(item)
+            if holder:
+                summary = [strip_tags(x) for x in holder if strip_tags(x) != '']
+                course_item.set_summary(' '.join(summary))
+                course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath("//*[text()='Possible Career Outcomes']/following-sibling::*").get()
         if career:
