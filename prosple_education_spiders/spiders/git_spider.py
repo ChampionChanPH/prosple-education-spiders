@@ -137,50 +137,29 @@ class GitSpiderSpider(scrapy.Spider):
                 course_name = re.sub('~', '', course_name[0])
                 course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//*[text()='Course Description']/following-sibling::*").get()
-        summary = overview
-        if overview and strip_tags(overview) == '':
-            overview = response.xpath("//*[text()='Course Description']/following-sibling::*").getall()
-            holder = []
-            if overview:
-                for index, item in enumerate(overview):
-                    if not re.search('^<(p|o|u)', item) and index != 0:
-                        break
-                    elif not re.search('^<(p|o|u)', item):
-                        pass
-                    else:
-                        holder.append(item)
-                if not holder:
-                    for index, item in enumerate(overview):
-                        if not re.search('^<(p|o|u|d)', item) and index != 0 and index != 1:
-                            break
-                        elif not re.search('^<(p|o|u|d)', item):
-                            pass
-                        else:
-                            holder.append(item)
-            if holder:
-                overview = ''.join(holder)
-                summary = [strip_tags(x) for x in holder if strip_tags(x) != '']
-                summary = ' '.join(summary)
-            else:
-                overview = ''
-        if overview and strip_tags(overview) != '':
-            course_item.set_summary(summary)
-            course_item["overview"] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
-        if 'overview' not in course_item:
-            overview = response.xpath("//div[@id='courseDiv']/div[@style='display: block;']/div[@style='display: "
-                                      "block;']/*[text()='Course Description']/following-sibling::text()").getall()
-            if overview:
-                overview = [strip_tags(x) for x in overview if strip_tags(x) != '']
-                if overview:
-                    course_item.set_summary(' '.join(overview))
-                    course_item["overview"] = ' '.join(overview)
-        if 'overview' not in course_item:
+        overview = response.xpath("//div[@id='courseDiv']/div[@style='display: block;']/div[@style='display: "
+                                  "block;']/*[text()='Course Description']/following-sibling::*").getall()
+        if not overview:
             overview = response.xpath(
-                "//div[@id='courseDiv']//*[text()='Course Description']/following-sibling::text()").get()
-            if overview:
-                course_item.set_summary(overview.strip())
-                course_item["overview"] = overview.strip()
+                "//div[@id='courseDiv']/*[text()='Course Description']/following-sibling::*").getall()
+        holder = []
+        for index, item in enumerate(overview):
+            if not re.search('^<(p|o|u)', item) and index != 0:
+                break
+            elif not re.search('^<(p|o|u)', item):
+                pass
+            else:
+                holder.append(item)
+        if holder:
+            summary = [strip_tags(x) for x in holder if strip_tags(x) != '']
+            course_item.set_summary(' '.join(summary))
+            course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+        # if 'overview' not in course_item:
+        #     overview = response.xpath(
+        #         "//div[@id='courseDiv']//*[text()='Course Description']/following-sibling::text()").get()
+        #     if overview:
+        #         course_item.set_summary(overview.strip())
+        #         course_item["overview"] = overview.strip()
 
         career = response.xpath("//*[text()='Possible Career Outcomes']/following-sibling::*").get()
         if career:
