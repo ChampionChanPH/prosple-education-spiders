@@ -113,7 +113,7 @@ class ChiSpiderSpider(scrapy.Spider):
     def link_parse(self, response):
         courses = response.xpath("//div[contains(@class, 'main-content-wrapper')]//ul[contains(@class, "
                                  "'primary-item-list')]//a[not(@class='shortlist')]/@href").getall()
-        courses = [re.sub('/online$', x) for x in courses]
+        courses = set([re.sub('/online$', '', x) for x in courses])
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
 
