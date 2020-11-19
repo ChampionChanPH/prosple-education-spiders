@@ -134,7 +134,8 @@ class GitSpiderSpider(scrapy.Spider):
                 course_item['courseCode'] = course_code[0]
             course_name = re.findall('[0-9A-Z]+?\s(.*)', name_with_code, re.DOTALL)
             if course_name:
-                course_item.set_course_name(course_name[0].strip(), self.uidPrefix)
+                course_name = re.sub('~', '', course_name[0])
+                course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//*[text()='Course Description']/following-sibling::*").get()
         summary = overview
