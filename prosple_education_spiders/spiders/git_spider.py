@@ -267,7 +267,7 @@ class GitSpiderSpider(scrapy.Spider):
                 # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         csp_fee = response.xpath("//div[@id='FeeTable']/div[@class='row']/*[contains(text(), 'Standard "
-                                 "Tuition')]/following-sibling::*[last()]").get()
+                                 "Tuition')]/following-sibling::*[last()-1]").get()
         if csp_fee:
             csp_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", csp_fee, re.M)
             csp_fee = [float(''.join(x)) for x in csp_fee]
