@@ -48,7 +48,7 @@ class ChiSpiderSpider(scrapy.Spider):
     institution = "Chisholm Institute"
     uidPrefix = "AU-CHI-"
     all_upper = ['WTIA', 'EAL', 'SLR', 'STEM', 'OSHC', 'LET', 'RSA', 'SWP', 'MIG', 'ARC', 'LEP', 'AS1796', 'HSR', 'CPR',
-                 'MYOB', 'OHS']
+                 'MYOB', 'OHS', 'VET']
 
     degrees = {
         "graduate certificate": "7",
@@ -145,8 +145,8 @@ class ChiSpiderSpider(scrapy.Spider):
             sub_name = sub_name[0].strip()
             if sub_name:
                 course_item['courseName'] = course_item['courseName'] + ' - ' + make_proper(sub_name, self.all_upper)
-            if re.search('VET', name):
-                course_item['courseName'] = course_item['courseName'] + ' - VET'
+            if re.search('VET', course_item['courseName']):
+                course_item['courseName'] = re.sub('(?<=VET\s).*', '', course_name['courseName'], re.DOTALL | re.M)
 
         course_code = response.xpath("//dt[text()='Course code']/following-sibling::*/text()").get()
         if course_code:
