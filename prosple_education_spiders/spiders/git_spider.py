@@ -116,8 +116,11 @@ class GitSpiderSpider(scrapy.Spider):
         yield response.follow(courses_link, callback=self.link_parse)
 
     def link_parse(self, response):
-        courses = response.xpath("//*[@id='pageCourseSearchDiv']//a")
-        yield from response.follow_all(courses, callback=self.course_parse)
+        # courses = response.xpath("//*[@id='pageCourseSearchDiv']//a")
+        # yield from response.follow_all(courses, callback=self.course_parse)
+
+        courses_link = 'https://www.thegordon.edu.au/courses/all-courses/fns30317-certificate-iii-in-accounts-administratio'
+        yield response.follow(courses_link, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -173,9 +176,9 @@ class GitSpiderSpider(scrapy.Spider):
             overview = response.xpath("//div[@id='courseDiv']/div[@style='display: block;']/div[@style='display: "
                                       "block;']/*[text()='Course Description']/following-sibling::node()").getall()
             if overview:
-                summary = [strip_tags(x) for x in holder if strip_tags(x) != '']
+                summary = [strip_tags(x) for x in overview if strip_tags(x) != '']
                 course_item.set_summary(' '.join(summary))
-                course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+                course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
         if 'overview' not in course_item:
             overview = response.xpath(
                 "//div[@id='courseDiv']/*[text()='Course Description']/following-sibling::node()").getall()
