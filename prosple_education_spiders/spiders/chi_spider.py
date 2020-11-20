@@ -147,6 +147,7 @@ class ChiSpiderSpider(scrapy.Spider):
                 course_item['courseName'] = course_item['courseName'] + ' - ' + make_proper(sub_name, self.all_upper)
             if re.search('VET', course_item['courseName']):
                 course_item['courseName'] = re.sub('(?<=VET).*', '', course_item['courseName'], re.DOTALL | re.M)
+        course_item.set_course_name(course_item['courseName'], self.uidPrefix)
 
         course_code = response.xpath("//dt[text()='Course code']/following-sibling::*/text()").get()
         if course_code:
