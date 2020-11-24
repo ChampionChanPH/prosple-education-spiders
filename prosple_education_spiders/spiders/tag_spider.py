@@ -112,7 +112,7 @@ class TagSpiderSpider(scrapy.Spider):
         courses = response.xpath("//ul[@id='search-results']//div[contains(@id, 'result')]/a")
         yield from response.follow_all(courses, callback=self.course_parse)
 
-        next_page = response.xpath("//a[@rel='next']/@href").getall()
+        next_page = response.xpath("//a[@rel='next']/@href").get()
         if next_page:
             yield response.follow(next_page, callback=self.parse)
 
