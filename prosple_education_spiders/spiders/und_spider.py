@@ -35,6 +35,7 @@ class UndSpiderSpider(scrapy.Spider):
         "executive master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
+        "undergraduate certificate": "4",
         "certificate": "4",
         "certificate i": "4",
         "certificate ii": "4",
