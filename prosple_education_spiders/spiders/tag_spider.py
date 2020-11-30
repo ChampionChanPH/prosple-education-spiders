@@ -60,9 +60,7 @@ class TagSpiderSpider(scrapy.Spider):
         "advanced diploma": "5",
         "diploma": "5",
         "associate degree": "1",
-        "vcal - victorian certificate": "9",
-        "vce - victorian certificate": "9",
-        "vce- victorian certificate": "9",
+        "victorian certificate": "9",
         "non-award": "13",
         "no match": "15"
     }
@@ -83,14 +81,18 @@ class TagSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Dandenong": "58339",
-        "Frankston": "58340",
-        "Berwick": "58341",
-        "Cranbourne": "58342",
-        "Chisholm at 311": "58343",
-        "Bass Coast": "58344",
-        "Mornington Peninsula": "58345",
-        "Workplace": "58346",
+        "Bairnsdale": "59016",
+        "Forestec": "59017",
+        "Lakes Entrance Seamec": "59018",
+        "Leongatha": "59019",
+        "Morwell": "59020",
+        "Sale (Fulham)": "59021",
+        "Sale (FLC)": "59022",
+        "Sale (Gtec)": "59023",
+        "Traralgon": "59024",
+        "Warragul": "59025",
+        "Yallourn": "59026",
+        "Workplace": "59027",
     }
 
     teaching_periods = {
@@ -131,7 +133,7 @@ class TagSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[@class='course-description']/*").getall()
         holder = []
         for index, item in enumerate(overview):
-            if not re.search('^<(p|u|o)', item) and index != 0:
+            if not re.search('^<(p|u|o)', item) and index != 0 and index != 1:
                 break
             elif re.search('^<(p|u|o)', item) and not re.search('<img', item):
                 holder.append(item)
@@ -242,7 +244,7 @@ class TagSpiderSpider(scrapy.Spider):
                     #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                     #     self.get_period(duration_full[1][1].lower(), course_item)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by", "Of"])
 
         course_item['group'] = 141
         course_item['canonicalGroup'] = 'CareerStarter'
