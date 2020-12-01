@@ -113,14 +113,14 @@ class RmiSpiderSpider(scrapy.Spider):
         yield SplashRequest(response.request.url, callback=self.category_parse, args={'wait': 20})
 
     def category_parse(self, response):
-        categories = response.xpath("//div[@class='target_EF']//a/@href").getall()
+        categories = response.xpath("//article[@class='grid-list']//a/@href").getall()
 
         for item in categories:
             yield response.follow(item, callback=self.sub_parse)
 
     def sub_parse(self, response):
-        sub = response.xpath("//div[contains(@class, 'columnlinklist__content--box')]//a["
-                             "@data-analytics-type='columnlinklist']/@href").getall()
+        sub = response.xpath("//div[contains(@class, 'iconlistsvg__content--row')]//a["
+                             "@data-analytics-type='iconlink']/@href").getall()
 
         for item in sub:
             yield SplashRequest(response.urljoin(item), callback=self.link_parse, args={'wait': 20})
