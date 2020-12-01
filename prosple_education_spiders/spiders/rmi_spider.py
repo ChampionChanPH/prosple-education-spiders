@@ -281,7 +281,7 @@ class RmiSpiderSpider(scrapy.Spider):
                                "'Admissions')]/following-sibling::div[1]/div[contains(@class, "
                                "'extended-desc')]/*").getall()
         if entry:
-            course_item['entryRequirements'] = strip_tags(''.join(entry), False)
+            course_item['entryRequirements'] = strip_tags(''.join(entry), False, remove_hyperlinks=True)
 
         credit = response.xpath(
             "//*[contains(text(), 'Credit and recognition of prior learning')]/following-sibling::*").getall()
