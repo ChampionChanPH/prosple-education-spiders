@@ -95,8 +95,8 @@ class VicSpiderSpider(scrapy.Spider):
         courses = response.xpath("//div[contains(@class, 'search-layout__search-results')]//li[contains(@class, "
                                  "'search-result-course')]/@data-fb-result").getall()
         for item in courses:
-            if not re.search('online.vu.edu', item):
-                response.follow_all(courses, callback=self.course_parse)
+            if not re.search('online.vu.edu', item, re.M | re.DOTALL):
+                response.follow(item, callback=self.course_parse)
 
         next_page = response.xpath("//li[@class='next']/a/@href").get()
         if next_page:
