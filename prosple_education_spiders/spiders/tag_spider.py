@@ -129,7 +129,7 @@ class TagSpiderSpider(scrapy.Spider):
         course_name = response.xpath("//h1/text()").get()
         if course_name:
             if re.search('\(Master', course_name):
-                course_name = re.sub('\s\(.*\)', '', course_name)
+                course_name = re.sub('\s\(.*', '', course_name, re.DOTALL)
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@class='course-description']/*").getall()
