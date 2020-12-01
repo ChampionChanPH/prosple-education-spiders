@@ -47,6 +47,25 @@ class VicSpiderSpider(scrapy.Spider):
     institution = "Victoria University (VU)"
     uidPrefix = "AU-VIC-"
 
+    degrees = {
+        "graduate certificate": "7",
+        "graduate diploma": "8",
+        "master": research_coursework,
+        "bachelor": bachelor_honours,
+        "doctor": "6",
+        "certificate": "4",
+        "certificate i": "4",
+        "certificate ii": "4",
+        "certificate iii": "4",
+        "certificate iv": "4",
+        "advanced diploma": "5",
+        "diploma": "5",
+        "associate degree": "1",
+        "victorian certificate": "9",
+        "non-award": "13",
+        "no match": "15"
+    }
+
     campuses = {
         "Werribee": "841",
         "Sunshine": "842",
@@ -96,7 +115,7 @@ class VicSpiderSpider(scrapy.Spider):
                                  "'search-result-course')]/@data-fb-result").getall()
         for item in courses:
             if not re.search('online.vu.edu', item, re.M | re.DOTALL):
-                response.follow(item, callback=self.course_parse)
+                yield response.follow(item, callback=self.course_parse)
 
         next_page = response.xpath("//li[@class='next']/a/@href").get()
         if next_page:
@@ -236,9 +255,10 @@ class VicSpiderSpider(scrapy.Spider):
         # course_item["domesticApplyURL"] = response.request.url
         # course_item["internationalApplyURL"] = response.request.url
 
+        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by", "Of"])
+
         international_link = response.xpath(
             "//div[@class='course-link']//div[contains(@class, 'non-residents')]//a/@href").get()
-
         if international_link:
             yield response.follow(international_link, callback=self.international_parse, meta={'item': course_item})
         else:
@@ -246,16 +266,6 @@ class VicSpiderSpider(scrapy.Spider):
 
     def international_parse(self, response):
         course_item = response.meta['item']
-
-        course_details = response.xpath("//section[@id='block-ds-extras-course-essentials']//div[@class='row']").get()
-        fee = re.findall("((?<=2020:\sA\$)|(?<=2020:\s\$))([0-9]{0,3}),?([0-9]{3})", course_details,
-                         re.IGNORECASE | re.MULTILINE)
-        if len(fee) >= 1:
-            course_item["internationalFeeTotal"] = float("".join(fee[0])) * float(course_item["durationMinFull"]) * 2
-            if float(course_item["durationMinFull"]) >= 1:
-                course_item["internationalFeeAnnual"] = float("".join(fee[0])) * 2
-            else:
-                course_item["internationalFeeAnnual"] = course_item["internationalFeeTotal"]
 
         int_fee = response.xpath("//div[@class='course-essential-block']//*[contains(text(), "
                                  "'Fees')]/following-sibling::*").get()
