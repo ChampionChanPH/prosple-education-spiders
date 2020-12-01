@@ -42,8 +42,8 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class VicSpiderSpider(scrapy.Spider):
     name = 'vic_spider'
-    start_urls = ['https://www.vu.edu.au/search?f.Program+type%7Ccourses=Courses&f.Tabs%7CcourseTab=Courses+%26+units'
-                  '&start_rank=1&query=%21showall&collection=vu-meta']
+    start_urls = ['https://www.vu.edu.au/search?collection=vu-meta&profile=_default&f.Tabs%7CcourseTab=Courses+%26'
+                  '+units&f.Student+type%7Cdomestic=Australian+resident&query=']
     institution = "Victoria University (VU)"
     uidPrefix = "AU-VIC-"
 
