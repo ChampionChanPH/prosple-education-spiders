@@ -116,12 +116,13 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[@id='introduction']/*").getall()
         relevant_degrees = response.xpath("//*[preceding-sibling::*[contains(text(), 'Relevant Degrees')]]").get()
         if relevant_degrees:
-            relevant_degrees = "<br><strong>Relevant Degrees</strong><br>" + relevant_degrees
+            relevant_degrees = '<br><strong>Relevant Degrees</strong><br>' + relevant_degrees
         else:
-            relevant_degrees = ""
+            relevant_degrees = ''
         if overview:
-            overview = "".join(overview)
-            course_item["overview"] = strip_tags(overview + relevant_degrees, remove_all_tags=False,
+            summary = [strip_tags(x) for x in overview]
+            course_item.set_summary(' '.join(summary))
+            course_item['overview'] = strip_tags(''.join(overview) + relevant_degrees, remove_all_tags=False,
                                                  remove_hyperlinks=True)
 
         career = response.xpath("//*[preceding-sibling::*[contains(text(), 'Career Options')]]").getall()
