@@ -42,7 +42,6 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class MuSpiderSpider(scrapy.Spider):
     name = 'mu_spider'
-    allowed_domains = ['www.massey.ac.nz', 'massey.ac.nz']
     start_urls = ['https://www.massey.ac.nz/massey/learning/programme-course/programme-list.cfm']
     banned_urls = []
     institution = 'Massey University'
@@ -52,7 +51,6 @@ class MuSpiderSpider(scrapy.Spider):
         "Auckland": "52524",
         "Manawatū": "52525",
         "Wellington": "52526",
-        "Distance Learning": "52527"
     }
 
     degrees = {
@@ -106,10 +104,8 @@ class MuSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//div[@id='prog-list']//a/@href").getall()
-
-        for item in courses:
-            yield response.follow(item, callback=self.course_parse)
+        courses = response.xpath("//div[@id='prog-list']//a")
+        yield from response.follow_all(courses, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -124,75 +120,44 @@ class MuSpiderSpider(scrapy.Spider):
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//h2[contains(text(), 'What is it like?')]/following-sibling::div["
-                                  "@class='progSectionText']/div[@class='progSectionText']/*").getall()
-        if overview:
-            holder = []
-            for index, item in enumerate(overview):
-                if index == 0:
-                    item = re.sub("<img.*?>", "", item, re.DOTALL)
-                    holder.append(item)
-                elif not re.search("^<p", item, re.M) and not re.search("^<ul", item, re.M):
-                    break
-                elif strip_tags(item).strip() != '':
-                    item = re.sub("<img.*?>", "", item, re.DOTALL)
-                    holder.append(item)
-            if holder:
-                if not re.search("^<p", holder[0], re.M) and not re.search("^<ul", holder[0], re.M):
-                    if len(holder) > 1:
-                        course_item.set_summary(strip_tags(holder[1]))
-                        course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False,
-                                                             remove_hyperlinks=True)
-                    else:
-                        course_item.set_summary(strip_tags(holder[0]))
-                        course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False,
-                                                             remove_hyperlinks=True)
-                else:
-                    course_item.set_summary(strip_tags(holder[0]))
-                    course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
+        overview = response.xpath("//div[@class='overview pp-block pp-keyfacts']/following-sibling::*["
+                                  "@class='overview pp-block']/*").getall()
+        holder = []
+        for index, item in enumerate(overview):
+            if not re.search('^<(p|u|o)', item) and index != 0:
+                break
+            elif re.search('^<(p|u|o)', item) and not re.search('<img', item):
+                holder.append(item)
+        if holder:
+            summary = [strip_tags(x) for x in holder]
+            course_item.set_summary(' '.join(summary))
+            course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        learn = response.xpath("//*[contains(text(), 'What will you learn')]/following-sibling::*").getall()
-        if learn:
-            holder = []
-            for item in learn:
-                if not re.search("^<p", item, re.M) and not re.search("^<ul", item, re.M):
-                    break
-                elif strip_tags(item).strip() != '' and not re.search("<img", item, re.M):
-                    holder.append(item)
-            if holder:
-                course_item["whatLearn"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
+        learn = response.xpath("//div[@class='overview pp-block pp-keyfacts']/following-sibling::*[@class='overview "
+                               "pp-block']/*[contains(text(), 'What will you learn')]/following-sibling::*").getall()
+        holder = []
+        for index, item in enumerate(learn):
+            if not re.search('^<(p|u|o)', item) and index != 0:
+                break
+            elif re.search('^<(p|u|o)', item) and not re.search('<img', item):
+                holder.append(item)
+        if holder:
+            course_item['whatLearn'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        career = response.xpath("//h2[@class='progSectionTitle'][contains(text(), 'Careers')]/following-sibling::div["
-                                "@class='progSectionText']/*").getall()
-        if career:
-            course_item["careerPathways"] = strip_tags("".join(career), remove_all_tags=False, remove_hyperlinks=True)
-
-        key_facts = response.xpath("//ul[@class='key-facts-list']").getall()
-        if key_facts:
-            key_facts = ", ".join(key_facts)
-            campus_holder = []
-            for campus in self.campuses:
-                if re.search(campus, key_facts, re.I | re.M):
-                    campus_holder.append(self.campuses[campus])
-            if campus_holder:
-                course_item["campusNID"] = "|".join(campus_holder)
-            if re.search("(?<!not\s)available for international students", key_facts, re.I | re.M):
-                course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.request.url
-            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\sfull.time)",
-                                       key_facts, re.I | re.M | re.DOTALL)
-            duration_part = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\spart.time)",
-                                       key_facts, re.I | re.M | re.DOTALL)
+        duration = response.xpath("//div[@class='overview pp-block pp-keyfacts']//*[*/text("
+                                  ")='Duration']/following-sibling::*").get()
+        if duration:
+            duration_full = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?full)",
+                duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?part)",
+                duration, re.I | re.M | re.DOTALL)
             if not duration_full and duration_part:
                 self.get_period(duration_part[0][1].lower(), course_item)
             if duration_full:
-                if len(duration_full[0]) == 2:
-                    course_item["durationMinFull"] = float(duration_full[0][0])
-                    self.get_period(duration_full[0][1].lower(), course_item)
-                if len(duration_full[0]) == 3:
-                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[0][1]))
-                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[0][1]))
-                    self.get_period(duration_full[0][2].lower(), course_item)
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
             if duration_part:
                 if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
                     course_item["durationMinPart"] = float(duration_part[0][0])
@@ -201,46 +166,79 @@ class MuSpiderSpider(scrapy.Spider):
                                                      / self.teaching_periods[duration_part[0][1].lower()]
             if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
                 duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
-                                           key_facts, re.I | re.M | re.DOTALL)
+                                           duration, re.I | re.M | re.DOTALL)
                 if duration_full:
-                    if len(duration_full) == 1:
-                        course_item["durationMinFull"] = float(duration_full[0][0])
-                        self.get_period(duration_full[0][1].lower(), course_item)
-                    if len(duration_full) == 2:
-                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
-                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
-                        self.get_period(duration_full[1][1].lower(), course_item)
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 1:
+                    #     course_item["durationMinFull"] = float(duration_full[0][0])
+                    #     self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 2:
+                    #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     self.get_period(duration_full[1][1].lower(), course_item)
+
+        location = response.xpath("//div[@class='overview pp-block pp-keyfacts']//*[*/text("
+                                  ")='Campus']/following-sibling::*").get()
+        campus_holder = set()
+        study_holder = set()
+        if location:
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+            if re.search('distance learning', location, re.I | re.M):
+                study_holder.add('Online')
+        online = response.xpath("//div[@class='overview pp-block pp-keyfacts']//*[*/text()='Distance "
+                                "learning']/following-sibling::*").get()
+        if online and re.search('(?<!un)available', online, re.I | re.M):
+            study_holder.add('Online')
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+            study_holder.add('In Person')
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
+
+        career = response.xpath("//*[@class='accordion-content']/*[text()='Careers']/following-sibling::*").getall()
+        holder = []
+        for index, item in enumerate(career):
+            if not re.search('^<(p|u|o)', item) and index != 0:
+                break
+            elif re.search('^<(p|u|o)', item) and not re.search('<img', item):
+                holder.append(item)
+        if holder:
+            course_item['careerPathways'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        credit = response.xpath("//*[text()='Prior learning, credit and exemptions']/following-sibling::*").getall()
+        holder = []
+        for index, item in enumerate(credit):
+            if not re.search('^<(p|u|o)', item) and index != 0:
+                break
+            elif re.search('^<(p|u|o)', item) and not re.search('<img', item):
+                holder.append(item)
+        if holder:
+            course_item['creditTransfer'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        entry = response.xpath("//*[@class='accordion-heading'][*/text()='Programme "
+                               "admission']/following-sibling::*/*[text()='Required']/following-sibling::*").getall()
+        holder = []
+        for index, item in enumerate(entry):
+            if not re.search('^<(p|u|o)', item) and index != 0:
+                break
+            elif re.search('^<(p|u|o)', item) and not re.search('<img', item):
+                holder.append(item)
+        if holder:
+            course_item['entryRequirements'] = strip_tags(''.join(holder), remove_all_tags=False,
+                                                          remove_hyperlinks=True)
+
+        check_int_1 = response.xpath("//*[@class='accordion-heading']/*[text()='International students']").getall()
+        check_int_2 = response.xpath("//div[@class='overview pp-block pp-keyfacts']//*[*/text("
+                                     ")='International']/following-sibling::*").get()
+        if check_int_1 or (check_int_2 and re.search('(?<!un)available', check_int_2, re.I | re.M)):
+            course_item["internationalApps"] = 1
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
         course_item['group'] = 2
         course_item['canonicalGroup'] = 'GradNewZealand'
-
-        planning_link = response.xpath("//a[i[@class='nav-icon-planning']]/@href").get()
-        if not re.search("not currently accepting applications", key_facts, re.I | re.M):
-            if planning_link:
-                yield response.follow(planning_link, callback=self.planning_parse, meta={'item': course_item})
-            else:
-                yield course_item
-
-    def planning_parse(self, response):
-        course_item = response.meta['item']
-
-        entry = response.xpath("//h2[@class='progSectionTitle'][contains(text(), 'Entry "
-                               "requirements')]/following-sibling::div[@class='progSectionText'][1]/*").getall()
-        if entry:
-            holder = []
-            for index, item in enumerate(entry):
-                if index == 0:
-                    item = re.sub("<img.*?>", "", item, re.DOTALL)
-                    holder.append(item)
-                elif not re.search("^<p", item, re.M) and not re.search("^<ul", item, re.M):
-                    break
-                elif strip_tags(item).strip() != '':
-                    item = re.sub("<img.*?>", "", item, re.DOTALL)
-                    holder.append(item)
-            if holder:
-                course_item["entryRequirements"] = strip_tags("".join(holder), remove_all_tags=False,
-                                                              remove_hyperlinks=True)
 
         yield course_item
