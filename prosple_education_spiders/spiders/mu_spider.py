@@ -141,13 +141,15 @@ class MuSpiderSpider(scrapy.Spider):
                 if not re.search("^<p", holder[0], re.M) and not re.search("^<ul", holder[0], re.M):
                     if len(holder) > 1:
                         course_item.set_summary(strip_tags(holder[1]))
-                        course_item["overview"] = strip_tags("".join(holder), False)
+                        course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False,
+                                                             remove_hyperlinks=True)
                     else:
                         course_item.set_summary(strip_tags(holder[0]))
-                        course_item["overview"] = strip_tags("".join(holder), False)
+                        course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False,
+                                                             remove_hyperlinks=True)
                 else:
                     course_item.set_summary(strip_tags(holder[0]))
-                    course_item["overview"] = strip_tags("".join(holder), False)
+                    course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         learn = response.xpath("//*[contains(text(), 'What will you learn')]/following-sibling::*").getall()
         if learn:
@@ -158,12 +160,12 @@ class MuSpiderSpider(scrapy.Spider):
                 elif strip_tags(item).strip() != '' and not re.search("<img", item, re.M):
                     holder.append(item)
             if holder:
-                course_item["whatLearn"] = strip_tags("".join(holder), False)
+                course_item["whatLearn"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath("//h2[@class='progSectionTitle'][contains(text(), 'Careers')]/following-sibling::div["
                                 "@class='progSectionText']/*").getall()
         if career:
-            course_item["careerPathways"] = strip_tags("".join(career), False)
+            course_item["careerPathways"] = strip_tags("".join(career), remove_all_tags=False, remove_hyperlinks=True)
 
         key_facts = response.xpath("//ul[@class='key-facts-list']").getall()
         if key_facts:
@@ -238,6 +240,7 @@ class MuSpiderSpider(scrapy.Spider):
                     item = re.sub("<img.*?>", "", item, re.DOTALL)
                     holder.append(item)
             if holder:
-                course_item["entryRequirements"] = strip_tags("".join(holder), False)
+                course_item["entryRequirements"] = strip_tags("".join(holder), remove_all_tags=False,
+                                                              remove_hyperlinks=True)
 
         yield course_item
