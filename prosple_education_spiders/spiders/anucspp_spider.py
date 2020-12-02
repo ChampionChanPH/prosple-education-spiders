@@ -93,10 +93,10 @@ class AnuCsppSpiderSpider(scrapy.Spider):
     def sub_parse(self, response):
         course_name = response.xpath("//h1[@class='title']/text()").get()
         next_page = response.xpath("//a[contains(text(), 'degree program structure')]/@href").get()
-        if next_page is None:
+        if not next_page:
             next_page = response.xpath("//a[contains(text(), 'View full degree details')]/@href").get()
 
-        if next_page is not None:
+        if next_page:
             yield SplashRequest(next_page, callback=self.course_parse, args={'wait': 10.0},
                                 meta={'url': next_page, 'name': course_name})
 
@@ -110,32 +110,33 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         course_item["domesticApplyURL"] = response.meta['url']
 
         course_name = response.meta['name']
-        if course_name is not None:
+        if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@id='introduction']/*").getall()
         relevant_degrees = response.xpath("//*[preceding-sibling::*[contains(text(), 'Relevant Degrees')]]").get()
-        if relevant_degrees is not None:
+        if relevant_degrees:
             relevant_degrees = "<br><strong>Relevant Degrees</strong><br>" + relevant_degrees
         else:
             relevant_degrees = ""
-        if len(overview) > 0:
+        if overview:
             overview = "".join(overview)
-            course_item["overview"] = strip_tags(overview + relevant_degrees, False)
+            course_item["overview"] = strip_tags(overview + relevant_degrees, remove_all_tags=False,
+                                                 remove_hyperlinks=True)
 
         career = response.xpath("//*[preceding-sibling::*[contains(text(), 'Career Options')]]").getall()
-        if len(career) > 0:
+        if career:
             career = "".join(career)
-            course_item["careerPathways"] = strip_tags(career, False)
+            course_item["careerPathways"] = strip_tags(career, remove_all_tags=False, remove_hyperlinks=True)
 
         learn = response.xpath("//*[preceding-sibling::*[contains(text(), 'Learning Outcomes')]]").get()
-        if learn is not None:
-            course_item["whatLearn"] = strip_tags(learn, False)
+        if learn:
+            course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False, remove_hyperlinks=True)
 
         structure = response.xpath("//div[@id='study']//*[preceding-sibling::*[contains(text(), 'Requirements')]]").getall()
-        if len(structure) > 0:
+        if structure:
             structure = "".join(structure)
-            course_item["courseStructure"] = strip_tags(structure, False)
+            course_item["courseStructure"] = strip_tags(structure, remove_all_tags=False, remove_hyperlinks=True)
 
         duration = response.xpath("//span[contains(text(), 'Length')]/following-sibling::*/text()").get()
         if duration is not None:
@@ -156,26 +157,26 @@ class AnuCsppSpiderSpider(scrapy.Spider):
 
         int_fee = response.xpath("//dt[contains(text(), 'Annual indicative fee for international "
                                  "students')]/following-sibling::*").get()
-        if int_fee is not None:
-            int_fee = re.findall("\$\d*,?\d+", int_fee, re.M)
-            if len(int_fee) > 0:
-                int_fee = float(re.sub("[$,]", "", int_fee[0]))
-                course_item["internationalFeeAnnual"] = int_fee
+        if int_fee:
+            int_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
+            int_fee = [float(''.join(x)) for x in int_fee]
+            if int_fee:
+                course_item["internationalFeeAnnual"] = max(int_fee) * 2
                 get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
         course_code = response.xpath("//*[preceding-sibling::*[contains(text(), 'Academic plan')]]/text()").get()
-        if course_code is None:
+        if not course_code:
             course_code = response.xpath("//*[preceding-sibling::*[contains(text(), 'Specialisation code')]]/text()").get()
-        if course_code is not None:
+        if course_code:
             course_item["courseCode"] = course_code.strip()
 
         nominal = response.xpath("//*[preceding-sibling::*[contains(text(), 'Post Nominal')]]/text()").get()
-        if nominal is not None:
+        if nominal:
             if nominal.strip() != "":
                 course_item["postNumerals"] = nominal.strip()
 
         cricos = response.xpath("//*[preceding-sibling::*[contains(text(), 'CRICOS')]]/text()").get()
-        if cricos is not None:
+        if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M | re.I)
             if len(cricos) > 0:
                 course_item["cricosCode"] = ", ".join(cricos)
@@ -184,21 +185,21 @@ class AnuCsppSpiderSpider(scrapy.Spider):
 
         study_holder = []
         study = response.xpath("//*[preceding-sibling::*[contains(text(), 'Mode of delivery')]]/text()").getall()
-        if len(study) > 0:
+        if study:
             study = "".join(study)
             if re.search("In Person", study, re.I | re.M):
                 study_holder.append("In Person")
             if re.search("Online", study, re.I | re.M):
                 study_holder.append("Online")
-        if len(study_holder) > 0:
+        if study_holder:
             course_item["modeOfStudy"] = "|".join(study_holder)
 
         entry = response.xpath("//*[not(self::div)][preceding-sibling::*[contains(text(), 'Admission Requirements')]]").getall()
-        if len(entry) > 0:
-            entry = "".join(entry)
-            course_item["entryRequirements"] = strip_tags(entry, False)
+        if entry:
+            entry = ''.join(entry)
+            course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False, remove_hyperlinks=True)
 
-        course_item["campusNID"] = "569"
+        course_item["campusNID"] = '569'
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"])
 
