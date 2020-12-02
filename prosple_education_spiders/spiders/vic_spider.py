@@ -163,7 +163,7 @@ class VicSpiderSpider(scrapy.Spider):
             summary_holder = []
             if summary:
                 summary_holder.append(summary)
-                summary_holder.extend([strip_tags(x) for x in holder])
+            summary_holder.extend([strip_tags(x) for x in holder])
             if summary_holder:
                 course_item.set_summary(' '.join(summary_holder))
 

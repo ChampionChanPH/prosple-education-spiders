@@ -24,6 +24,8 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
         'div': 'div',
         'p': 'p',
         'li': 'li',
+        'ol': 'ol',
+        'ul': 'ul',
     }
 
     if remove_all_tags:
