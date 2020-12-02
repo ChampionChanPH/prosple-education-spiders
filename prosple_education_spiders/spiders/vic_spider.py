@@ -135,12 +135,23 @@ class VicSpiderSpider(scrapy.Spider):
 
         course_code = response.xpath("//div[contains(@class, 'field-name-field-unit-code')]//div[@class='field-item "
                                      "even ']/text()").get()
+        if not course_code:
+            course_code = response.xpath("//div[@class='key-summary-content']/div[contains(div/div/text(), 'Course "
+                                         "code')]/following-sibling::*/div/div/text()").get()
         if course_code:
             course_item["courseCode"] = course_code.strip()
 
         summary = response.xpath("//p[@class='paragraph--lead']/text()").get()
 
         overview = response.xpath("//section[@id='description']//div[@class='field-item even ']/*").getall()
+        if not overview:
+            overview = response.xpath("//div[contains(@class, 'paragraphs-item-page-intro')]//div[contains(@class, "
+                                      "'field-type-text-with-summary')]//div[@class='field-item even ']/*").getall()
+        if not overview:
+            overview = response.xpath(
+                "//div[@id='overview']//p[@class='paragraph--lead']/following-sibling::*").getall()
+        if not overview:
+            overview = response.xpath("//div[@id='overview']//div[contains(@class, 'col-md-7')]/*").getall()
         holder = []
         for index, item in enumerate(overview):
             if not re.search('^<(p|u|o)', item) and index != 0 and index != 1:
@@ -153,10 +164,14 @@ class VicSpiderSpider(scrapy.Spider):
             if summary:
                 summary_holder.append(summary)
                 summary_holder.extend([strip_tags(x) for x in holder])
+            if summary_holder:
                 course_item.set_summary(' '.join(summary_holder))
 
         cricos = response.xpath("//div[contains(@class, 'field-name-vucrs-cricos-code')]//div[@class='field-item even "
                                 "']").get()
+        if not cricos:
+            cricos = response.xpath("//div[@class='key-summary-content']/div[contains(div/div/text(), 'CRICOS "
+                                    "code')]/following-sibling::*").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
@@ -165,6 +180,9 @@ class VicSpiderSpider(scrapy.Spider):
 
         duration = response.xpath("//div[@class='course-essential-block']//*[contains(text(), "
                                   "'Duration')]/following-sibling::*").get()
+        if not duration:
+            duration = response.xpath("//div[@class='key-summary-content']/div[contains(div/div/text(), "
+                                      "'Duration')]/following-sibling::*").get()
         if duration:
             duration_full = re.findall(
                 "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
@@ -199,6 +217,9 @@ class VicSpiderSpider(scrapy.Spider):
 
         location = response.xpath("//div[@class='course-essential-block']//*[contains(text(), "
                                   "'Location')]/following-sibling::*").get()
+        if not location:
+            location = response.xpath("//div[@class='key-summary-content']/div[contains(div/div/text(), "
+                                      "'Location')]/following-sibling::*").get()
         campus_holder = set()
         if location:
             for campus in self.campuses:
@@ -211,11 +232,11 @@ class VicSpiderSpider(scrapy.Spider):
                                "mode')]/following-sibling::*").get()
         holder = set()
         if study:
-            if re.search('face', study, re.M | re.DOTALL):
+            if re.search('face', study, re.I | re.M | re.DOTALL):
                 holder.add('In Person')
-            if re.search('online', study, re.M | re.DOTALL):
+            if re.search('online', study, re.I | re.M | re.DOTALL):
                 holder.add('Online')
-            if re.search('blended', study, re.M | re.DOTALL):
+            if re.search('blended', study, re.I | re.M | re.DOTALL):
                 holder.add('In Person')
                 holder.add('Online')
         if holder:
@@ -223,6 +244,9 @@ class VicSpiderSpider(scrapy.Spider):
 
         intake = response.xpath("//div[@class='course-essential-block']//*[contains(text(), 'Start "
                                 "date')]/following-sibling::*").get()
+        if not intake:
+            intake = response.xpath("//div[@class='key-summary-content']/div[contains(div/div/text(), "
+                                    "'Intakes')]/following-sibling::*").get()
         if intake:
             holder = []
             for item in self.months:
