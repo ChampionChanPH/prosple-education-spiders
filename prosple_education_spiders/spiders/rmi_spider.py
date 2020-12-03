@@ -152,7 +152,8 @@ class RmiSpiderSpider(scrapy.Spider):
             if not re.search("class=\"module\"", item.xpath(".").get()):
                 overview = item.xpath(".//div[contains(@class, 'extended-desc')]/*").getall()
                 if overview:
-                    course_item['overview'] = strip_tags(''.join(overview), False)
+                    course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False,
+                                                         remove_hyperlinks=True)
                     break
         if 'overview' not in course_item:
             overview = response.xpath("//div[@class='MainSectionPad'][contains(*//h2/text(), "
@@ -163,7 +164,8 @@ class RmiSpiderSpider(scrapy.Spider):
                 if not re.search("class=\"module\"", item.xpath(".").get()):
                     overview = item.xpath(".//div[contains(@class, 'extended-desc')]/*").getall()
                     if overview:
-                        course_item['overview'] = strip_tags(''.join(overview), False)
+                        course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False,
+                                                             remove_hyperlinks=True)
                         break
 
         summary = response.xpath("//*[@class='program-tilte']/text()").get()
@@ -179,7 +181,7 @@ class RmiSpiderSpider(scrapy.Spider):
                                     "'extended-desc')]/text()").getall()
             career = [x for x in career if strip_tags(x).strip() != '']
         if career:
-            course_item['careerPathways'] = strip_tags(''.join(career), False)
+            course_item['careerPathways'] = strip_tags(''.join(career), remove_all_tags=False, remove_hyperlinks=True)
 
         location = response.xpath("//*[@class='description'][text()='Location']/following-sibling::*").getall()
         campus_holder = set()
@@ -281,12 +283,13 @@ class RmiSpiderSpider(scrapy.Spider):
                                "'Admissions')]/following-sibling::div[1]/div[contains(@class, "
                                "'extended-desc')]/*").getall()
         if entry:
-            course_item['entryRequirements'] = strip_tags(''.join(entry), False, remove_hyperlinks=True)
+            course_item['entryRequirements'] = strip_tags(''.join(entry), remove_all_tags=False,
+                                                          remove_hyperlinks=True)
 
         credit = response.xpath(
             "//*[contains(text(), 'Credit and recognition of prior learning')]/following-sibling::*").getall()
         if credit:
-            course_item['creditTransfer'] = strip_tags(''.join(credit), False)
+            course_item['creditTransfer'] = strip_tags(''.join(credit), remove_all_tags=False, remove_hyperlinks=True)
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
