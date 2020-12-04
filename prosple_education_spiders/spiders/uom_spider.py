@@ -116,7 +116,8 @@ class UomSpiderSpider(scrapy.Spider):
         course_item["published"] = 1
         course_item["institution"] = self.institution
 
-        course_name = response.xpath("//h1[@data-test='header-course-title']/text()").get()
+        course_name = response.xpath(
+            "//h1[@data-test='header-course-title' or @data-test='course-header-title']/text()").get()
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
@@ -226,7 +227,8 @@ class UomSpiderSpider(scrapy.Spider):
             if campus_holder:
                 course_item["campusNID"] = "|".join(campus_holder)
 
-        entry = response.xpath("//*[contains(text(), 'Prerequisites')]/following-sibling::*").get()
+        entry = response.xpath(
+            "//*[contains(text(), 'Prerequisites') or contains(text(), 'Pre-requisites')]/following-sibling::*").get()
         if entry:
             course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False, remove_hyperlinks=True)
 
