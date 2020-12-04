@@ -101,13 +101,10 @@ class UomSpiderSpider(scrapy.Spider):
             yield response.follow(item, callback=self.sub_parse)
 
     def sub_parse(self, response):
-        courses = response.xpath("//ul[@data-test='course-list']//a/@href").getall()
+        courses = response.xpath("//div[@data-test='course-list']//a[@data-test='card-course']/@href").getall()
 
         for item in courses:
-            if item not in self.banned_urls and \
-                    not re.search("/major/", item) and \
-                    not re.search("/specialisation/", item) and \
-                    not re.search("/minor/", item):
+            if not re.search("/(major|specialisation|minor)/", item):
                 yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 10},
                                     meta={'url': response.urljoin(item)})
 
@@ -129,21 +126,18 @@ class UomSpiderSpider(scrapy.Spider):
                 overview = response.xpath("//div[@data-test='course-overview-content']/*/*/*").getall()
             elif re.search("^<div><p", overview[0]) or re.search("^<section", overview[0]):
                 overview = response.xpath("//div[@data-test='course-overview-content']/*/*").getall()
-        overview_list = []
-        for item in overview:
-            if not re.search("^<p", item) and not re.search("^<ul", item) and not re.search("^<div><p", item) and \
-                    overview.index(item) != 0:
+        holder = []
+        for index, item in enumerate(overview):
+            if not re.search("^<(p|u|o)", item) and index != 0:
                 break
             elif re.search("notice--default", item):
                 pass
             else:
-                overview_list.append(strip_tags(item, False))
-        if overview_list:
-            if len(overview_list[0]) < 95 and len(overview_list) > 1:
-                course_item.set_summary(strip_tags(overview_list[0]) + ' ' + strip_tags(overview_list[1]))
-            else:
-                course_item.set_summary(strip_tags(overview_list[0]))
-            course_item["overview"] = strip_tags("".join(overview_list), remove_all_tags=False, remove_hyperlinks=True)
+                holder.append(item)
+        if holder:
+            summary = [strip_tags(x) for x in holder]
+            course_item.set_summary(' '.join(summary))
+            course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         cricos = response.xpath("//li[contains(text(), 'CRICOS')]/*/text()").get()
         if cricos:
@@ -152,13 +146,27 @@ class UomSpiderSpider(scrapy.Spider):
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
 
-        atar = response.xpath("//dt[contains(*/text(), 'Lowest Selection Rank')]/following-sibling::dd/*[contains("
-                              "@class, 'score-panel__value-heading')]/text()").get()
-        if atar:
-            try:
-                course_item["lowestScore"] = float(atar.strip())
-            except ValueError:
-                pass
+        lowest_atar = response.xpath("//dt[contains(*/text(), 'Lowest Selection Rank')]/following-sibling::dd/*["
+                                     "contains(@class, 'score-panel__value-heading')]").get()
+        if lowest_atar:
+            lowest_atar = re.findall('\d{2}\.\d{2}', lowest_atar, re.M)
+            lowest_atar = [float(x) for x in lowest_atar]
+            lowest_atar = min(lowest_atar)
+
+        guaranteed_score = response.xpath(
+            "//div[contains(strong/text(), 'Guaranteed ATAR')]/following-sibling::*").get()
+        if guaranteed_score:
+            guaranteed_score = re.findall('\d{2}\.\d{2}', guaranteed_score, re.M)
+            guaranteed_score = [float(x) for x in guaranteed_score]
+            guaranteed_score = min(guaranteed_score)
+
+        if lowest_atar and guaranteed_score:
+            course_item['guaranteedEntryScore'] = guaranteed_score
+            course_item['lowestScore'] = lowest_atar
+        elif lowest_atar and not guaranteed_score:
+            course_item['guaranteedEntryScore'] = lowest_atar
+        elif not lowest_atar and guaranteed_score:
+            course_item['guaranteedEntryScore'] = guaranteed_score
 
         fee = response.xpath("//*[contains(text(), 'Indicative total course fee')]/preceding-sibling::*/text()").get()
         if fee:
@@ -207,9 +215,8 @@ class UomSpiderSpider(scrapy.Spider):
         if location:
             study_holder = set()
             campus_holder = set()
-            if re.search(r"online", location, re.M | re.I):
+            if re.search('online', location, re.M | re.I):
                 study_holder.add("Online")
-                campus_holder.add("757")
             for campus in self.campuses:
                 if re.search(campus, location, re.I | re.M):
                     campus_holder.add(self.campuses[campus])
