@@ -152,14 +152,16 @@ class UomSpiderSpider(scrapy.Spider):
         if lowest_atar:
             lowest_atar = re.findall('\d{2}\.\d{2}', lowest_atar, re.M)
             lowest_atar = [float(x) for x in lowest_atar]
-            lowest_atar = min(lowest_atar)
+            if lowest_atar:
+                lowest_atar = min(lowest_atar)
 
         guaranteed_score = response.xpath(
             "//div[contains(strong/text(), 'Guaranteed ATAR')]/following-sibling::*").get()
         if guaranteed_score:
             guaranteed_score = re.findall('\d{2}\.\d{2}', guaranteed_score, re.M)
             guaranteed_score = [float(x) for x in guaranteed_score]
-            guaranteed_score = min(guaranteed_score)
+            if guaranteed_score:
+                guaranteed_score = min(guaranteed_score)
 
         if lowest_atar and guaranteed_score:
             course_item['guaranteedEntryScore'] = guaranteed_score
