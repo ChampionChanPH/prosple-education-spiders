@@ -185,19 +185,20 @@ class SwiSpiderSpider(scrapy.Spider):
                                   "'general-content')]").get()
         if overview:
             course_item.set_summary(strip_tags(overview))
-            course_item['overview'] = strip_tags(overview, False)
+            course_item['overview'] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
 
         credit = response.xpath("//h4[contains(text(), 'Credit')]/following-sibling::*").get()
         if credit:
-            course_item['creditTransfer'] = strip_tags(credit, False)
+            course_item['creditTransfer'] = strip_tags(credit, remove_all_tags=False, remove_hyperlinks=True)
 
         course_structure = response.xpath("//div[@id='cs-field-course-structure']/*").getall()
         if course_structure:
-            course_item['courseStructure'] = strip_tags(''.join(course_structure), False)
+            course_item['courseStructure'] = strip_tags(''.join(course_structure), remove_all_tags=False,
+                                                        remove_hyperlinks=True)
 
         pathway = response.xpath("//h3[contains(text(), 'Graduate skills')]/following-sibling::*").get()
         if pathway:
-            course_item["careerPathways"] = strip_tags(pathway, False)
+            course_item["careerPathways"] = strip_tags(pathway, remove_all_tags=False, remove_hyperlinks=True)
 
         start_date = response.xpath("//h3[contains(text(), '2020 Start Dates')]/following-sibling::*").getall()
         if start_date:
@@ -252,7 +253,7 @@ class SwiSpiderSpider(scrapy.Spider):
 
         learn = response.xpath("//h3[contains(text(), 'Course learning outcomes')]/following-sibling::*").getall()
         if len(learn) > 0:
-            course_item["whatLearn"] = strip_tags("".join(learn), False)
+            course_item["whatLearn"] = strip_tags("".join(learn), remove_all_tags=False, remove_hyperlinks=True)
 
         for header, content in zip(response.xpath("//div[@id='fees']//th/text()").getall(),
                                    response.xpath("//div[@id='fees']//td/text()").getall()):
@@ -276,7 +277,9 @@ class SwiSpiderSpider(scrapy.Spider):
 
         international = response.xpath("//a[@id='tab-international']/@href").get()
 
-        if international:
+        if re.search('only$', course_item['courseName'], re.I | re.M):
+            pass
+        elif international:
             yield response.follow(international, callback=self.international_parse, meta={'item': course_item})
         else:
             yield course_item
