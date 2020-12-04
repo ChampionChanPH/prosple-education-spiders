@@ -243,6 +243,10 @@ class UomSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"])
 
+        learn = response.xpath("//*[text()='LEARNING OUTCOMES']/following-sibling::*").get()
+        if learn:
+            course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False, remove_hyperlinks=True)
+
         learn = response.xpath("//a[@data-test='nav-link-what-will-i-study']/@href").get()
 
         if response.xpath("//*[contains(text(), 'Page not found')]").getall():
