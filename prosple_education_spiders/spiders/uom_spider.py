@@ -120,7 +120,7 @@ class UomSpiderSpider(scrapy.Spider):
         course_item["institution"] = self.institution
 
         course_name = response.xpath("//h1[@data-test='header-course-title']/text()").get()
-        if course_name is not None:
+        if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@data-test='course-overview-content']/*").getall()
@@ -143,7 +143,7 @@ class UomSpiderSpider(scrapy.Spider):
                 course_item.set_summary(strip_tags(overview_list[0]) + ' ' + strip_tags(overview_list[1]))
             else:
                 course_item.set_summary(strip_tags(overview_list[0]))
-            course_item["overview"] = strip_tags("".join(overview_list), remove_all_tags=False)
+            course_item["overview"] = strip_tags("".join(overview_list), remove_all_tags=False, remove_hyperlinks=True)
 
         cricos = response.xpath("//li[contains(text(), 'CRICOS')]/*/text()").get()
         if cricos:
@@ -157,7 +157,7 @@ class UomSpiderSpider(scrapy.Spider):
         if atar:
             try:
                 course_item["lowestScore"] = float(atar.strip())
-            except:
+            except ValueError:
                 pass
 
         fee = response.xpath("//*[contains(text(), 'Indicative total course fee')]/preceding-sibling::*/text()").get()
@@ -221,7 +221,7 @@ class UomSpiderSpider(scrapy.Spider):
 
         entry = response.xpath("//*[contains(text(), 'Prerequisites')]/following-sibling::*").get()
         if entry:
-            course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False)
+            course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False, remove_hyperlinks=True)
 
         period = response.xpath("//li[@id='course-overview-entryPeriods']/text()").get()
         if period:
@@ -258,7 +258,7 @@ class UomSpiderSpider(scrapy.Spider):
             else:
                 holder.append(strip_tags(item, False))
         if holder:
-            course_item["whatLearn"] = strip_tags("".join(holder), remove_all_tags=False)
+            course_item["whatLearn"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath("//a[@data-test='nav-link-where-will-this-take-me']/@href").get()
 
@@ -281,7 +281,7 @@ class UomSpiderSpider(scrapy.Spider):
             else:
                 holder.append(strip_tags(item, False))
         if holder:
-            course_item["careerPathways"] = strip_tags("".join(holder), remove_all_tags=False)
+            course_item["careerPathways"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         apply = response.xpath("//a[@data-test='nav-link-how-to-apply']/@href").get()
 
@@ -304,6 +304,6 @@ class UomSpiderSpider(scrapy.Spider):
             else:
                 holder.append(strip_tags(item, False))
         if holder:
-            course_item["howToApply"] = strip_tags("".join(holder), remove_all_tags=False)
+            course_item["howToApply"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         yield course_item
