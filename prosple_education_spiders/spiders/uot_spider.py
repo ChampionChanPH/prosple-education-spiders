@@ -134,12 +134,13 @@ class UotSpiderSpider(scrapy.Spider):
             elif re.search('^<(p|u|o)', item) and not re.search('<img', item):
                 holder.append(item)
         if holder:
-            course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
+            course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
             summary_holder = []
             if summary:
                 summary_holder.append(summary)
-            summary_holder.append([strip_tags(x) for x in overview])
-            course_item.set_summary(' '.join(summary_holder))
+            summary_holder.append([strip_tags(x) for x in holder])
+            if summary_holder:
+                course_item.set_summary(' '.join(summary_holder))
 
         duration = response.xpath("//dt[contains(*[@class='t-shark']/text(), 'Duration')]/following-sibling::dd").get()
         if duration:
@@ -202,7 +203,7 @@ class UotSpiderSpider(scrapy.Spider):
             elif re.search("813|814|817", course_item["campusNID"]):
                 study_holder.add('Online')
         if study_holder:
-            course_item['modeOfStudy']  = '|'.join(study_holder)
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         cricos = response.xpath("//abbr[text()='CRICOS']/following-sibling::text()").get()
         if cricos:
@@ -219,6 +220,11 @@ class UotSpiderSpider(scrapy.Spider):
         credit = response.xpath("//div[@id='c-entry-credittransfer']/*/*").getall()
         if credit:
             course_item['creditTransfer'] = strip_tags(''.join(credit), remove_all_tags=False, remove_hyperlinks=True)
+
+        learn = response.xpath("//*[@id='learning-outcomes']/following-sibling::*[1]//*[contains(@class, "
+                               "'richtext__medium')]/*").getall()
+        if learn:
+            course_item['whatLearn'] = strip_tags(''.join(learn), remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath("//*[@id='career-outcomes']/following-sibling::*[1]//*[contains(@class, "
                                 "'richtext__medium')]/*").getall()
