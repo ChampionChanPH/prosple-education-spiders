@@ -35,8 +35,11 @@ class UoaSpiderSpider(scrapy.Spider):
 
     degrees = {
         "graduate certificate": "7",
+        "adelaide graduate certificate": "7",
         "graduate diploma": "8",
+        "adelaide graduate diploma": "8",
         "master": research_coursework,
+        "adelaide master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
@@ -185,6 +188,7 @@ class UoaSpiderSpider(scrapy.Spider):
             except ValueError:
                 pass
 
-        course_item.set_sf_dt(self.degrees, ["and", "with"])
+        course_item.set_sf_dt(self.degrees, ["and", "with", "/"])
 
-        yield course_item
+        if "doubleDegree" in course_item:
+            yield course_item
