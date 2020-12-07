@@ -112,6 +112,7 @@ class UotSpiderSpider(scrapy.Spider):
         course_item['sourceURL'] = response.request.url
         course_item['published'] = 1
         course_item['institution'] = self.institution
+        course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1[@class='l-object-page-header--page-title']/text()").get()
         if course_name:
@@ -209,9 +210,7 @@ class UotSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(set(cricos))
                 course_item["internationalApps"] = 1
-
-        # course_item["domesticApplyURL"] = response.request.url
-        # course_item["internationalApplyURL"] = response.request.url
+                course_item["internationalApplyURL"] = response.request.url
 
         entry = response.xpath("//div[@id='c-entry-eligibility']/*/*").getall()
         if entry:
