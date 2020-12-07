@@ -122,17 +122,23 @@ class UotSpiderSpider(scrapy.Spider):
         if course_code:
             course_item["courseCode"] = ', '.join(course_code)
 
-        summary = response.xpath("//div[@class='richtext richtext__medium']/div[@class='lede']/text()").get()
+        summary = response.xpath("//div[@class='richtext richtext__medium']//div[@class='lede']/text()").get()
         overview = response.xpath(
             "//div[@class='block block__gutter-md block__shadowed']/div[@class='block block__pad-lg']/div["
             "@class='richtext richtext__medium']/*[not(contains(@class, 'lede'))]").getall()
-        if overview:
+        holder = []
+        for index, item in enumerate(overview):
+            if not re.search('^<(p|u|o)', item) and index != 0 and index != 1:
+                break
+            elif re.search('^<(p|u|o)', item) and not re.search('<img', item):
+                holder.append(item)
+        if holder:
             course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
             summary_holder = []
             if summary:
                 summary_holder.append(summary)
             summary_holder.append([strip_tags(x) for x in overview])
-            course_item.set_summary(' '.join(summary))
+            course_item.set_summary(' '.join(summary_holder))
 
         duration = response.xpath("//dt[contains(*[@class='t-shark']/text(), 'Duration')]/following-sibling::dd").get()
         if duration:
@@ -195,7 +201,7 @@ class UotSpiderSpider(scrapy.Spider):
             elif re.search("813|814|817", course_item["campusNID"]):
                 study_holder.add('Online')
         if study_holder:
-            course_item['modeOfStudy'] = '|'.join(study_holder)
+            course_item['modeOfStudy']  = '|'.join(study_holder)
 
         cricos = response.xpath("//abbr[text()='CRICOS']/following-sibling::text()").get()
         if cricos:
@@ -224,9 +230,9 @@ class UotSpiderSpider(scrapy.Spider):
                                    "'richtext__medium')]/*").getall()
         holder = []
         for index, item in enumerate(structure):
-            if not re.search('^<(p|o|u)', item) and index != 0:
+            if not re.search('^<(p|o|u)', item) and index != 0 and index != 1:
                 break
-            else:
+            elif re.search('^<(p|u|o)', item) and not re.search('<img', item):
                 holder.append(item)
         if holder:
             course_item['courseStructure'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
