@@ -100,10 +100,13 @@ class UotSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//div[@id='courseList']//div[@class='content-border']//a/@href").getall()
+        # courses = response.xpath("//div[@id='courseList']//div[@class='content-border']//a/@href").getall()
+        #
+        # for course in courses:
+        #     yield response.follow(course, callback=self.course_parse)
 
-        for course in courses:
-            yield response.follow(course, callback=self.course_parse)
+        course = 'https://www.utas.edu.au/courses/chm/courses/h7q-master-of-quality-services-health-and-safety'
+        yield response.follow(course, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -123,24 +126,22 @@ class UotSpiderSpider(scrapy.Spider):
         if course_code:
             course_item["courseCode"] = ', '.join(course_code)
 
-        summary = response.xpath("//div[@class='richtext richtext__medium']//div[@class='lede']/text()").get()
+        summary = response.xpath("//div[@class='richtext richtext__medium']//div[@class='lede']").get()
         overview = response.xpath(
             "//div[@class='block block__gutter-md block__shadowed']/div[@class='block block__pad-lg']/div["
             "@class='richtext richtext__medium']/*[not(contains(@class, 'lede'))]").getall()
         holder = []
+        if summary:
+            holder.append(summary)
         for index, item in enumerate(overview):
             if not re.search('^<(p|u|o)', item) and index != 0 and index != 1:
                 break
             elif re.search('^<(p|u|o)', item) and not re.search('<img', item):
                 holder.append(item)
         if holder:
+            summary = [strip_tags(x) for x in holder]
+            course_item.set_summary(' '.join(summary))
             course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
-            summary_holder = []
-            if summary:
-                summary_holder.append(summary)
-            summary_holder.extend([strip_tags(x) for x in holder])
-            if summary_holder:
-                course_item.set_summary(' '.join(summary_holder))
 
         duration = response.xpath("//dt[contains(*[@class='t-shark']/text(), 'Duration')]/following-sibling::dd").get()
         if duration:
@@ -221,8 +222,7 @@ class UotSpiderSpider(scrapy.Spider):
         if credit:
             course_item['creditTransfer'] = strip_tags(''.join(credit), remove_all_tags=False, remove_hyperlinks=True)
 
-        learn = response.xpath("//*[@id='learning-outcomes']/following-sibling::*[1]//*[contains(@class, "
-                               "'richtext__medium')]/*").getall()
+        learn = response.xpath("//*[@id='learning-outcomes']//*[contains(@class, 'richtext__medium')]/*").getall()
         if learn:
             course_item['whatLearn'] = strip_tags(''.join(learn), remove_all_tags=False, remove_hyperlinks=True)
 
