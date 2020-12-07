@@ -134,7 +134,8 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         if learn:
             course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False, remove_hyperlinks=True)
 
-        structure = response.xpath("//div[@id='study']//*[preceding-sibling::*[contains(text(), 'Requirements')]]").getall()
+        structure = response.xpath(
+            "//div[@id='study']//*[preceding-sibling::*[contains(text(), 'Requirements')]]").getall()
         if structure:
             structure = "".join(structure)
             course_item["courseStructure"] = strip_tags(structure, remove_all_tags=False, remove_hyperlinks=True)
