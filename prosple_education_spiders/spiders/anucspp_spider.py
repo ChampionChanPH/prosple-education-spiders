@@ -141,16 +141,16 @@ class AnuCsppSpiderSpider(scrapy.Spider):
             course_item["courseStructure"] = strip_tags(structure, remove_all_tags=False, remove_hyperlinks=True)
 
         duration = response.xpath("//span[contains(text(), 'Length')]/following-sibling::*/text()").get()
-        if duration is not None:
+        if duration:
             duration = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration, re.M)
-            if duration is not None:
+            if duration:
                 if len(duration) > 0:
                     course_item["durationMinFull"] = float(duration[0][0])
                     self.get_period(duration[0][1], course_item)
 
         dom_fee = response.xpath("//dt[contains(text(), 'Annual indicative fee for domestic "
                                  "students')]/following-sibling::*").get()
-        if dom_fee is not None:
+        if dom_fee:
             dom_fee = re.findall("\$\d*,?\d+", dom_fee, re.M)
             if len(dom_fee) > 0:
                 dom_fee = float(re.sub("[$,]", "", dom_fee[0]))

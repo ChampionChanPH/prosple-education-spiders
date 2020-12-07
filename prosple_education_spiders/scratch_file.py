@@ -27,6 +27,7 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
         'ol': 'ol',
         'ul': 'ul',
         'td': 'td',
+        'a': 'a',
     }
 
     if remove_all_tags:
@@ -43,7 +44,8 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
         phrase = re.sub("[\r\n\t]", " ", phrase, re.M | re.DOTALL)
         phrase = re.sub("\s+", " ", phrase, re.M | re.DOTALL)
         if remove_hyperlinks:
-            phrase = re.sub("</?a.*?>", "", phrase, re.M | re.DOTALL)
+            phrase = re.sub("</a.*?>", "", phrase, re.M | re.DOTALL)
+            phrase = re.sub("<a.*?>", "", phrase, re.M | re.DOTALL)
         if phrase:
             phrase = clean_html(phrase)
         return phrase.strip()
