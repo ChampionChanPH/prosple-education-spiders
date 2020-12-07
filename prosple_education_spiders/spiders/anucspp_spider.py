@@ -84,11 +84,16 @@ class AnuCsppSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//div[contains(@class, 'panel-display')]//a/@href").getall()
+        # courses = response.xpath("//div[contains(@class, 'panel-display')]//a/@href").getall()
+        course_name = 'Master of Climate Change'
+        courses = 'https://programsandcourses.anu.edu.au/2021/program/MCLIM'
+        yield SplashRequest(courses, callback=self.course_parse, args={'wait': 10.0},
+                            meta={'url': courses, 'name': course_name})
 
-        for item in courses:
-            if item not in self.banned_urls:
-                yield response.follow(item, callback=self.sub_parse)
+        #
+        # for item in courses:
+        #     if item not in self.banned_urls:
+        #         yield response.follow(item, callback=self.sub_parse)
 
     def sub_parse(self, response):
         course_name = response.xpath("//h1[@class='title']/text()").get()
@@ -138,6 +143,7 @@ class AnuCsppSpiderSpider(scrapy.Spider):
             "//div[@id='study']//*[preceding-sibling::*[contains(text(), 'Requirements')]]").getall()
         if structure:
             structure = "".join(structure)
+            structure = re.sub("</?a[^]]*?>", "", structure, re.M | re.DOTALL | re.VERBOSE)
             course_item["courseStructure"] = strip_tags(structure, remove_all_tags=False, remove_hyperlinks=True)
 
         duration = response.xpath("//span[contains(text(), 'Length')]/following-sibling::*/text()").get()
