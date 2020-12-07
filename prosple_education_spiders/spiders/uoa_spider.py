@@ -190,5 +190,5 @@ class UoaSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, ["and", "with", "/"])
 
-        if "doubleDegree" in course_item:
-            yield course_item
+        # if "doubleDegree" in course_item:
+        yield course_item
