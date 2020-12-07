@@ -4,12 +4,13 @@ import re
 from lxml.html.clean import clean_html
 
 
-def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
+def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False, remove_linktext=False):
     """
     :param phrase: string to clean
     :param remove_all_tags: if True, remove all HTML tags. if False, h1, h2, h3,
     and h4 tags will be converted to strong tag. Other tags will also be cleaned.
     :param remove_hyperlinks: if True, will remove all of the hyperlinks <a> on that field.
+    :param remove_linktext: if True, will remove text on hyperlinks.
     :return: cleaned phrase
     """
 
@@ -31,7 +32,6 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
 
     if remove_all_tags:
         phrase = re.sub("[\r\n\t]", " ", phrase, re.M | re.DOTALL)
-        phrase = re.sub("</[^]]*?>", "", phrase, re.M | re.DOTALL)
         phrase = re.sub("<[^]]*?>", "", phrase, re.M | re.DOTALL)
         phrase = re.sub("\s+", " ", phrase, re.M | re.DOTALL)
         return phrase.strip()
@@ -42,7 +42,9 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False):
         phrase = re.sub("<img[^]]*?>", "", phrase, re.M | re.DOTALL)
         phrase = re.sub("[\r\n\t]", " ", phrase, re.M | re.DOTALL)
         phrase = re.sub("\s+", " ", phrase, re.M | re.DOTALL)
-        if remove_hyperlinks:
+        if remove_hyperlinks and remove_linktext:
+            phrase = re.sub("<a[^]]*?>[^]]*?</a[^]]*?>", "", phrase, re.M | re.DOTALL | re.VERBOSE)
+        elif remove_hyperlinks:
             phrase = re.sub("</a[^]]*?>", "", phrase, re.M | re.DOTALL | re.VERBOSE)
             phrase = re.sub("<a[^]]*?>", "", phrase, re.M | re.DOTALL | re.VERBOSE)
         if phrase:
