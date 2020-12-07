@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-import scrapy
-import re
-from ..items import Course
-from datetime import date
+
+from ..standard_libs import *
 
 
 def research_coursework(course_item):
@@ -92,8 +90,8 @@ class UoaSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = institution
-        course_item["internationalApplyURL"] = response.request.url
-        course_item["domesticApplyURL"] = response.request.url
+        # course_item["internationalApplyURL"] = response.request.url
+        # course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h2/text()").get()
         course_item["courseName"] = course_name.strip()
@@ -106,6 +104,11 @@ class UoaSpiderSpider(scrapy.Spider):
         else:
             overview = response.xpath("//div[@class='intro-df']/div/p").getall()
             course_item["overview"] = "".join(overview)
+
+        summary = course_item["overview"]
+        summary = re.sub("<strong.*?/strong>", "", summary)
+        summary = re.sub("<.*?>", "", summary)
+        course_item.set_summary(cleanspace(summary))
 
         learn = response.xpath("//div[@class='intro-df']/div/*[preceding-sibling::p/strong[contains(text(), "
                                "'What will you do')] and following-sibling::p/strong[contains(text(), 'Where could it"
