@@ -76,8 +76,10 @@ class UotSpiderSpider(scrapy.Spider):
         "certificate ii": "4",
         "certificate iii": "4",
         "certificate iv": "4",
+        "undergraduate certificate": "4",
         "advanced diploma": "5",
         "diploma": "5",
+        "international first year diploma": "5",
         "associate degree": "1",
         "victorian certificate": "9",
         "non-award": "13",
@@ -255,5 +257,7 @@ class UotSpiderSpider(scrapy.Spider):
             annual_fee = [float(''.join(x)) for x in annual_fee]
             if annual_fee:
                 course_item["internationalFeeAnnual"] = max(annual_fee)
+
+        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
         yield course_item
