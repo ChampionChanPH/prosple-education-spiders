@@ -14,7 +14,7 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False, to_remove=
         to_remove (str): default if None. If whole_sentence, remove entire sentence with hyperlink. If hyperlink_text,
             remove text on the hyperlink.
     Returns:
-        None: It will return the cleaned phrase.
+        It will return the cleaned phrase.
     """
 
     tag_conversion = {
@@ -45,9 +45,7 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False, to_remove=
         phrase = re.sub("<img[^]]*?>", "", phrase, re.M | re.DOTALL)
         phrase = re.sub("[\r\n\t]", " ", phrase, re.M | re.DOTALL)
         phrase = re.sub("\s+", " ", phrase, re.M | re.DOTALL)
-        if remove_hyperlinks and to_remove == 'whole sentence':
-            pass  # TODO
-        elif remove_hyperlinks and to_remove == 'hyperlink_text':
+        if remove_hyperlinks and to_remove == 'hyperlink_text':
             phrase = re.sub("<a[^]]*?>[^]]*?(?=<)", "", phrase, re.M | re.DOTALL | re.VERBOSE)
             phrase = re.sub("</a[^]]*?>", "", phrase, re.M | re.DOTALL | re.VERBOSE)
             phrase = re.sub("<a[^]]*?>", "", phrase, re.M | re.DOTALL | re.VERBOSE)
