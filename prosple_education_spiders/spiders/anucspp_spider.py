@@ -84,16 +84,11 @@ class AnuCsppSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        # courses = response.xpath("//div[contains(@class, 'panel-display')]//a/@href").getall()
-        course_name = 'Master of Climate Change'
-        courses = 'https://programsandcourses.anu.edu.au/2021/program/MCLIM'
-        yield SplashRequest(courses, callback=self.course_parse, args={'wait': 10.0},
-                            meta={'url': courses, 'name': course_name})
+        courses = response.xpath("//div[contains(@class, 'panel-display')]//a/@href").getall()
 
-        #
-        # for item in courses:
-        #     if item not in self.banned_urls:
-        #         yield response.follow(item, callback=self.sub_parse)
+        for item in courses:
+            if item not in self.banned_urls:
+                yield response.follow(item, callback=self.sub_parse)
 
     def sub_parse(self, response):
         course_name = response.xpath("//h1[@class='title']/text()").get()
