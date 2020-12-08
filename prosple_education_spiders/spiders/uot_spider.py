@@ -102,13 +102,10 @@ class UotSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        # courses = response.xpath("//div[@id='courseList']//div[@class='content-border']//a/@href").getall()
-        #
-        # for course in courses:
-        #     yield response.follow(course, callback=self.course_parse)
+        courses = response.xpath("//div[@id='courseList']//div[@class='content-border']//a/@href").getall()
 
-        course = 'https://www.utas.edu.au/courses/chm/courses/h7q-master-of-quality-services-health-and-safety'
-        yield response.follow(course, callback=self.course_parse)
+        for course in courses:
+            yield response.follow(course, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
