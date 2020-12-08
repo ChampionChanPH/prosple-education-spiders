@@ -213,7 +213,7 @@ class UotSpiderSpider(scrapy.Spider):
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
-        entry = response.xpath("//div[@id='c-entry-eligibility']/*/*").getall()
+        entry = response.xpath("//div[@id='c-entry-eligibility' or @id='c-entry-requirements']/*/*").getall()
         if entry:
             course_item['entryRequirements'] = strip_tags(''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
 
