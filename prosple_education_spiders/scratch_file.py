@@ -31,6 +31,9 @@ def strip_tags(phrase, remove_all_tags=True, remove_hyperlinks=False, to_remove=
         'ol': 'ol',
         'ul': 'ul',
         'td': 'td',
+        'th': 'th',
+        'table': 'table',
+        'tr': 'tr',
     }
 
     if remove_all_tags:
