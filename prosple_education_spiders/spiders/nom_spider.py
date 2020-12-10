@@ -150,7 +150,7 @@ class NomSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            if re.search('[.?!]', holder[0], re.M):
+            if re.search('[.?!]', strip_tags(holder[0]), re.M):
                 summary = [strip_tags(x) for x in holder]
                 course_item.set_summary(' '.join(summary))
             else:
