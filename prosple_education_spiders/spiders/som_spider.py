@@ -68,16 +68,18 @@ class SomSpiderSpider(scrapy.Spider):
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
+        "certificate i": "4",
+        "certificate ii": "4",
+        "certificate iii": "4",
+        "certificate iv": "4",
         "foundation certificate": "4",
         "advanced diploma": "5",
         "diploma": "5",
         "associate degree": "1",
         "non-award": "13",
         "no match": "15",
-        'te aho paerewa postgraduate diploma': '8',
         'postgraduate diploma': '8',
         'postgraduate certificate': '7',
-        'te aho tātairangi: bachelor': bachelor_honours
     }
 
     teaching_periods = {
@@ -148,7 +150,7 @@ class SomSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            if re.search('\.', holder[0], re.M):
+            if re.search('[.?!]', holder[0], re.M):
                 summary = [strip_tags(x) for x in holder]
                 course_item.set_summary(' '.join(summary))
             else:
