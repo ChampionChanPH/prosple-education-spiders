@@ -118,11 +118,8 @@ class NomSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        # courses = response.xpath("//td[@class='c-course-title']/a")
-        # yield from response.follow_all(courses, callback=self.course_parse)
-
-        course = 'https://www.northmetrotafe.wa.edu.au/courses/certificate-iii-security-equipment'
-        yield response.follow(course, callback=self.course_parse)
+        courses = response.xpath("//td[@class='c-course-title']/a")
+        yield from response.follow_all(courses, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
