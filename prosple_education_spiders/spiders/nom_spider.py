@@ -48,9 +48,16 @@ class NomSpiderSpider(scrapy.Spider):
     uidPrefix = 'AU-NOM-'
 
     campuses = {
-        "Auckland": "52524",
-        "Manawatū": "52525",
-        "Wellington": "52526",
+        "Balga": "59264",
+        "Clarkson": "59265",
+        "East Perth": "59266",
+        "Joondalup (Kendrew Crescent)": "59267",
+        "Joondalup (McLarty Avenue)": "59268",
+        "Leederville": "59269",
+        "Midland": "59270",
+        "Mount Lawley": "59271",
+        "Nedlands (Oral Health Centre)": "59272",
+        "Perth": "59273",
     }
 
     degrees = {
@@ -193,7 +200,10 @@ class NomSpiderSpider(scrapy.Spider):
         if location:
             location = '|'.join(location)
             for campus in self.campuses:
-                if re.search(campus, location, re.I):
+                if campus == 'Perth':
+                    if re.search('(?<!East )Perth', location, re.I):
+                        campus_holder.add(self.campuses[campus])
+                elif re.search(campus, location, re.I):
                     campus_holder.add(self.campuses[campus])
             if re.search('blended', location, re.I | re.M):
                 study_holder.add('Online')
@@ -212,7 +222,7 @@ class NomSpiderSpider(scrapy.Spider):
         dom_fee = response.xpath("//*[@class='c-fee-contenty']//td[1]").getall()
         if dom_fee:
             dom_fee = ''.join(dom_fee)
-            dom_fee = re.findall("\$(\d*)[,\s]?(\d+)(\.\d\d)?", dom_fee, re.M)
+            dom_fee = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", dom_fee, re.M)
             dom_fee = [float(''.join(x)) for x in dom_fee]
             if dom_fee:
                 course_item["domesticFeeTotal"] = max(dom_fee)
@@ -221,11 +231,21 @@ class NomSpiderSpider(scrapy.Spider):
         csp_fee = response.xpath("//*[@class='c-fee-contenty']//td[2]").getall()
         if csp_fee:
             csp_fee = ''.join(csp_fee)
-            csp_fee = re.findall("\$(\d*)[,\s]?(\d+)(\.\d\d)?", csp_fee, re.M)
+            csp_fee = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", csp_fee, re.M)
             csp_fee = [float(''.join(x)) for x in csp_fee]
             if csp_fee:
                 course_item["domesticSubFeeTotal"] = max(csp_fee)
                 # get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
+
+        start = response.xpath("//*[@class='c-raw-data generic-accordion']/h3").getall()
+        if start:
+            start = ''.join(start)
+            holder = []
+            for item in self.term:
+                if re.search(item, start, re.I | re.M):
+                    holder.append(self.term[item])
+            if holder:
+                course_item['startMonths'] = '|'.join(holder)
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
