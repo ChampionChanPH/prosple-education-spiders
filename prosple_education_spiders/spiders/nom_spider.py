@@ -147,7 +147,7 @@ class NomSpiderSpider(scrapy.Spider):
             overview = [x for x in overview if strip_tags(x) != '']
         holder = []
         for index, item in enumerate(overview):
-            if re.search('^<(p|u|o|h)', item)
+            if re.search('^<(p|u|o|h)', item):
                 holder.append(item)
         if holder:
             if re.search('[.?!]', strip_tags(holder[0]), re.M):
