@@ -70,6 +70,7 @@ class SomSpiderSpider(scrapy.Spider):
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
+        "ampa master": "4",
         "certificate i": "4",
         "certificate ii": "4",
         "certificate iii": "4",
