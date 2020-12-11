@@ -141,6 +141,7 @@ class SomSpiderSpider(scrapy.Spider):
         if course_name:
             if 'courseCode' in course_item:
                 course_name = re.sub(course_item['courseCode'], '', course_name, re.I)
+            course_name = re.sub('\(Master.*', '', course_name, re.DOTALL)
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath(
