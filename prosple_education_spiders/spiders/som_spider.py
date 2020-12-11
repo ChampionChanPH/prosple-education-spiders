@@ -48,16 +48,18 @@ class SomSpiderSpider(scrapy.Spider):
     uidPrefix = 'AU-SOM-'
 
     campuses = {
-        "Balga": "59264",
-        "Clarkson": "59265",
-        "East Perth": "59266",
-        "Joondalup (Kendrew Crescent)": "59267",
-        "Joondalup (McLarty Avenue)": "59268",
-        "Leederville": "59269",
-        "Midland": "59270",
-        "Mount Lawley": "59271",
-        "Nedlands (Oral Health Centre)": "59272",
-        "Perth": "59273",
+        "Armadale": "59838",
+        "Bentley": "59840",
+        "Carlisle": "59841",
+        "Fremantle": "59842",
+        "Jandakot": "59843",
+        "Kwinana": "59844",
+        "Mandurah": "59845",
+        "Munster": "59846",
+        "Murdoch": "59847",
+        "Naval Base": "59848",
+        "Rockingham": "59849",
+        "Thornlie": "59850",
     }
 
     degrees = {
@@ -143,6 +145,8 @@ class SomSpiderSpider(scrapy.Spider):
 
         overview = response.xpath(
             "//*[contains(@class, 'c-course-opening-section')]//*[@class='field-items']/*/*").getall()
+        if overview:
+            overview = [x for x in overview if strip_tags(x) != '']
         holder = []
         for index, item in enumerate(overview):
             if not re.search('^<(p|u|o)', item) and index != 0:
@@ -150,7 +154,7 @@ class SomSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            if re.search('[.?!]', holder[0], re.M):
+            if re.search('[.?!]', strip_tags(holder[0]), re.M):
                 summary = [strip_tags(x) for x in holder]
                 course_item.set_summary(' '.join(summary))
             else:
@@ -197,32 +201,21 @@ class SomSpiderSpider(scrapy.Spider):
                         self.get_period(duration_full[1][1].lower(), course_item)
 
         location = response.xpath("//a[contains(@class, 'availability-title')]/text()").getall()
+        campus_holder = set()
+        study_holder = set()
         if location:
             location = '|'.join(location)
-            course_item['campusNID'] = location
-        # campus_holder = set()
-        # study_holder = set()
-        # if location:
-        #     location = '|'.join(location)
-        #     for campus in self.campuses:
-        #         if campus == 'Perth':
-        #             if re.search('(?<!East )Perth', location, re.I):
-        #                 campus_holder.add(self.campuses[campus])
-        #         elif re.search(campus, location, re.I):
-        #             campus_holder.add(self.campuses[campus])
-        #     if re.search('blended', location, re.I | re.M):
-        #         study_holder.add('Online')
-        #         study_holder.add('In Person')
-        #     elif re.search('on.?line', location, re.I | re.M | re.DOTALL):
-        #         study_holder.add('Online')
-        #     elif re.search('on.campus', location, re.I | re.M | re.DOTALL):
-        #         study_holder.add('In Person')
-        #     elif re.search('work|trainee|apprentice', location, re.I | re.M):
-        #         study_holder.add('In Person')
-        # if campus_holder:
-        #     course_item['campusNID'] = '|'.join(campus_holder)
-        # if study_holder:
-        #     course_item['modeOfStudy'] = '|'.join(study_holder)
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+            if re.search('on.?line', location, re.I | re.M | re.DOTALL):
+                study_holder.add('Online')
+            elif re.search('paced|part|full|classroom|trainee|apprentice|onsite|work', location, re.I | re.M):
+                study_holder.add('In Person')
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         dom_fee = response.xpath("//*[@class='c-fee-contenty']//td[1]").getall()
         if dom_fee:
