@@ -202,11 +202,19 @@ class NomSpiderSpider(scrapy.Spider):
         if location:
             location = '|'.join(location)
             for campus in self.campuses:
-                if re.search(campus, location, re.I):
+                if campus == 'Perth':
+                    if re.search('(?<!East )Perth', location, re.I):
+                        campus_holder.add(self.campuses[campus])
+                elif re.search(campus, location, re.I):
                     campus_holder.add(self.campuses[campus])
+            if re.search('blended', location, re.I | re.M):
+                study_holder.add('Online')
+                study_holder.add('In Person')
             if re.search('on.?line', location, re.I | re.M | re.DOTALL):
                 study_holder.add('Online')
-            elif re.search('paced|part|full|classroom|trainee|apprentice|onsite|work|campus', location, re.I | re.M):
+            if re.search('on.campus', location, re.I | re.M | re.DOTALL):
+                study_holder.add('In Person')
+            if re.search('work|trainee|apprentice', location, re.I | re.M):
                 study_holder.add('In Person')
         if campus_holder:
             course_item['campusNID'] = '|'.join(campus_holder)
