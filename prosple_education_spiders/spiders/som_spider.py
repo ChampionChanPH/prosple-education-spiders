@@ -149,9 +149,7 @@ class SomSpiderSpider(scrapy.Spider):
             overview = [x for x in overview if strip_tags(x) != '']
         holder = []
         for index, item in enumerate(overview):
-            if not re.search('^<(p|u|o)', item) and index != 0:
-                break
-            else:
+            if re.search('^<(p|u|o|h)', item)
                 holder.append(item)
         if holder:
             if re.search('[.?!]', strip_tags(holder[0]), re.M):
