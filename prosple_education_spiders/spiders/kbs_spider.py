@@ -63,6 +63,7 @@ class KbsSpiderSpider(scrapy.Spider):
         "graduate diploma": "8",
         "master": research_coursework,
         "mba - master": research_coursework,
+        "mba – master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
