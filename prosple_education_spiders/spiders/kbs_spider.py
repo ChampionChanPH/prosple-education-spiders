@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
+# client requested to included courses only in Perth
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
@@ -48,7 +49,11 @@ class KbsSpiderSpider(scrapy.Spider):
                   'https://www.kbs.edu.au/courses/graduate-certificate-in-business-analytics',
                   'https://www.kbs.edu.au/courses/graduate-diploma-of-business-analytics',
                   'https://www.kbs.edu.au/courses/master-of-business-analytics',
-                  'https://www.kbs.edu.au/courses/master-of-business-analytics-extension']
+                  'https://www.kbs.edu.au/courses/master-of-business-analytics-extension',
+                  'https://www.kbs.edu.au/courses/postgraduate-qualifying-program',
+                  'https://www.kbs.edu.au/courses/graduate-certificate-in-accounting',
+                  'https://www.kbs.edu.au/courses/master-of-professional-accounting',
+                  'https://www.kbs.edu.au/courses/master-of-accounting']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "Kaplan Business School"
     uidPrefix = "AU-KBS-"
@@ -125,8 +130,9 @@ class KbsSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item.set_summary(strip_tags(holder[0]))
-            course_item['overview'] = strip_tags(''.join(holder), False)
+            summary = [strip_tags(x) for x in holder]
+            course_item.set_summary(' '.join(summary))
+            course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         cricos = response.xpath("//span[contains(@class, 'cricos-code')]").get()
         if cricos:
@@ -165,7 +171,7 @@ class KbsSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item['creditTransfer'] = strip_tags(''.join(holder), False)
+            course_item['creditTransfer'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         # entry = response.xpath("//div[@id='entry-requirements']//span[@class='field__item']/*").getall()
 

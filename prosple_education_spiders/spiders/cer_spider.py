@@ -48,18 +48,16 @@ class CerSpiderSpider(scrapy.Spider):
     uidPrefix = 'AU-CER-'
 
     campuses = {
-        "Armadale": "59838",
-        "Bentley": "59840",
-        "Carlisle": "59841",
-        "Fremantle": "59842",
-        "Jandakot": "59843",
-        "Kwinana": "59844",
-        "Mandurah": "59845",
-        "Munster": "59846",
-        "Murdoch": "59847",
-        "Naval Base": "59848",
-        "Rockingham": "59849",
-        "Thornlie": "59850",
+        "Batavia Coast Maritime": "60696",
+        "Carnarvon": "60697",
+        "Exmouth": "60698",
+        "Geraldton": "60699",
+        "Kalgoorlie": "60700",
+        "Merredin": "60701",
+        "Moora": "60702",
+        "Northam": "60703",
+        "Technology Park": "60704",
+        "Wiluna": "60705",
     }
 
     degrees = {
@@ -201,23 +199,21 @@ class CerSpiderSpider(scrapy.Spider):
                         self.get_period(duration_full[1][1].lower(), course_item)
 
         location = response.xpath("//a[contains(@class, 'availability-title')]/text()").getall()
+        campus_holder = set()
+        study_holder = set()
         if location:
-            course_item['campusNID'] = '|'.join(location)
-        # campus_holder = set()
-        # study_holder = set()
-        # if location:
-        #     location = '|'.join(location)
-        #     for campus in self.campuses:
-        #         if re.search(campus, location, re.I):
-        #             campus_holder.add(self.campuses[campus])
-        #     if re.search('on.?line', location, re.I | re.M | re.DOTALL):
-        #         study_holder.add('Online')
-        #     if re.search('paced|part|full|classroom|trainee|apprentice|onsite|work|campus', location, re.I | re.M):
-        #         study_holder.add('In Person')
-        # if campus_holder:
-        #     course_item['campusNID'] = '|'.join(campus_holder)
-        # if study_holder:
-        #     course_item['modeOfStudy'] = '|'.join(study_holder)
+            location = '|'.join(location)
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+            if re.search('on.?line', location, re.I | re.M | re.DOTALL):
+                study_holder.add('Online')
+            if re.search('paced|part|full|classroom|trainee|apprentice|onsite|work|campus', location, re.I | re.M):
+                study_holder.add('In Person')
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         dom_fee = response.xpath("//*[@class='c-fee-contenty']//td[1]").getall()
         if dom_fee:
