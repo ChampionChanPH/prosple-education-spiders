@@ -398,6 +398,8 @@ class Course(scrapy.Item):
             temp_holder = []
             char_count = 0
             for index, item in enumerate(text):
+                if char_count + len(item) > max_characters:
+                    break
                 if index == 0 and len(item) > max_characters:
                     cut_summary = text[0][:max_characters + 1]
                     last_space = cut_summary.rindex(' ')
