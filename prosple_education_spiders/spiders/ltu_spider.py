@@ -211,9 +211,10 @@ class LtuSpiderSpider(scrapy.Spider):
         intake = response.xpath("//div[contains(@class, 'mock-table-cell')][contains(text(), 'Start') and contains("
                                 "text(), 'dates')]/following-sibling::*").get()
         start_holder = []
-        for item in self.months:
-            if re.search(item, intake, re.M):
-                start_holder.append(self.months[item])
+        if intake:
+            for item in self.months:
+                if re.search(item, intake, re.M):
+                    start_holder.append(self.months[item])
         if start_holder:
             course_item['startMonths'] = '|'.join(start_holder)
 
@@ -328,11 +329,12 @@ class LtuSpiderSpider(scrapy.Spider):
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
 
-        intake = response.xpath("//th[text()='Dates']/following-sibling::*").get()
+        intake = response.xpath("//th[contains(text(), 'Date') and contains(text(), 's')]/following-sibling::*").get()
         start_holder = []
-        for item in self.months:
-            if re.search(item, intake, re.M):
-                start_holder.append(self.months[item])
+        if intake:
+            for item in self.months:
+                if re.search(item, intake, re.M):
+                    start_holder.append(self.months[item])
         if start_holder:
             course_item['startMonths'] = '|'.join(start_holder)
 
@@ -369,7 +371,8 @@ class LtuSpiderSpider(scrapy.Spider):
                         course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                         self.get_period(duration_full[1][1].lower(), course_item)
 
-        dom_fee = response.xpath("//th[text()='Fees']/following-sibling::*").getall()
+        dom_fee = response.xpath(
+            "//th[contains(text(), 'Fee') and contains(text(), 's')]/following-sibling::*").getall()
         if dom_fee:
             dom_fee = ''.join(dom_fee)
             dom_fee = re.findall("\$(\d*)[,\s]?(\d+)(\.\d\d)?", dom_fee, re.M)
@@ -380,7 +383,8 @@ class LtuSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
-        yield course_item
+        if 'overview' in course_item:
+            yield course_item
 
     def international_parse(self, response):
         course_item = response.meta['item']
@@ -406,4 +410,5 @@ class LtuSpiderSpider(scrapy.Spider):
                 course_item["internationalFeeAnnual"] = max(int_fee)
                 get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
-        yield course_item
+        if 'overview' in course_item:
+            yield course_item
