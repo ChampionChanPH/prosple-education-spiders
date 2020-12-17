@@ -44,10 +44,10 @@ class LtuSpiderSpider(scrapy.Spider):
     name = 'ltu_spider'
     start_urls = [
         'https://www.latrobe.edu.au/handbook/2021/undergraduate/',
-        # 'https://www.latrobe.edu.au/handbook/2021/postgraduate/',
-        # 'https://www.latrobe.edu.au/handbook//2021/postgraduate/research.htm',
+        'https://www.latrobe.edu.au/handbook/2021/postgraduate/',
+        'https://www.latrobe.edu.au/handbook//2021/postgraduate/research.htm',
     ]
-    http_user = 'b4a56de85d954e9b924ec0e0b7696641'
+
     banned_urls = []
     institution = 'La Trobe University'
     uidPrefix = 'AU-LTU-'
