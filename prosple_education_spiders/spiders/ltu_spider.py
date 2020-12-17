@@ -44,13 +44,17 @@ class LtuSpiderSpider(scrapy.Spider):
     name = 'ltu_spider'
     start_urls = [
         'https://www.latrobe.edu.au/handbook/2021/undergraduate/',
-        'https://www.latrobe.edu.au/handbook/2021/postgraduate/',
-        'https://www.latrobe.edu.au/handbook//2021/postgraduate/research.htm',
+        # 'https://www.latrobe.edu.au/handbook/2021/postgraduate/',
+        # 'https://www.latrobe.edu.au/handbook//2021/postgraduate/research.htm',
     ]
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     banned_urls = []
     institution = 'La Trobe University'
     uidPrefix = 'AU-LTU-'
+
+    custom_settings = {
+        'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
+    }
 
     campuses = {
         "North Campus": "53669",
@@ -81,6 +85,7 @@ class LtuSpiderSpider(scrapy.Spider):
         "diploma": "5",
         "associate degree": "1",
         "juris doctor": "10",
+        "joint doctor": "6",
         "non-award": "13",
         "no match": "15"
     }
@@ -117,7 +122,7 @@ class LtuSpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         for index, item in enumerate(self.start_urls):
-            if index == len(self.start_urls) - 1:
+            if item == self.start_urls[2]:
                 yield response.follow(response.request.url, callback=self.graduate_research_parse)
             else:
                 yield response.follow(response.request.url, callback=self.undergraduate_and_postgraduate_parse)
