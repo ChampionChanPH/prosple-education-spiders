@@ -150,12 +150,8 @@ class LtuSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        # categories = response.xpath("//ul[@class='double-list']/li/a")
-        # yield from response.follow_all(categories, callback=self.sub_parse)
-
-        course = 'https://www.latrobe.edu.au/courses/master-of-community-planning-and-development'
-        yield SplashRequest(course, callback=self.course_parse, endpoint='execute',
-                            args={'lua_source': self.lua_script, 'url': course, 'wait': 20}, meta={'url': course})
+        categories = response.xpath("//ul[@class='double-list']/li/a")
+        yield from response.follow_all(categories, callback=self.sub_parse)
 
     def sub_parse(self, response):
         boxes = response.xpath("//div[@id='ajax-course-list']/article[@data-filters]")
