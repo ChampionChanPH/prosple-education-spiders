@@ -302,12 +302,14 @@ class LtuSpiderSpider(scrapy.Spider):
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//div[*/text()='Overview']/following-sibling::*[1]/*").getall()
+        overview = response.xpath("//div/*[text()='Overview']/following-sibling::*").getall()
+        if len(overview) == 1:
+            overview = response.xpath("//div[*/text()='Overview']/following-sibling::*[1]/*").getall()
         holder = []
         for index, item in enumerate(overview):
             if not re.search('^<(p|o|u)', item) and index != 0:
                 break
-            else:
+            elif re.search('^<(p|o|u)', item):
                 holder.append(item)
         if holder:
             summary = [strip_tags(x) for x in holder]
