@@ -116,6 +116,11 @@ class LtuSpiderSpider(scrapy.Spider):
           splash.private_mode_enabled = false
           assert(splash:go(args.url))
           assert(splash:wait(2.0))
+          local element = splash:select('button#overlay-dom.overlay-student-type')
+          if element then
+            assert(element:mouse_click())
+            assert(splash:wait(1.0))
+          end
           return splash:html()
         end
     """
@@ -126,11 +131,15 @@ class LtuSpiderSpider(scrapy.Spider):
           assert(splash:go(args.url))
           assert(splash:wait(2.0))
           local element = splash:select('div#saved-student-type.D')
-          assert(element:mouse_click())
-          assert(splash:wait(1.0))
+          if element then
+            assert(element:mouse_click())
+            assert(splash:wait(1.0))
+          end
           local element = splash:select('button#overlay-int.overlay-student-type')
-          assert(element:mouse_click())
-          assert(splash:wait(1.0))
+          if element then
+            assert(element:mouse_click())
+            assert(splash:wait(1.0))
+          end
           return splash:html()
         end
     """
@@ -141,8 +150,12 @@ class LtuSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        categories = response.xpath("//ul[@class='double-list']/li/a")
-        yield from response.follow_all(categories, callback=self.sub_parse)
+        # categories = response.xpath("//ul[@class='double-list']/li/a")
+        # yield from response.follow_all(categories, callback=self.sub_parse)
+
+        course = 'https://www.latrobe.edu.au/courses/master-of-community-planning-and-development'
+        yield SplashRequest(course, callback=self.course_parse, endpoint='execute',
+                            args={'lua_source': self.lua_script, 'url': course, 'wait': 20}, meta={'url': course})
 
     def sub_parse(self, response):
         boxes = response.xpath("//div[@id='ajax-course-list']/article[@data-filters]")
