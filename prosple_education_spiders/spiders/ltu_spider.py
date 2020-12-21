@@ -297,6 +297,7 @@ class LtuSpiderSpider(scrapy.Spider):
         course_item['sourceURL'] = response.meta['url']
         course_item['published'] = 1
         course_item['institution'] = self.institution
+        course_item['domesticApplyURL'] = response.meta['url']
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
