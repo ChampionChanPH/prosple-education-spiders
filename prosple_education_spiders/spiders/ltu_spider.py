@@ -408,7 +408,7 @@ class LtuSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
-                course_item['internationalApplyURL'] = response.meta['url']
+                course_item['internationalApplyURL'] = course_item['sourceURL']
 
         int_fee = response.xpath("//div[contains(@class, 'mock-table-cell')][contains(text(), 'Fees') and contains("
                                  "text(), 'scholarships')]/following-sibling::*").get()
