@@ -221,10 +221,22 @@ class LtuonlineSpiderSpider(scrapy.Spider):
         if cost_per_subj and total_subj:
             course_item["domesticFeeTotal"] = cost_per_subj * total_subj
 
+        intake = response.xpath("//div[contains(@class, 'tux-c-accordion__heading')][contains(*/text(), 'application "
+                                "deadline')]/following-sibling::*").get()
+        if intake:
+            holder = []
+            for item in self.term:
+                if re.search(item, intake, re.I | re.M):
+                    holder.append(self.months[item])
+            if holder:
+                course_item['startMonths'] = '|'.join(holder)
+
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
         if re.search('online mba', course_name, re.I):
             name = 'Online MBA'
             course_item.set_course_name(name.strip(), self.uidPrefix)
+
+        course_item['modeOfStudy'] = 'Online'
 
         yield course_item
