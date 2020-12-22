@@ -225,7 +225,7 @@ class LtuonlineSpiderSpider(scrapy.Spider):
                                 "deadline')]/following-sibling::*").get()
         if intake:
             holder = []
-            for item in self.term:
+            for item in self.months:
                 if re.search(item, intake, re.I | re.M):
                     holder.append(self.months[item])
             if holder:
