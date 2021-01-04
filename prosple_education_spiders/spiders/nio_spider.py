@@ -21,7 +21,6 @@ def bachelor_honours(course_item):
 
 class NioSpiderSpider(scrapy.Spider):
     name = 'nio_spider'
-    allowed_domains = ['www.nioda.org.au', 'nioda.org.au']
     start_urls = ['https://www.nioda.org.au/academic-programs/master-of-leadership-and-management-organisation'
                   '-dynamics/']
     institution = "The National Institute of Organisation Dynamics Australia (NIODA)"
@@ -68,8 +67,8 @@ class NioSpiderSpider(scrapy.Spider):
         course_item["institution"] = self.institution
         course_item["domesticApplyURL"] = response.request.url
 
-        course_name = response.xpath("//span[@class='et_pb_fullwidth_header_subhead']/text()").get()
-        if course_name is not None:
+        course_name = response.xpath("//*[@class='et_pb_module_header']/text()").get()
+        if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         summary = response.xpath("//div[@class='et_pb_header_content_wrapper']/p/text()").get()
@@ -79,32 +78,28 @@ class NioSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[@class='et_pb_text_inner']/*[contains(*/text(), "
                                   "'OVERVIEW')]/following-sibling::*").getall()
         if overview:
-            overview = "".join(overview)
-            course_item["overview"] = strip_tags(overview, False)
+            course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
         entry = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'ADMISSION "
                                "REQUIREMENTS')]/following-sibling::*").getall()
         if entry:
-            entry = "".join(entry)
-            course_item["entryRequirements"] = strip_tags(entry, False)
+            course_item["entryRequirements"] = strip_tags(''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
 
         learn = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'COURSE "
                                "CONTENT')]/following-sibling::*").getall()
         if learn:
-            learn = "".join(learn)
-            course_item["whatLearn"] = strip_tags(learn, False)
+            course_item['whatLearn'] = strip_tags(''.join(learn), remove_all_tags=False, remove_hyperlinks=True)
 
         structure = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'COURSE "
                                    "STRUCTURE')]/following-sibling::*").getall()
         if structure:
-            structure = "".join(structure)
-            course_item["courseStructure"] = strip_tags(structure, False)
+            course_item['courseStructure'] = strip_tags(''.join(structure), remove_all_tags=False,
+                                                        remove_hyperlinks=True)
 
         apply = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'HOW TO "
                                "APPLY')]/following-sibling::*").getall()
         if apply:
-            apply = "".join(apply)
-            course_item["howToApply"] = strip_tags(apply, False)
+            course_item['howToApply'] = strip_tags(''.join(apply), remove_all_tags=False, remove_hyperlinks=True)
 
         fee = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'FEES AND "
                              "COSTS')]/following-sibling::*").getall() 
@@ -137,9 +132,9 @@ class NioSpiderSpider(scrapy.Spider):
 
         delivery = response.xpath("//*[contains(text(), 'Delivery Mode')]/following-sibling::*").getall()
         if delivery:
-            delivery = "".join(delivery)
+            delivery = ''.join(delivery)
             study_holder = []
-            if re.search("face.to.face", delivery, re.M | re.I):
+            if re.search("face.to.face", delivery, re.M | re.I | re.DOTALL):
                 study_holder.append("In Person")
             if re.search("online", delivery, re.M | re.I):
                 study_holder.append("Online")
