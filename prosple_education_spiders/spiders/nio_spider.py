@@ -19,6 +19,27 @@ def bachelor_honours(course_item):
         return "2"
 
 
+def get_total(field_to_use, field_to_update, course_item):
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
+        if course_item["teachingPeriod"] == 1:
+            if float(course_item["durationMinFull"]) < 1:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) *\
+                                               float(course_item["durationMinFull"]) / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) *\
+                                               float(course_item["durationMinFull"]) / 52
+
+
 class NioSpiderSpider(scrapy.Spider):
     name = 'nio_spider'
     start_urls = ['https://www.nioda.org.au/academic-programs/master-of-leadership-and-management-organisation'
@@ -101,14 +122,15 @@ class NioSpiderSpider(scrapy.Spider):
         if apply:
             course_item['howToApply'] = strip_tags(''.join(apply), remove_all_tags=False, remove_hyperlinks=True)
 
-        fee = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'FEES AND "
-                             "COSTS')]/following-sibling::*").getall() 
-        if fee:
-            fee = "".join(fee)
-            fee = re.findall(r"\$(\d*,?\d+) per year", fee, re.M | re.I)
-            if fee:
-                fee = float(re.sub(",", "", fee[0]))
-                course_item["domesticFeeAnnual"] = fee
+        dom_fee = response.xpath("//div[@class='et_pb_text_inner']/*[contains(text(), 'FEES AND "
+                             "COSTS')]/following-sibling::*").getall()
+        if dom_fee:
+            dom_fee = ''.join(dom_fee)
+            dom_fee = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", dom_fee, re.M)
+            dom_fee = [float(''.join(x)) for x in dom_fee]
+            if dom_fee:
+                course_item["domesticFeeAnnual"] = max(dom_fee)
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         location = response.xpath("//*[contains(text(), 'Locations')]/following-sibling::*").get()
         campus_holder = []
