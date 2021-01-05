@@ -198,18 +198,20 @@ class AcnSpiderSpider(scrapy.Spider):
         careerPathways = response.xpath(
             "//div[preceding-sibling::h2/text()='Career outcomes'][2]/div/p/text()").getall()
         if careerPathways:
-            course_item["careerPathways"] = "<br>".join(careerPathways)
+            course_item["careerPathways"] = strip_tags("<br>".join(careerPathways), remove_all_tags=False,
+                                                       remove_hyperlinks=True)
 
         whatLearn = response.css("#outcomes .standard-arrow").get()
         if whatLearn:
-            course_item["whatLearn"] = whatLearn
+            course_item["whatLearn"] = strip_tags(whatLearn, remove_all_tags=False, remove_hyperlinks=True)
 
         entryRequirements = response.css("#requirements .standard-arrow").get()
         if entryRequirements:
-            course_item["entryRequirements"] = entryRequirements
+            course_item["entryRequirements"] = strip_tags(entryRequirements, remove_all_tags=False,
+                                                          remove_hyperlinks=True)
 
         courseStructure = response.xpath("//div[preceding-sibling::h2/text()='Units of study'][2]").get()
         if courseStructure:
-            course_item["courseStructure"] = courseStructure
+            course_item["courseStructure"] = strip_tags(courseStructure, remove_all_tags=False, remove_hyperlinks=True)
 
         yield course_item
