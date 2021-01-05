@@ -135,6 +135,7 @@ class AcnSpiderSpider(scrapy.Spider):
 
         duration = response.xpath("//*[text()='Duration']/following-sibling::*").getall()
         if duration:
+            duration = ''.join(duration)
             duration_full = re.findall(
                 "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?full)",
                 duration, re.I | re.M | re.DOTALL)
