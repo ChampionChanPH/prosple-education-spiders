@@ -160,7 +160,7 @@ class TopSpiderSpider(scrapy.Spider):
             course_item.add_flag("overview", "no overview found: " + response.request.url)
         if overview:
             course_item['overview'] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
-            course_item.set_summary(overview)
+            course_item.set_summary(strip_tags(overview))
 
         career = response.xpath("//td[contains(strong/text(), 'Career Options')]/following-sibling::*").get()
         if career:
