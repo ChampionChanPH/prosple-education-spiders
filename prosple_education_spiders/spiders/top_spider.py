@@ -164,15 +164,15 @@ class TopSpiderSpider(scrapy.Spider):
 
         career = response.xpath("//td[contains(strong/text(), 'Career Options')]/following-sibling::*").get()
         if career:
-            course_item["careerPathways"] = strip_tags(career, remove_all_tags=False, remove_hyperlinks=False)
+            course_item["careerPathways"] = strip_tags(career, remove_all_tags=False, remove_hyperlinks=True)
 
         credit = response.xpath("//td[contains(strong/text(), 'Credit arrangement')]/following-sibling::*").get()
         if credit:
-            course_item["creditTransfer"] = strip_tags(credit, remove_all_tags=False, remove_hyperlinks=False)
+            course_item["creditTransfer"] = strip_tags(credit, remove_all_tags=False, remove_hyperlinks=True)
 
         entry = response.xpath("//td[contains(strong/text(), 'Entry Requirements')]/following-sibling::*").get()
         if entry:
-            course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False, remove_hyperlinks=False)
+            course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False, remove_hyperlinks=True)
 
         study = response.xpath("//td[contains(strong/text(), 'Delivery Site')]/following-sibling::*").get()
         campus_holder = []
@@ -192,13 +192,13 @@ class TopSpiderSpider(scrapy.Spider):
 
         learn = response.xpath("//td[contains(strong/text(), 'Learning Outcomes')]/following-sibling::*").get()
         if learn:
-            course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False, remove_hyperlinks=False)
+            course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False, remove_hyperlinks=True)
 
         structure = response.xpath("//td[contains(strong/text(), 'Course Structure')]/following-sibling::*").get()
         if not structure:
             structure = response.xpath("//td[contains(strong/span/text(), 'Course Structure')]/following-sibling::*").get()
         if structure:
-            course_item["courseStructure"] = strip_tags(structure, remove_all_tags=False, remove_hyperlinks=False)
+            course_item["courseStructure"] = strip_tags(structure, remove_all_tags=False, remove_hyperlinks=True)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"])
 
