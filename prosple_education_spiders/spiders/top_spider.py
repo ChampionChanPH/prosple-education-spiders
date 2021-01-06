@@ -19,9 +19,29 @@ def bachelor_honours(course_item):
         return "2"
 
 
+def get_total(field_to_use, field_to_update, course_item):
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
+        if course_item["teachingPeriod"] == 1:
+            if float(course_item["durationMinFull"]) < 1:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 52
+
+
 class TopSpiderSpider(scrapy.Spider):
     name = 'top_spider'
-    allowed_domains = ['www.top.edu.au', 'top.edu.au']
     start_urls = ['https://www.top.edu.au/school-of-business/undergraduate-programs',
                   'https://www.top.edu.au/school-of-business/postgraduate-programs']
     banned_urls = ['/school-of-business/postgraduate-programs/graduate-diploma-of-public-relations-and-marketing'
@@ -32,7 +52,7 @@ class TopSpiderSpider(scrapy.Spider):
                    '-marketing-and-public-relations',
                    '/school-of-business/postgraduate-programs/pathway-to-the-university-of-newcastle/pathway-to-the'
                    '-university-of-newcastle']
-    institution = "Top Education Institute"
+    institution = "Australian National Institute of Management and Commerce"
     uidPrefix = "AU-TOP-"
 
     degrees = {
@@ -85,76 +105,100 @@ class TopSpiderSpider(scrapy.Spider):
         course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1/text()").get()
-        if course_name is not None:
+        if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         cricos = response.xpath("//td[contains(strong/text(), 'CRICOS')]/following-sibling::*").get()
-        if cricos is None:
+        if not cricos:
             cricos = response.xpath("//strong[contains(text(), 'CRICOS')]").get()
-        if cricos is not None:
-            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M | re.I)
-            if len(cricos) > 0:
+        if cricos:
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
         duration = response.xpath("//td[contains(strong/text(), 'Duration')]/following-sibling::*").get()
-        if duration is not None:
-            duration = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration, re.M)
-        if duration is not None:
-            if len(duration) > 0:
-                course_item["durationMinFull"] = float(duration[0][0])
-                self.get_period(duration[0][1], course_item)
+        if duration:
+            duration_full = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?full)",
+                duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?part)",
+                duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    if len(duration_full) == 1:
+                        course_item["durationMinFull"] = float(duration_full[0][0])
+                        self.get_period(duration_full[0][1].lower(), course_item)
+                    if len(duration_full) == 2:
+                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                        self.get_period(duration_full[1][1].lower(), course_item)
 
         overview = response.xpath("//td[contains(strong/text(), 'Program Overview')]/following-sibling::*").get()
-        if overview is None:
+        if not overview:
             overview = response.xpath("//td[contains(span/strong/text(), 'Program Overview')]/following-sibling::*").get()
-        if overview is None:
+        if not overview:
             overview = response.xpath("//td[contains(strong/span/text(), 'Program Overview')]/following-sibling::*").get()
-        if overview is None:
+        if not overview:
             overview = response.xpath("//td[contains(span/strong/em/text(), 'Program Overview')]/following-sibling::*").get()
-        if overview is None:
+        if not overview:
             course_item.add_flag("overview", "no overview found: " + response.request.url)
-        else:
-            course_item["overview"] = strip_tags(overview, False)
+        if overview:
+            course_item['overview'] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
+            course_item.set_summary(overview)
 
         career = response.xpath("//td[contains(strong/text(), 'Career Options')]/following-sibling::*").get()
-        if career is not None:
-            course_item["careerPathways"] = strip_tags(career, False)
+        if career:
+            course_item["careerPathways"] = strip_tags(career, remove_all_tags=False, remove_hyperlinks=False)
 
         credit = response.xpath("//td[contains(strong/text(), 'Credit arrangement')]/following-sibling::*").get()
-        if credit is not None:
-            course_item["creditTransfer"] = strip_tags(credit, False)
+        if credit:
+            course_item["creditTransfer"] = strip_tags(credit, remove_all_tags=False, remove_hyperlinks=False)
 
         entry = response.xpath("//td[contains(strong/text(), 'Entry Requirements')]/following-sibling::*").get()
-        if entry is not None:
-            course_item["entryRequirements"] = strip_tags(entry, False)
+        if entry:
+            course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False, remove_hyperlinks=False)
 
-        delivery = response.xpath("//td[contains(strong/text(), 'Delivery Site')]/following-sibling::*").get()
+        study = response.xpath("//td[contains(strong/text(), 'Delivery Site')]/following-sibling::*").get()
         campus_holder = []
         study_holder = []
-        if delivery is not None:
-            if re.search(r"On campus", delivery, re.M | re.I):
+        if study:
+            if re.search('on campus', study, re.M | re.I):
                 study_holder.append("In Person")
-            if re.search(r"Online", delivery, re.M | re.I):
+            if re.search('online', study, re.M | re.I):
                 study_holder.append("Online")
             for campus in self.campuses:
-                if re.search(campus, delivery, re.I):
+                if re.search(campus, study, re.I):
                     campus_holder.append(self.campuses[campus])
-        if len(campus_holder) > 0:
+        if campus_holder:
             course_item["campusNID"] = "|".join(campus_holder)
-        if len(study_holder) > 0:
+        if study_holder:
             course_item["modeOfStudy"] = "|".join(study_holder)
 
         learn = response.xpath("//td[contains(strong/text(), 'Learning Outcomes')]/following-sibling::*").get()
-        if learn is not None:
-            course_item["whatLearn"] = strip_tags(learn, False)
+        if learn:
+            course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False, remove_hyperlinks=False)
 
         structure = response.xpath("//td[contains(strong/text(), 'Course Structure')]/following-sibling::*").get()
-        if structure is None:
+        if not structure:
             structure = response.xpath("//td[contains(strong/span/text(), 'Course Structure')]/following-sibling::*").get()
-        if structure is not None:
-            course_item["courseStructure"] = strip_tags(structure, False)
+        if structure:
+            course_item["courseStructure"] = strip_tags(structure, remove_all_tags=False, remove_hyperlinks=False)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"])
 
