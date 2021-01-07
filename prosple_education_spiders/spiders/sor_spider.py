@@ -48,18 +48,18 @@ class SorSpiderSpider(scrapy.Spider):
     uidPrefix = 'AU-SOR-'
 
     campuses = {
-        "Armadale": "59838",
-        "Bentley": "59840",
-        "Carlisle": "59841",
-        "Fremantle": "59842",
-        "Jandakot": "59843",
-        "Kwinana": "59844",
-        "Mandurah": "59845",
-        "Munster": "59846",
-        "Murdoch": "59847",
-        "Naval Base": "59848",
-        "Rockingham": "59849",
-        "Thornlie": "59850",
+        "Albany": "61400",
+        "Bunbury": "61401",
+        "Busselton": "61402",
+        "Collie": "61403",
+        "Denmark": "61404",
+        "Esperance": "61405",
+        "Harvey": "61406",
+        "Katanning": "61407",
+        "Manjimup": "61408",
+        "Margaret River": "61409",
+        "Barker": "61410",
+        "Narrogin": "61411",
     }
 
     degrees = {
@@ -171,55 +171,51 @@ class SorSpiderSpider(scrapy.Spider):
 
         duration = response.xpath("//td[text()='Duration']/following-sibling::*/text()").get()
         if duration:
-            course_item['durationRaw'] = duration
-        # if duration:
-        #     duration_full = re.findall(
-        #         "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?full)",
-        #         duration, re.I | re.M | re.DOTALL)
-        #     duration_part = re.findall(
-        #         "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?part)",
-        #         duration, re.I | re.M | re.DOTALL)
-        #     if not duration_full and duration_part:
-        #         self.get_period(duration_part[0][1].lower(), course_item)
-        #     if duration_full:
-        #         course_item["durationMinFull"] = float(duration_full[0][0])
-        #         self.get_period(duration_full[0][1].lower(), course_item)
-        #     if duration_part:
-        #         if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
-        #             course_item["durationMinPart"] = float(duration_part[0][0])
-        #         else:
-        #             course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
-        #                                              / self.teaching_periods[duration_part[0][1].lower()]
-        #     if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
-        #         duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
-        #                                    duration, re.I | re.M | re.DOTALL)
-        #         if duration_full:
-        #             if len(duration_full) == 1:
-        #                 course_item["durationMinFull"] = float(duration_full[0][0])
-        #                 self.get_period(duration_full[0][1].lower(), course_item)
-        #             if len(duration_full) == 2:
-        #                 course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
-        #                 course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
-        #                 self.get_period(duration_full[1][1].lower(), course_item)
+            duration_full = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?full)",
+                duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?part)",
+                duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    if len(duration_full) == 1:
+                        course_item["durationMinFull"] = float(duration_full[0][0])
+                        self.get_period(duration_full[0][1].lower(), course_item)
+                    if len(duration_full) == 2:
+                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                        self.get_period(duration_full[1][1].lower(), course_item)
 
         location = response.xpath("//a[contains(@class, 'availability-title')]/text()").getall()
+        campus_holder = set()
+        study_holder = set()
         if location:
-            course_item['campusNID'] = '|'.join(location)
-        # campus_holder = set()
-        # study_holder = set()
-        # if location:
-        #     location = '|'.join(location)
-        #     for campus in self.campuses:
-        #         if re.search(campus, location, re.I):
-        #             campus_holder.add(self.campuses[campus])
-        #     if re.search('on.?line', location, re.I | re.M | re.DOTALL):
-        #         study_holder.add('Online')
-        #     if re.search('paced|part|full|classroom|trainee|apprentice|onsite|work|campus', location, re.I | re.M):
-        #         study_holder.add('In Person')
-        # if campus_holder:
-        #     course_item['campusNID'] = '|'.join(campus_holder)
-        # if study_holder:
-        #     course_item['modeOfStudy'] = '|'.join(study_holder)
+            location = '|'.join(location)
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+            if re.search('on.?line', location, re.I | re.M | re.DOTALL):
+                study_holder.add('Online')
+            if re.search('paced|part|full|classroom|trainee|apprentice|onsite|work|campus', location, re.I | re.M):
+                study_holder.add('In Person')
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+        if study_holder:
+            course_item['modeOfStudy'] = '|'.join(study_holder)
 
         dom_fee = response.xpath("//*[@class='c-fee-contenty']//td[1]").getall()
         if dom_fee:
