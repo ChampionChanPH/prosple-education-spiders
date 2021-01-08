@@ -154,7 +154,11 @@ class SorSpiderSpider(scrapy.Spider):
             if re.search('^<(p|u|o|h)', item):
                 holder.append(item)
         if holder:
-            if re.search('[.?!]', strip_tags(holder[0]), re.M):
+            if re.search('Description', strip_tags(holder[0])):
+                if len(holder) > 1:
+                    summary = [strip_tags(x) for x in holder[1:]]
+                    course_item.set_summary(' '.join(summary))
+            elif re.search('[.?!]', strip_tags(holder[0]), re.M):
                 summary = [strip_tags(x) for x in holder]
                 course_item.set_summary(' '.join(summary))
             else:
