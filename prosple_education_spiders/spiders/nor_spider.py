@@ -64,6 +64,7 @@ class NorSpiderSpider(scrapy.Spider):
     degrees = {
         "graduate certificate": "7",
         "graduate diploma": "8",
+        "master 24": "13",
         "master": research_coursework,
         "executive master": research_coursework,
         "bachelor": bachelor_honours,
@@ -79,7 +80,6 @@ class NorSpiderSpider(scrapy.Spider):
         "diploma": "5",
         "associate degree": "1",
         "non-award": "13",
-        "master 24": "13",
         "no match": "15",
         'postgraduate diploma': '8',
         'postgraduate certificate': '7',
