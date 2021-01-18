@@ -213,7 +213,7 @@ class LtuSpiderSpider(scrapy.Spider):
             atar = [float(x) for x in atar]
             atar = set(atar)
             if len(atar) == 1:
-                course_item['guaranteedEntryScore'] = atar[0]
+                course_item['guaranteedEntryScore'] = max(atar)
             if len(atar) > 1:
                 course_item['lowestScore'] = min(atar)
                 course_item['guaranteedEntryScore'] = max(atar)
