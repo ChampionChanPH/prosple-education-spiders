@@ -158,12 +158,9 @@ class CduSpiderSpider(scrapy.Spider):
 
         domestic_fee = response.css(".field-vet-other-fees p").get()
         if domestic_fee:
-            if "Domestic Full Fees" in domestic_fee:
-                fees = re.findall("Domestic Full Fees:</strong> \$(.*?)<", domestic_fee)
-                
-                if fees:
-                    fees = [float(x.replace(",", "")) for x in re.findall("[\d\.,]+", fees[0])]
-                    course_item["domesticFeeTotal"] = max(fees)
+            fees = re.findall("\$(\d*)[,\s]?(\d+)(\.\d\d)?", domestic_fee, re.M)
+            fees = [float(''.join(x)) for x in fees]
+            course_item["domesticFeeTotal"] = max(fees)
 
         code = response.xpath("//div[preceding-sibling::div/text()='CDU Course Code']//p/text()").get()
         if code:
