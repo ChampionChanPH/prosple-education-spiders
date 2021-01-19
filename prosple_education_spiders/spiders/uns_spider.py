@@ -44,7 +44,7 @@ def get_total(field_to_use, field_to_update, course_item):
 class UnsSpiderSpider(scrapy.Spider):
     name = 'uns_spider'
     # allowed_domains = ['https://degrees.unsw.edu.au/']
-    start_urls = ['https://degrees.unsw.edu.au//']
+    start_urls = ['https://degrees.unsw.edu.au/']
     blacklist_urls = []
     scraped_urls = []
     superlist_urls = []
