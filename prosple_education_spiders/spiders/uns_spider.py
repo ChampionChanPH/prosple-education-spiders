@@ -58,6 +58,7 @@ class UnsSpiderSpider(scrapy.Spider):
         "graduate certificate": "7",
         "agsm graduate certificate": "7",
         "postgraduate diploma": "8",
+        'science graduate diploma': '8',
         "graduate diploma": "8",
         "senior executive master": research_coursework,
         "executive master": research_coursework,
