@@ -1,41 +1,44 @@
 # -*- coding: utf-8 -*-
 # by: Johnel Bacani
+# Updated by: Christian Anasco
 
 from ..standard_libs import *
+from ..scratch_file import strip_tags
 
 
-def master(course_item):
-    if "by-research" in course_item["sourceURL"]:
+def research_coursework(course_item):
+    if re.search("research", course_item["courseName"], re.I):
         return "12"
     else:
-        if "research" in course_item["overviewSummary"].lower() and "coursework" not in course_item["overviewSummary"].lower():
-            return "12"
-
-        elif "research" not in course_item["overviewSummary"].lower() and "coursework" in course_item["overviewSummary"].lower():
-            return "11"
-
-        elif "research" not in course_item["overviewSummary"].lower() and "coursework" not in course_item["overviewSummary"].lower():
-            # course_item.add_flag("degreeType", "Master degree description has no indicator")
-            return "11"
-        else:
-            # course_item.add_flag("degreeType", "Both indicators present")
-            return "11"
+        return "11"
 
 
-def bachelor(course_item):
-    if "doubleDegree" in course_item:
-        if course_item["doubleDegree"] == 1:
-            index = 1 if "degreeType" in course_item else 0
-            if "honour" in course_item["rawStudyfield"][index]:
-                return "3"
-            else:
-                return "2"
-
-    elif "honour" in course_item["courseName"].lower() or "hons" in course_item["courseName"].lower():
+def bachelor_honours(course_item):
+    if re.search("honours", course_item["courseName"], re.I):
         return "3"
-
     else:
         return "2"
+
+
+def get_total(field_to_use, field_to_update, course_item):
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
+        if course_item["teachingPeriod"] == 1:
+            if float(course_item["durationMinFull"]) < 1:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 52
 
 
 class UnsSpiderSpider(scrapy.Spider):
@@ -51,13 +54,31 @@ class UnsSpiderSpider(scrapy.Spider):
     uidPrefix = "AU-UNS-"
 
     degrees = {
-        "master": "11",
-        "agsm master": "11",
+        "postgraduate certificate": "7",
+        "graduate certificate": "7",
         "agsm graduate certificate": "7",
-        "science graduate diploma": "8",
-        "bachelor": bachelor,
+        "postgraduate diploma": "8",
+        "graduate diploma": "8",
+        "senior executive master": research_coursework,
+        "executive master": research_coursework,
+        "agsm master": research_coursework,
+        "master": research_coursework,
+        "bachelor": bachelor_honours,
+        "doctoral program": "6",
+        "doctor": "6",
+        "specialist certificate": "4",
+        "professional certificate": "14",
+        "certificate i": "4",
+        "certificate ii": "4",
+        "certificate iii": "4",
+        "certificate iv": "4",
+        "certificate": "4",
         "advanced diploma": "5",
-        "certificate iv": "4"
+        "diploma": "5",
+        "associate degree": "1",
+        "juris doctor": "10",
+        "non-award": "13",
+        "no match": "15"
     }
 
     campus = {
@@ -137,6 +158,7 @@ class UnsSpiderSpider(scrapy.Spider):
         code = response.xpath("//dd[preceding-sibling::dt/text()='Program Code']/div/p/text()").get()
         if code:
             course_item["courseCode"] = code
+            course_item['uid'] = course_item['uid'] + '-' + code
 
         course_item["uid"] = course_item["uid"] + "-" + course_item["courseCode"]
 
