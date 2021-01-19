@@ -177,14 +177,14 @@ class AcnSpiderSpider(scrapy.Spider):
 
             course_item["modeOfStudy"] = "|".join(holder)
 
-        dom_fee = response.xpath("//*[text()='Fees']/following-sibling::*").getall()
-        if dom_fee:
-            dom_fee = ''.join(dom_fee)
-            dom_fee = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", dom_fee, re.M)
-            dom_fee = [float(''.join(x)) for x in dom_fee]
-            if dom_fee:
-                course_item["domesticFeeAnnual"] = max(dom_fee)
-                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+        # dom_fee = response.xpath("//*[text()='Fees']/following-sibling::*").getall()
+        # if dom_fee:
+        #     dom_fee = ''.join(dom_fee)
+        #     dom_fee = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", dom_fee, re.M)
+        #     dom_fee = [float(''.join(x)) for x in dom_fee]
+        #     if dom_fee:
+        #         course_item["domesticFeeAnnual"] = max(dom_fee)
+        #         get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         intake = response.xpath("//div[preceding-sibling::h4/text()='Intakes']/div/p/text()").get()
         if intake:
