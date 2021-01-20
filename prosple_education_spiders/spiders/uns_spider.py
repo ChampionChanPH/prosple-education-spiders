@@ -161,8 +161,6 @@ class UnsSpiderSpider(scrapy.Spider):
             course_item["courseCode"] = code
             course_item['uid'] = course_item['uid'] + '-' + code
 
-        course_item["uid"] = course_item["uid"] + "-" + course_item["courseCode"]
-
         cricos = response.xpath("//dd[preceding-sibling::dt/text()='CRICOS Code']/div/p/text()").get()
         if cricos and cricos != "N/A^":
             course_item["cricosCode"] = cricos
@@ -220,7 +218,7 @@ class UnsSpiderSpider(scrapy.Spider):
 
         apply = response.css("section#how-to-apply div.text").extract_first()
         if apply:
-            course_item["howToApply"] = apply
+            course_item["howToApply"] = strip_tags(apply, remove_all_tags=False, remove_hyperlinks=True)
 
         intakes = response.xpath("//dd[preceding-sibling::dt/text()='Commencing Terms']/div/p/text()").get()
         if intakes:
