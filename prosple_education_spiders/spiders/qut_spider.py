@@ -194,7 +194,7 @@ class QutSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.request.url
+                course_item["internationalApplyURL"] = response.request.url+r"?utm_source=referral_partner&utm_medium=prosple&utm_campaign=prosple_course_listing&utm_content=&utm_term=&spad=prosple"
 
         course_code = response.xpath("//dt[contains(text(), 'Course code')]/following-sibling::dd/text()").get()
         if course_code:
