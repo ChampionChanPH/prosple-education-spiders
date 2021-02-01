@@ -119,11 +119,8 @@ class WsuonlineSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        # courses = response.xpath("//a[@class='read-more']")
-        # yield from response.follow_all(courses, callback=self.course_parse)
-
-        course = 'https://online.westernsydney.edu.au/online-courses/nursing-midwifery/bachelor-of-nursing/'
-        yield response.follow(course, callback=self.course_parse)
+        courses = response.xpath("//a[@class='read-more']")
+        yield from response.follow_all(courses, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
