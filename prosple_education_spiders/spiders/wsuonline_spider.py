@@ -90,6 +90,19 @@ class WsuonlineSpiderSpider(scrapy.Spider):
         "National Marine Science Centre": "694",
     }
 
+    numbers = {
+        'one': '1',
+        'two': '2',
+        'three': '3',
+        'four': '4',
+        'five': '5',
+        'six': '6',
+        'seven': '7',
+        'eight': '8',
+        'nine': '9',
+        'ten': '10',
+    }
+
     teaching_periods = {
         "year": 1,
         "semester": 2,
@@ -106,8 +119,11 @@ class WsuonlineSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//a[@class='read-more']")
-        yield from response.follow_all(courses, callback=self.course_parse)
+        # courses = response.xpath("//a[@class='read-more']")
+        # yield from response.follow_all(courses, callback=self.course_parse)
+
+        course = 'https://online.westernsydney.edu.au/online-courses/nursing-midwifery/bachelor-of-nursing/'
+        yield response.follow(course, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -147,6 +163,9 @@ class WsuonlineSpiderSpider(scrapy.Spider):
         duration = response.xpath(
             "//div[contains(@class, 'course-callout')]/*[text()='Duration']/following-sibling::*").get()
         if duration:
+            for num in self.numbers:
+                duration = re.sub(num, self.numbers[num], duration, flags=re.I | re.M)
+            print(duration)
             duration_full = re.findall(
                 "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
                 duration, re.I | re.M | re.DOTALL)
