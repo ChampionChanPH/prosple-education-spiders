@@ -52,7 +52,7 @@ class TopSpiderSpider(scrapy.Spider):
                    '-marketing-and-public-relations',
                    '/school-of-business/postgraduate-programs/pathway-to-the-university-of-newcastle/pathway-to-the'
                    '-university-of-newcastle']
-    institution = "Australian National Institute of Management and Commerce"
+    institution = "Australian National Institute of Management and Commerce (IMC)"
     uidPrefix = "AU-TOP-"
 
     degrees = {
