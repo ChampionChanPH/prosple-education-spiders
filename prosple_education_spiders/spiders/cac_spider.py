@@ -47,7 +47,6 @@ class CacSpiderSpider(scrapy.Spider):
         "certificate ii": "4",
         "certificate iii": "4",
         "certificate iv": "4",
-        'preparation': '13',
         "year 10": "9",
         "year 11": "9",
         "year 12 - western australian certificate": "9",
@@ -160,8 +159,12 @@ class CacSpiderSpider(scrapy.Spider):
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
+        if course_item['courseName'] == 'Preparation for Year 10 and Year 11':
+            course_item['rawStudyfield'] = ['preparation for year 10 and year 11']
+            course_item['degreeType'] = None
+
         course_item["campusNID"] = "30901"
 
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
+        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
         yield course_item
