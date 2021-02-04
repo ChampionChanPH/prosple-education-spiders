@@ -161,7 +161,8 @@ class CacSpiderSpider(scrapy.Spider):
 
         if course_item['courseName'] == 'Preparation for Year 10 and Year 11':
             course_item['rawStudyfield'] = ['preparation for year 10 and year 11']
-            course_item['degreeType'] = None
+            course_item['degreeType'] = 'Non-Award'
+            course_item['doubleDegree'] = None
 
         course_item["campusNID"] = "30901"
 
