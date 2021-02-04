@@ -30,12 +30,11 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class CmuSpiderSpider(scrapy.Spider):
     name = 'cmu_spider'
-    allowed_domains = ['www.australia.cmu.edu', 'australia.cmu.edu']
     start_urls = ['https://www.australia.cmu.edu/study']
     banned_urls = []
     courses = []
-    institution = "The University of Queensland (UQ)"
-    uidPrefix = "AU-UOQ-"
+    institution = "Carnegie Mellon University Australia"
+    uidPrefix = "AU-CMU-"
 
     campuses = {
         "Adelaide": "512",
@@ -120,7 +119,7 @@ class CmuSpiderSpider(scrapy.Spider):
                 else:
                     holder.append(item)
             if holder:
-                course_item["overview"] = strip_tags("".join(holder), False)
+                course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         cricos = response.xpath("//p[contains(text(), 'CRICOS:')]").getall()
         if cricos:
@@ -187,7 +186,8 @@ class CmuSpiderSpider(scrapy.Spider):
                 else:
                     holder.append(item)
             if holder:
-                course_item["courseStructure"] = strip_tags("".join(holder), False)
+                course_item["courseStructure"] = strip_tags("".join(holder), remove_all_tags=False,
+                                                            remove_hyperlinks=True)
 
         learn = response.xpath("//*[contains(text(), 'Learning outcomes')]/following-sibling::*").getall()
         if not learn:
@@ -200,7 +200,7 @@ class CmuSpiderSpider(scrapy.Spider):
                 else:
                     holder.append(item)
             if holder:
-                course_item["whatLearn"] = strip_tags("".join(holder), False)
+                course_item["whatLearn"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         entry = response.xpath("//*[contains(text(), 'Entry Requirements')]/following-sibling::*").getall()
         if entry:
@@ -211,7 +211,8 @@ class CmuSpiderSpider(scrapy.Spider):
                 else:
                     holder.append(item)
             if holder:
-                course_item["entryRequirements"] = strip_tags("".join(holder), False)
+                course_item["entryRequirements"] = strip_tags("".join(holder), remove_all_tags=False,
+                                                              remove_hyperlinks=True)
 
         career = response.xpath("//*[contains(text(), 'Internships and Career Outcomes')]/following-sibling::*").getall()
         if career:
@@ -222,7 +223,8 @@ class CmuSpiderSpider(scrapy.Spider):
                 else:
                     holder.append(item)
             if holder:
-                course_item["careerPathways"] = strip_tags("".join(holder), False)
+                course_item["careerPathways"] = strip_tags("".join(holder), remove_all_tags=False,
+                                                           remove_hyperlinks=True)
 
         location = response.xpath("//td[text() = 'Location']/following-sibling::*").get()
         if location:
