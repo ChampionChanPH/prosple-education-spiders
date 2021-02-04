@@ -30,7 +30,6 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class CacSpiderSpider(scrapy.Spider):
     name = 'cac_spider'
-    allowed_domains = ['www.canningcollege.wa.edu.au', 'canningcollege.wa.edu.au']
     start_urls = ['http://www.canningcollege.wa.edu.au/Courses.htm']
     banned_urls = ['/Courses-Links_to_WA_Universities.htm']
     institution = "Canning College"
@@ -42,6 +41,7 @@ class CacSpiderSpider(scrapy.Spider):
         "master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
+        "western australian certificate": "9",
         "certificate": "4",
         "certificate i": "4",
         "certificate ii": "4",
@@ -88,21 +88,9 @@ class CacSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        categories = response.xpath("//div[@class='head']/a/@href").getall()
-
-        for item in categories:
-            if item not in self.banned_urls:
-                if item in ['/Courses-Bridging_Programs.htm',
-                            '/Courses-Year_11_Secondary_Studies.htm',
-                            '/Courses-Year_10_Secondary_Studies.htm']:
-                    yield response.follow(item, callback=self.course_parse)
-                else:
-                    yield response.follow(item, callback=self.sub_parse)
-
-    def sub_parse(self, response):
-        courses = response.xpath("//ul[contains(@class, 'list-un')]//a/@href").getall()
-        for item in courses:
-            yield response.follow(item, callback=self.course_parse)
+        courses = response.xpath("//div[@class='head'][not(*/text()='Links to WA "
+                                 "Universities')]/following-sibling::div[@class='right-cont']//a/@href").getall()
+        yield from response.follow_all(courses, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -119,14 +107,16 @@ class CacSpiderSpider(scrapy.Spider):
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[contains(@class, 'bodyContent_Body')]/*").getall()
-        if overview:
-            course_item.set_summary(strip_tags(overview[0]))
-            holder = []
-            for item in overview:
-                if not re.search("^<p><img", item):
-                    holder.append(item)
-            if holder:
-                course_item["overview"] = strip_tags("".join(holder), False)
+        holder = []
+        for item in overview:
+            if not re.search('^<p><img', item):
+                holder.append(item)
+            else:
+                break
+        if holder:
+            summary = [strip_tags(x) for x in holder if strip_tags(x) != '']
+            course_item.set_summary(' '.join(summary))
+            course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         duration = response.xpath("//div[contains(@class, 'bodyContent_Course_Duration')]").getall()
         if duration:
@@ -139,11 +129,11 @@ class CacSpiderSpider(scrapy.Spider):
 
         entry = response.xpath("//div[contains(@class, 'bodyContent_Prerequisites')]/*").getall()
         if entry:
-            course_item["entryRequirements"] = strip_tags("".join(entry), False)
+            course_item['entryRequirements'] = strip_tags(''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
 
         apply = response.xpath("//div[contains(@class, 'bodyContent_Enrolment_Details')]/*").getall()
         if apply:
-            course_item["howToApply"] = strip_tags("".join(apply), False)
+            course_item['howToApply'] = strip_tags(''.join(apply), remove_all_tags=False, remove_hyperlinks=True)
 
         # start = response.xpath("//div[contains(@class, 'bodyContent_Course_Dates')]").getall()
         # if start:
@@ -157,7 +147,8 @@ class CacSpiderSpider(scrapy.Spider):
 
         course_structure = response.xpath("//div[contains(@class, 'bodyContent_Course_Outline')]/*").getall()
         if course_structure:
-            course_item["courseStructure"] = strip_tags("".join(course_structure), False)
+            course_item['courseStructure'] = strip_tags(''.join(course_structure), remove_all_tags=False,
+                                                        remove_hyperlinks=True)
 
         cricos = response.xpath("//div[contains(@class, 'bodyContent_Course_Code')]").getall()
         if cricos:
