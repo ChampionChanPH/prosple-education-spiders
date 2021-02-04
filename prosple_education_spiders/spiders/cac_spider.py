@@ -159,13 +159,13 @@ class CacSpiderSpider(scrapy.Spider):
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
+        course_item["campusNID"] = "30901"
+
+        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
+
         if course_item['courseName'] == 'Preparation for Year 10 and Year 11':
             course_item['rawStudyfield'] = ['preparation for year 10 and year 11']
             course_item['degreeType'] = 'Non-Award'
             course_item['doubleDegree'] = None
-
-        course_item["campusNID"] = "30901"
-
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
         yield course_item
