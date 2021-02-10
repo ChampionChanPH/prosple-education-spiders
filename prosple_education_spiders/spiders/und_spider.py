@@ -110,12 +110,12 @@ class UndSpiderSpider(scrapy.Spider):
         course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1/text()").get()
-        if course_name is not None:
+        if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//h1/following-sibling::div").get()
-        if overview is not None:
-            course_item["overview"] = strip_tags(overview, remove_all_tags=False)
+        if overview:
+            course_item["overview"] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
 
         summary = response.xpath("//h1/following-sibling::div[1]/*[2]//text()").getall()
         second = response.xpath("//h1/following-sibling::div[1]/*[3]//text()").getall()
@@ -128,9 +128,9 @@ class UndSpiderSpider(scrapy.Spider):
             course_item.set_summary(summary)
 
         duration = response.xpath("//*[contains(strong/text(), 'Duration')]/following-sibling::*").get()
-        if duration is not None:
+        if duration:
             duration = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration, re.M)
-        if duration is not None:
+        if duration:
             if len(duration) == 1:
                 course_item["durationMinFull"] = float(duration[0][0])
                 self.get_period(duration[0][1], course_item)
@@ -141,7 +141,7 @@ class UndSpiderSpider(scrapy.Spider):
 
         location = response.xpath("//*[contains(strong/text(), 'Campus')]/following-sibling::*").get()
         campus_holder = []
-        if location is not None:
+        if location:
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.append(self.campuses[campus])
@@ -150,7 +150,7 @@ class UndSpiderSpider(scrapy.Spider):
 
         study = response.xpath("//*[contains(strong/text(), 'Study mode')]/following-sibling::*").get()
         study_holder = []
-        if study is not None:
+        if study:
             if re.search("online", study, re.I | re.M):
                 study_holder.append("Online")
             if re.search("on campus", study, re.I | re.M):
@@ -159,7 +159,7 @@ class UndSpiderSpider(scrapy.Spider):
             course_item["modeOfStudy"] = "|".join(study_holder)
 
         code = response.xpath("//*[contains(strong/text(), 'Code')]/following-sibling::*").get()
-        if code is not None:
+        if code:
             course_code = re.findall(r"Program Code (\w+)", code, re.M | re.I)
             cricos_code = re.findall(r"CRICOS Code (\d{6}[0-9a-zA-Z])", code, re.M | re.I)
             if len(course_code) > 0:
@@ -180,14 +180,14 @@ class UndSpiderSpider(scrapy.Spider):
             entry = response.xpath("//*[contains(text(), 'Admission requirements')]/following-sibling::*").getall()
         if len(entry) > 0:
             entry = "".join(entry)
-            course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False)
+            course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False, remove_hyperlinks=True)
 
         learn = response.xpath("//*[contains(text(), 'Why study this')]/following-sibling::*").getall()
         if len(learn) == 0:
             learn = response.xpath("//*[contains(text(), 'About this')]/following-sibling::*").getall()
         if len(learn) > 0:
             learn = "".join(learn)
-            course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False)
+            course_item["whatLearn"] = strip_tags(learn, remove_all_tags=False, remove_hyperlinks=True)
 
         structure = response.xpath("//*[contains(text(), 'Program summary')]/following-sibling::*").getall()
         if len(structure) == 0:
@@ -196,17 +196,14 @@ class UndSpiderSpider(scrapy.Spider):
             structure = response.xpath("//*[contains(text(), 'Program outline')]/following-sibling::*").getall()
         if len(structure) > 0:
             structure = "".join(structure)
-            course_item["courseStructure"] = strip_tags(structure, remove_all_tags=False)
+            course_item["courseStructure"] = strip_tags(structure, remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath("//*[contains(text(), 'Career opportunities')]/following-sibling::*").getall()
         if len(career) > 0:
             career = "".join(career)
-            course_item["careerPathways"] = strip_tags(career, remove_all_tags=False)
+            course_item["careerPathways"] = strip_tags(career, remove_all_tags=False, remove_hyperlinks=True)
 
-        if "doubleDegree" not in course_item and re.search("/", course_item["courseName"]):
-            course_item["doubleDegree"] = 1
-
-        course_item.set_sf_dt(self.degrees)
+        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
         if response.request.url not in self.banned_urls:
             yield course_item
