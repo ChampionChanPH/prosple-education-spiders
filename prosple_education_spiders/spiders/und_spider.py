@@ -36,11 +36,11 @@ class UndSpiderSpider(scrapy.Spider):
         "bachelor": bachelor_honours,
         "doctor": "6",
         "undergraduate certificate": "4",
-        "certificate": "4",
-        "certificate i": "4",
-        "certificate ii": "4",
-        "certificate iii": "4",
         "certificate iv": "4",
+        "certificate iii": "4",
+        "certificate ii": "4",
+        "certificate i": "4",
+        "certificate": "4",
         "diploma": "5",
         "associate degree": "1",
         "non-award": "13",
@@ -111,6 +111,7 @@ class UndSpiderSpider(scrapy.Spider):
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
+            course_name = re.sub('^[A-Z]+[0-9]+', '', course_name)
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//h1/following-sibling::div").get()
