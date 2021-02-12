@@ -131,23 +131,25 @@ class SuiSpiderSpider(scrapy.Spider):
                 course_item.set_course_name(course_name[0].strip(), self.uidPrefix)
 
         overview = response.xpath(
-            "//*[@class='s-course-details-page__content']/*[text()='Overview']/following-sibling::*").get()
+            "//*[contains(@class, 's-course-details-page__content')]/*[text()='Overview']/following-sibling::*").get()
         if overview:
             course_item.set_summary(strip_tags(overview))
-            course_item["overview"] = strip_tags(overview, remove_all_tags=False)
+            course_item["overview"] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath(
-            "//*[@class='s-course-details-page__content']/*[text()='Careers']/following-sibling::*").get()
+            "//*[contains(@class, 's-course-details-page__content')]/*[text()='Careers']/following-sibling::*").get()
         if career:
-            course_item['careerPathways'] = strip_tags(career, remove_all_tags=False)
+            course_item['careerPathways'] = strip_tags(career, remove_all_tags=False, remove_hyperlinks=True)
 
         entry = response.xpath(
-            "//*[@class='s-course-details-page__content']/*[text()='Entry Requirements']/following-sibling::*").get()
+            "//*[contains(@class, 's-course-details-page__content')]/*[text()='Entry "
+            "Requirements']/following-sibling::*").get()
         if entry:
-            course_item['entryRequirements'] = strip_tags(entry, remove_all_tags=False)
+            course_item['entryRequirements'] = strip_tags(entry, remove_all_tags=False, remove_hyperlinks=True)
 
-        duration = response.xpath("//*[@class='s-course-details-page__content']/*[text()='Expected Time to "
-                                  "Complete']/following-sibling::*").get()
+        duration = response.xpath(
+            "//*[contains(@class, 's-course-details-page__content')]/*[text()='Expected Time to "
+            "Complete']/following-sibling::*").get()
         if duration:
             duration_full = re.findall(
                 "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?,?\s+?full)",
