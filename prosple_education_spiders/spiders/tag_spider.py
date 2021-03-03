@@ -43,6 +43,8 @@ def get_total(field_to_use, field_to_update, course_item):
 class TagSpiderSpider(scrapy.Spider):
     name = 'tag_spider'
     start_urls = ['https://www.tafegippsland.edu.au/course_search?profile=_default&collection=fed-training-meta&query=']
+    banned_urls = ['https://www.tafegippsland.edu.au/courses/find_a_course/courses/courses_by_department'
+                   '/short_courses_for_individuals/koorie/koorie_workshops']
     institution = "TAFE Gippsland"
     uidPrefix = "AU-TAG-"
 
@@ -111,8 +113,10 @@ class TagSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//ul[@id='search-results']//div[contains(@id, 'result')]/a")
-        yield from response.follow_all(courses, callback=self.course_parse)
+        courses = response.xpath("//ul[@id='search-results']//div[contains(@id, 'result')]/a/@href").getall()
+        for item in courses:
+            if item not in self.banned_urls:
+                yield response.follow(item, callback=self.course_parse)
 
         next_page = response.xpath("//a[@rel='next']/@href").get()
         if next_page:
