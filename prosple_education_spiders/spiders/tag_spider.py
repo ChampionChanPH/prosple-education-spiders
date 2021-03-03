@@ -113,10 +113,8 @@ class TagSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//ul[@id='search-results']//div[contains(@id, 'result')]/a/@href").getall()
-        for item in courses:
-            if item not in self.banned_urls:
-                yield response.follow(item, callback=self.course_parse)
+        courses = response.xpath("//ul[@id='search-results']//div[contains(@id, 'result')]/a")
+        yield from response.follow_all(courses, callback=self.course_parse)
 
         next_page = response.xpath("//a[@rel='next']/@href").get()
         if next_page:
@@ -255,4 +253,5 @@ class TagSpiderSpider(scrapy.Spider):
         course_item['group'] = 141
         course_item['canonicalGroup'] = 'CareerStarter'
 
-        yield course_item
+        if course_item['sourceURL'] not in self.banned_urls:
+            yield course_item
