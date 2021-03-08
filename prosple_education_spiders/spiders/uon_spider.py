@@ -93,14 +93,17 @@ class UonSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        boxes = response.xpath("//table[@class='handbook-degree-listing']/tbody/tr[@data-degreeid]")
+        # boxes = response.xpath("//table[@class='handbook-degree-listing']/tbody/tr[@data-degreeid]")
+        #
+        # for item in boxes:
+        #     url = item.xpath(".//a[@class='degree-link']/@href").get()
+        #     intake = item.xpath(".//td[@class='no-further-intake']").get()
+        #     if not intake:
+        #         if url not in self.banned_urls:
+        #             yield response.follow(url, callback=self.course_parse)
 
-        for item in boxes:
-            url = item.xpath(".//a[@class='degree-link']/@href").get()
-            intake = item.xpath(".//td[@class='no-further-intake']").get()
-            if not intake:
-                if url not in self.banned_urls:
-                    yield response.follow(url, callback=self.course_parse)
+        courses = 'https://www.newcastle.edu.au/degrees/bachelor-of-medical-science-doctor-of-medicine-joint-medical-program'
+        yield response.follow(courses, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -113,7 +116,7 @@ class UonSpider(scrapy.Spider):
 
         course_name = response.xpath("//h1[@class='page-header-title']//text()").getall()
         if not course_name:
-            course_name = response.xpath("//h1/text()").getall()
+            course_name = response.xpath("//h1//text()").getall()
         course_name = [x.strip() for x in course_name if x != '']
         course_name = ' '.join(course_name)
         if course_name:
@@ -258,7 +261,7 @@ class UonSpider(scrapy.Spider):
             lowest_atar = re.findall('Selection\sRank<.*?>(\d*\.?\d+)', atar)
             median_atar = re.findall('<strong>(\d*\.?\d+)<.*?>\s+\(Median', atar)
             if len(lowest_atar) > 0:
-                course_item['lowestScore'] = float(lowest_atar[0])
+                course_item['guaranteedEntryScore'] = float(lowest_atar[0])
             if len(median_atar) > 0:
                 course_item['medianScore'] = float(median_atar[0])
 
