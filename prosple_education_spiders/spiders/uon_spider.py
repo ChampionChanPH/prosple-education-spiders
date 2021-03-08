@@ -262,6 +262,10 @@ class UonSpider(scrapy.Spider):
             if len(median_atar) > 0:
                 course_item['medianScore'] = float(median_atar[0])
 
+        if course_item['sourceURL'] == 'https://www.newcastle.edu.au/degrees/juris-doctor-graduate-diploma-legal' \
+                                       '-practice':
+            course_item['rawStudyfield'] = ['law', 'legal practice']
+
         if 'uid' in course_item and 'courseCode' in course_item:
             course_item["uid"] = course_item["uid"] + '-' + course_item['courseCode']
 
