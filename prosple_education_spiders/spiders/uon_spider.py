@@ -93,17 +93,14 @@ class UonSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        # boxes = response.xpath("//table[@class='handbook-degree-listing']/tbody/tr[@data-degreeid]")
-        #
-        # for item in boxes:
-        #     url = item.xpath(".//a[@class='degree-link']/@href").get()
-        #     intake = item.xpath(".//td[@class='no-further-intake']").get()
-        #     if not intake:
-        #         if url not in self.banned_urls:
-        #             yield response.follow(url, callback=self.course_parse)
+        boxes = response.xpath("//table[@class='handbook-degree-listing']/tbody/tr[@data-degreeid]")
 
-        course = 'https://www.newcastle.edu.au/degrees/juris-doctor-graduate-diploma-legal-practice'
-        yield response.follow(course, callback=self.course_parse)
+        for item in boxes:
+            url = item.xpath(".//a[@class='degree-link']/@href").get()
+            intake = item.xpath(".//td[@class='no-further-intake']").get()
+            if not intake:
+                if url not in self.banned_urls:
+                    yield response.follow(url, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
