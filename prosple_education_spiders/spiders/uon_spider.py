@@ -136,10 +136,10 @@ class UonSpider(scrapy.Spider):
                 holder.append(item)
         if len(holder) == 1:
             course_item.set_summary(strip_tags(holder[0]))
-            course_item["overview"] = strip_tags("".join(holder), False)
+            course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
         if len(holder) > 1:
             course_item.set_summary(strip_tags(holder[0] + holder[1]))
-            course_item["overview"] = strip_tags("".join(holder), False)
+            course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         location = response.xpath("//nav[@class='fast-fact-toggle']//text()").getall()
         if location:
@@ -163,7 +163,7 @@ class UonSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item["careerPathways"] = strip_tags("".join(holder), False)
+            course_item["careerPathways"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         duration = response.xpath("//*[contains(text(), 'Duration')]/following-sibling::*").get()
         if duration:
@@ -246,7 +246,7 @@ class UonSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item["whatLearn"] = strip_tags("".join(holder), False)
+            course_item["whatLearn"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         fee = response.xpath("//span[contains(@class, 'icons8-us-dollar')]/following-sibling::p").getall()
         if fee:
@@ -265,10 +265,6 @@ class UonSpider(scrapy.Spider):
             if len(median_atar) > 0:
                 course_item['medianScore'] = float(median_atar[0])
 
-        if course_item['courseName'] == 'Juris Doctor / Graduate Diploma in Legal Practice':
-            course_item['rawStudyfield'] = ['law', 'legal practice']
-            course_item['specificStudyField'] = 'Law / Legal Practice'
-
         if 'uid' in course_item and 'courseCode' in course_item:
             course_item["uid"] = course_item["uid"] + '-' + course_item['courseCode']
 
@@ -276,6 +272,9 @@ class UonSpider(scrapy.Spider):
             if course_item['courseName'].lower() not in ['phd and research masters', 'yapug', 'newstep', 'music',
                                                          'fine art', 'creative and performing arts']:
                 course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
+                if course_item['courseName'] == 'Juris Doctor / Graduate Diploma in Legal Practice':
+                    course_item['rawStudyfield'] = ['law', 'legal practice']
+                    course_item['specificStudyField'] = 'Law / Legal Practice'
                 if 'degreeType' in course_item:
                     if course_item['degreeType'] == '3':
                         course_item['group'] = 3
