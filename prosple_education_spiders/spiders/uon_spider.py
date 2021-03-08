@@ -93,14 +93,17 @@ class UonSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        boxes = response.xpath("//table[@class='handbook-degree-listing']/tbody/tr[@data-degreeid]")
+        # boxes = response.xpath("//table[@class='handbook-degree-listing']/tbody/tr[@data-degreeid]")
+        #
+        # for item in boxes:
+        #     url = item.xpath(".//a[@class='degree-link']/@href").get()
+        #     intake = item.xpath(".//td[@class='no-further-intake']").get()
+        #     if not intake:
+        #         if url not in self.banned_urls:
+        #             yield response.follow(url, callback=self.course_parse)
 
-        for item in boxes:
-            url = item.xpath(".//a[@class='degree-link']/@href").get()
-            intake = item.xpath(".//td[@class='no-further-intake']").get()
-            if not intake:
-                if url not in self.banned_urls:
-                    yield response.follow(url, callback=self.course_parse)
+        course = 'https://www.newcastle.edu.au/degrees/juris-doctor-graduate-diploma-legal-practice'
+        yield response.follow(course, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -262,9 +265,9 @@ class UonSpider(scrapy.Spider):
             if len(median_atar) > 0:
                 course_item['medianScore'] = float(median_atar[0])
 
-        if course_item['sourceURL'] == 'https://www.newcastle.edu.au/degrees/juris-doctor-graduate-diploma-legal' \
-                                       '-practice':
+        if course_item['courseName'] == 'Juris Doctor / Graduate Diploma in Legal Practice':
             course_item['rawStudyfield'] = ['law', 'legal practice']
+            course_item['specificStudyField'] = 'Law / Legal Practice'
 
         if 'uid' in course_item and 'courseCode' in course_item:
             course_item["uid"] = course_item["uid"] + '-' + course_item['courseCode']
