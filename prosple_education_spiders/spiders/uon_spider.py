@@ -54,6 +54,7 @@ class UonSpider(scrapy.Spider):
         "executive master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
+        "undergraduate certificate": "4",
         "certificate": "4",
         "advanced diploma": "5",
         "diploma": "5",
