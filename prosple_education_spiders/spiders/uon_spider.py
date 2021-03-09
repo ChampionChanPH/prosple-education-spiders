@@ -99,9 +99,13 @@ class UonSpider(scrapy.Spider):
         for item in boxes:
             url = item.xpath(".//a[@class='degree-link']/@href").get()
             intake = item.xpath(".//td[@class='no-further-intake']").get()
+            atar = item.xpath(".//td[@class='degree-atar']").get()
             if not intake:
                 if url not in self.banned_urls:
-                    yield response.follow(url, callback=self.course_parse)
+                    if atar:
+                        yield response.follow(url, callback=self.course_parse, meta={'atar': atar})
+                    else:
+                        yield response.follow(url, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -220,12 +224,16 @@ class UonSpider(scrapy.Spider):
                 course_item["startMonths"] = "|".join(start_holder)
 
         course_code = response.xpath("//div[@class='uon-code']/div").get()
+        if not course_code:
+            course_code = response.xpath("//*[contains(text(), 'Program Code')]/following-sibling::*/text()").get()
         if course_code:
             course_code = re.findall("\d+", course_code, re.M)
             if course_code:
                 course_item["courseCode"] = ", ".join(course_code)
 
-        cricos = response.xpath("//div[contains(@class, 'cricos-code')]/strong//text()").getall()
+        cricos = response.xpath("//div[contains(@class, 'cricos-code')]//text()").getall()
+        if not cricos:
+            cricos = response.xpath("//*[contains(text(), 'CRICOS Code')]/following-sibling::*//text()").getall()
         if cricos:
             cricos = " ".join(cricos)
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
@@ -246,22 +254,30 @@ class UonSpider(scrapy.Spider):
         if holder:
             course_item["whatLearn"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        fee = response.xpath("//span[contains(@class, 'icons8-us-dollar')]/following-sibling::p").getall()
-        if fee:
-            fee = "".join(fee)
-            fee = re.findall("(?<=AUD)(\d*),?(\d+)", fee, re.M)
-            if fee:
-                course_item["internationalFeeAnnual"] = float(fee[0][0] + fee[0][1])
+        dom_fee = response.xpath("//span[contains(@class, 'icons8-us-dollar')]/following-sibling::*["
+                                 "@data-region='australian']").get()
+        if dom_fee:
+            dom_fee = re.findall("AUD\s(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
+            dom_fee = [float(''.join(x)) for x in dom_fee]
+            if dom_fee:
+                course_item["domesticFeeAnnual"] = max(dom_fee)
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+        int_fee = response.xpath("//span[contains(@class, 'icons8-us-dollar')]/following-sibling::*["
+                                 "@data-region='international']").get()
+        if int_fee:
+            int_fee = re.findall("AUD\s(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
+            int_fee = [float(''.join(x)) for x in int_fee]
+            if int_fee:
+                course_item["internationalFeeAnnual"] = max(int_fee)
                 get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
-        atar = response.css('div.entrance-rank').get()
-        if atar:
-            lowest_atar = re.findall('Selection\sRank<.*?>(\d*\.?\d+)', atar)
-            median_atar = re.findall('<strong>(\d*\.?\d+)<.*?>\s+\(Median', atar)
-            if len(lowest_atar) > 0:
-                course_item['guaranteedEntryScore'] = float(lowest_atar[0])
-            if len(median_atar) > 0:
-                course_item['medianScore'] = float(median_atar[0])
+        if 'atar' in response.meta:
+            atar = response.meta['atar']
+            if atar:
+                atar = re.findall('(\d+)(\.\d{2})?', atar)
+                if atar:
+                    course_item['guaranteedEntryScore'] = float(''.join(atar[0]))
 
         if 'uid' in course_item and 'courseCode' in course_item:
             course_item["uid"] = course_item["uid"] + '-' + course_item['courseCode']
