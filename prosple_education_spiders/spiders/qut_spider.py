@@ -115,22 +115,16 @@ class QutSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        categories = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a/@href").getall()
+        categories = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a")
+        yield from response.follow_all(categories, callback=self.link_parse)
 
-        for item in categories:
-            yield response.follow(item, callback=self.link_parse)
-
-    # def sub_parse(self, response):
-    #     sub = response.xpath("//div[@id='course-category-listing-panel-tabs']/a[not(contains(@data-target, "
-    #                          "'Overview-tab'))]/@href").getall()
-    #
-    #     for item in sub:
-    #         yield response.follow(item, callback=self.link_parse)
+    def sub_parse(self, response):
+        sub = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a")
+        yield from response.follow_all(sub, callback=self.link_parse)
 
     def link_parse(self, response):
-        courses = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a/@href").getall()
+        courses = response.xpath("//a[contains(@class, 'course-page-link')]/@href").getall()
         courses = [x for x in courses if not re.search("online.qut.edu.au", x)]
-        courses = [x for x in courses if not re.search("\?", x)]
 
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
