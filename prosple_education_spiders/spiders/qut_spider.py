@@ -128,8 +128,9 @@ class QutSpiderSpider(scrapy.Spider):
     #         yield response.follow(item, callback=self.link_parse)
 
     def link_parse(self, response):
-        courses = response.xpath("//div[contains(@class, 'study-level')]//a/@href").getall()
+        courses = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a/@href").getall()
         courses = [x for x in courses if not re.search("online.qut.edu.au", x)]
+        courses = [x for x in courses if not re.search("\?", x)]
 
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
