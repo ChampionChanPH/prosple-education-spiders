@@ -116,7 +116,7 @@ class QutSpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         categories = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a")
-        yield from response.follow_all(categories, callback=self.link_parse)
+        yield from response.follow_all(categories, callback=self.sub_parse)
 
     def sub_parse(self, response):
         sub = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a")
@@ -136,7 +136,9 @@ class QutSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.request.url+r"?utm_source=referral_partner&utm_medium=prosple&utm_campaign=prosple_course_listing&utm_content=&utm_term=&spad=prosple"
+        course_item["domesticApplyURL"] = response.request.url + \
+                                          r"?utm_source=referral_partner&utm_medium=prosple&utm_campaign" \
+                                          r"=prosple_course_listing&utm_content=&utm_term=&spad=prosple "
 
         course_name = response.xpath("//h1/span/text()").get()
         if not course_name:
@@ -189,8 +191,9 @@ class QutSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.request.url+r"?utm_source=referral_partner&utm_medium=prosple&utm_campaign=prosple_course_listing&utm_content=&utm_term=&spad=prosple"
-
+                course_item["internationalApplyURL"] = response.request.url + \
+                                          r"?utm_source=referral_partner&utm_medium=prosple&utm_campaign" \
+                                          r"=prosple_course_listing&utm_content=&utm_term=&spad=prosple "
         course_code = response.xpath("//dt[contains(text(), 'Course code')]/following-sibling::dd/text()").get()
         if course_code:
             course_item["courseCode"] = course_code.strip()
