@@ -66,9 +66,9 @@ class QutSpiderSpider(scrapy.Spider):
         "executive master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
-        "certificate": "4",
         "undergraduate certificate": "4",
         "university certificate": "4",
+        "certificate": "4",
         "advanced diploma": "5",
         "diploma": "5",
         "associate degree": "1",
@@ -120,7 +120,9 @@ class QutSpiderSpider(scrapy.Spider):
 
     def sub_parse(self, response):
         sub = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a")
-        yield from response.follow_all(sub, callback=self.link_parse)
+
+        for item in sub:
+            yield response.follow(item, callback=self.link_parse)
 
     def link_parse(self, response):
         courses = response.xpath("//a[contains(@class, 'course-page-link')]/@href").getall()
@@ -153,13 +155,17 @@ class QutSpiderSpider(scrapy.Spider):
             course_item.set_summary(summary)
         if 'overviewSummary' not in course_item:
             summary = response.xpath("//*[contains(text(), 'Highlights')]/following-sibling::ul/*").getall()
+            if not summary:
+                summary = response.xpath("//*[contains(text(), 'Highlights')]/following-sibling::*").get()
             if summary:
                 summary = [strip_tags(x) for x in summary]
                 course_item.set_summary(' '.join(summary))
 
         overview = response.xpath("//*[contains(text(), 'Highlights')]/following-sibling::ul").get()
+        if not overview:
+            overview = response.xpath("//*[contains(text(), 'Highlights')]/following-sibling::*").get()
         if overview:
-            course_item["overview"] = strip_tags(overview, False)
+            course_item["overview"] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
 
         rank = response.xpath("//dd[@class='rank']/text()").get()
         if rank:
@@ -192,8 +198,8 @@ class QutSpiderSpider(scrapy.Spider):
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url + \
-                                          r"?utm_source=referral_partner&utm_medium=prosple&utm_campaign" \
-                                          r"=prosple_course_listing&utm_content=&utm_term=&spad=prosple "
+                                                       r"?utm_source=referral_partner&utm_medium=prosple&utm_campaign" \
+                                                       r"=prosple_course_listing&utm_content=&utm_term=&spad=prosple "
         course_code = response.xpath("//dt[contains(text(), 'Course code')]/following-sibling::dd/text()").get()
         if course_code:
             course_item["courseCode"] = course_code.strip()
@@ -246,7 +252,7 @@ class QutSpiderSpider(scrapy.Spider):
 
         career = response.xpath("//*[@id='career-outcomes-tab']//div[contains(@class, 'panel-content')]/*/*").getall()
         if career:
-            course_item["careerPathways"] = strip_tags(''.join(career), False)
+            course_item["careerPathways"] = strip_tags(''.join(career), remove_all_tags=False, remove_hyperlinks=True)
 
         fee = response.xpath("//div[contains(@data-course-audience, 'DOM')]//div[contains(h3, '202') or contains(h3, "
                              "'fees')]/following-sibling::div").getall()
@@ -292,7 +298,7 @@ class QutSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item["whatLearn"] = strip_tags(''.join(learn), False)
+            course_item["whatLearn"] = strip_tags(''.join(learn), remove_all_tags=False, remove_hyperlinks=True)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
