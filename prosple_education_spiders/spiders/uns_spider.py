@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # by: Johnel Bacani
-# Updated by: Christian Anasco
+# Updated by: Christian Anasco - added set_summary on overviewSummary and added strip_tags on some html fields
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
@@ -199,7 +199,7 @@ class UnsSpiderSpider(scrapy.Spider):
 
         overview = response.xpath("//div[preceding-sibling::h1/text()='Overview']/div/p/text()").getall()
         if overview:
-            course_item["overviewSummary"] = overview[0]
+            course_item["overviewSummary"] = course_item.set_summary(strip_tags(overview[0]))
             course_item["overview"] = "<br>".join(overview)
 
         dom_fee = response.xpath("//dd[preceding-sibling::dt/text()='2020 Indicative First Year Fee']/div/p/text()").get()
