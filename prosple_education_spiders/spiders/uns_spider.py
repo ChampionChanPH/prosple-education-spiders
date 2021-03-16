@@ -139,7 +139,7 @@ class UnsSpiderSpider(scrapy.Spider):
             course_item["courseName"] = re.sub("Bachelor of Bachelor of", "Bachelor of", course_item["courseName"])
         # course_item["courseName"] = award if "," in award else course_name
 
-        course_item.set_sf_dt(self.degrees, [",", "/"])
+        course_item.set_sf_dt(self.degrees, degree_delims=['/', ','], type_delims=['of', 'in', 'by'])
 
         course_item.set_course_name(course_name, self.uidPrefix)
 
@@ -197,10 +197,11 @@ class UnsSpiderSpider(scrapy.Spider):
         # if duration not in self.holder:
         #     self.holder.append(duration)
 
-        overview = response.xpath("//div[preceding-sibling::h1/text()='Overview']/div/p/text()").getall()
+        overview = response.xpath("//div[preceding-sibling::h1/text()='Overview']/div/p").getall()
         if overview:
-            course_item["overviewSummary"] = course_item.set_summary(strip_tags(overview[0]))
-            course_item["overview"] = "<br>".join(overview)
+            summary = [strip_tags(x) for x in overview if strip_tags(x) != '']
+            course_item.set_summary(' '.join(summary))
+            course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
         dom_fee = response.xpath("//dd[preceding-sibling::dt/text()='2020 Indicative First Year Fee']/div/p/text()").get()
         if dom_fee and dom_fee != "$TBC":
