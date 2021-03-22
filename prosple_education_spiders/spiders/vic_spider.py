@@ -53,6 +53,7 @@ class VicSpiderSpider(scrapy.Spider):
         "master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
+        "undergraduate certificate": "4",
         "certificate": "4",
         "certificate i": "4",
         "certificate ii": "4",
