@@ -42,8 +42,8 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class VicSpiderSpider(scrapy.Spider):
     name = 'vic_spider'
-    start_urls = ['https://www.vu.edu.au/search?collection=vu-meta&profile=_default&f.Tabs%7CcourseTab=Courses+%26'
-                  '+units&f.Student+type%7Cdomestic=Australian+resident&query=']
+    start_urls = ['https://www.vu.edu.au/search?collection=vu-meta&f.Tabs%7CcourseTab=Courses+%26+units&query'
+                  '=!showall&f.Program+type|courses=Courses']
     institution = "Victoria University (VU)"
     uidPrefix = "AU-VIC-"
 
@@ -114,10 +114,11 @@ class VicSpiderSpider(scrapy.Spider):
         courses = response.xpath("//div[contains(@class, 'search-layout__search-results')]//li[contains(@class, "
                                  "'search-result-course')]/@data-fb-result").getall()
         for item in courses:
-            if re.search('shortcourses', item, re.M):
-                yield response.follow(item, callback=self.short_parse)
-            elif not re.search('online.vu.edu', item, re.M | re.DOTALL):
-                yield response.follow(item, callback=self.course_parse)
+            if not re.search('online.vu.edu', item, re.M | re.DOTALL):
+                if re.search('shortcourses', item, re.M):
+                    yield response.follow(item, callback=self.short_parse)
+                else:
+                    yield response.follow(item, callback=self.course_parse)
 
         next_page = response.xpath("//li[@class='next']/a/@href").get()
         if next_page:
