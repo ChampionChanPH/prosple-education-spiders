@@ -125,7 +125,7 @@ class AraSpiderSpider(scrapy.Spider):
 
         yield SplashRequest(response.request.url, callback=self.parse, endpoint='execute',
                             args={'lua_source': self.lua, 'url': response.request.url,
-                                  'selector_category': 'li.paginationjs-page'})
+                                  'selector_category': 'li.paginationjs-page a', 'wait': 20})
 
     def category_parse(self, response):
         courses = response.xpath("//a[@data-blk='CourseSearchResultItemBlock']/@href").getall()
