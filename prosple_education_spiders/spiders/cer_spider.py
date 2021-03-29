@@ -136,9 +136,9 @@ class CerSpiderSpider(scrapy.Spider):
         if course_name:
             if not re.search('COVID', course_name):
                 course_code = re.findall('^[A-Z0-9]{2,}', course_name)
-            if course_code:
-                course_item['courseCode'] = course_code[0].strip()
-                course_name = re.sub(course_item['courseCode'], '', course_name, re.I)
+                if course_code:
+                    course_item['courseCode'] = course_code[0].strip()
+                    course_name = re.sub(course_item['courseCode'], '', course_name, re.I)
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@class='course-body--content']//div[@class='col-md']/*").getall()
