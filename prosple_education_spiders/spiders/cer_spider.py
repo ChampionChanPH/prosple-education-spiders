@@ -254,6 +254,9 @@ class CerSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
+        if 'doubleDegree' in course_item:
+            del course_item['doubleDegree']
+
         course_item['group'] = 141
         course_item['canonicalGroup'] = 'CareerStarter'
 
