@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
+# uses same structure as SOM, NOM, SOR, NOR except for lines 259-259
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
