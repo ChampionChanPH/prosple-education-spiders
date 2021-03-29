@@ -258,7 +258,7 @@ class CerSpiderSpider(scrapy.Spider):
 
         if 'doubleDegree' in course_item:
             del course_item['doubleDegree']
-            course_item['rawStudyfield'] = [re.sub('.+ in ', '', course_item['courseName'], re.DOTALL)]
+            course_item['rawStudyfield'] = [re.sub('.+ (in|of) ', '', course_item['courseName'], re.DOTALL)]
 
         course_item['group'] = 141
         course_item['canonicalGroup'] = 'CareerStarter'

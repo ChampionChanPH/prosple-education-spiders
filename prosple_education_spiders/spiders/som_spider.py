@@ -135,10 +135,11 @@ class SomSpiderSpider(scrapy.Spider):
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
-            course_code = re.findall('^[A-Z0-9]{2,}', course_name)
-            if course_code:
-                course_item['courseCode'] = course_code[0].strip()
-                course_name = re.sub(course_item['courseCode'], '', course_name, re.I)
+            if not re.search('COVID', course_name):
+                course_code = re.findall('^[A-Z0-9]{2,}', course_name)
+                if course_code:
+                    course_item['courseCode'] = course_code[0].strip()
+                    course_name = re.sub(course_item['courseCode'], '', course_name, re.I)
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@class='course-body--content']//div[@class='col-md']/*").getall()
@@ -255,6 +256,10 @@ class SomSpiderSpider(scrapy.Spider):
             course_item['whatLearn'] = strip_tags(''.join(learn), remove_all_tags=False, remove_hyperlinks=True)
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
+
+        if 'doubleDegree' in course_item:
+            del course_item['doubleDegree']
+            course_item['rawStudyfield'] = [re.sub('.+ (in|of) ', '', course_item['courseName'], re.DOTALL)]
 
         course_item['group'] = 141
         course_item['canonicalGroup'] = 'CareerStarter'
