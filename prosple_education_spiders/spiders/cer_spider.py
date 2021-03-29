@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
-# uses same structure as SOM, NOM, SOR, NOR except for lines 259-259
+# uses same structure as SOM, NOM, SOR, NOR except for lines 258-260
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
@@ -257,6 +257,7 @@ class CerSpiderSpider(scrapy.Spider):
 
         if 'doubleDegree' in course_item:
             del course_item['doubleDegree']
+            course_item['rawStudyfield'] = [re.sub('.+ in ', '', course_item['courseName'], re.DOTALL)]
 
         course_item['group'] = 141
         course_item['canonicalGroup'] = 'CareerStarter'
