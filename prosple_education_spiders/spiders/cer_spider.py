@@ -264,4 +264,3 @@ class CerSpiderSpider(scrapy.Spider):
         course_item['canonicalGroup'] = 'CareerStarter'
 
         yield course_item
-
