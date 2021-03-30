@@ -136,9 +136,14 @@ class NorSpiderSpider(scrapy.Spider):
         course_name = response.xpath("//h1/text()").get()
         if course_name:
             if not re.search('COVID', course_name):
-                course_code = re.findall('^[A-Z0-9]{2,}', course_name)
+                course_code = ''
+                code = re.findall('^[A-Z]+[0-9]+', course_name)
+                if not code:
+                    code = re.findall('^[0-9]+[A-Z]+', course_name)
+                if code:
+                    course_code = code[0]
                 if course_code:
-                    course_item['courseCode'] = course_code[0].strip()
+                    course_item['courseCode'] = course_code.strip()
                     course_name = re.sub(course_item['courseCode'], '', course_name, re.I)
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
