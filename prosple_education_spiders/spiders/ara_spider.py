@@ -4,7 +4,7 @@
 from ..standard_libs import *
 from ..scratch_file import *
 import os
-import gspread
+from gspread import service_account
 
 
 def research_coursework(course_item):
@@ -43,7 +43,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 
 filename = os.getcwd() + '\\prosple_education_spiders\\' + 'erudite-mote-285607-b80c9a7fd152.json'
-google_json = gspread.service_account(filename=filename)
+google_json = service_account(filename=filename)
 gsheet_name = google_json.open_by_key('1Ik-mLfkkK_iOwRD6nM87pXHsXNTyhU2Ecjh5b3J-KuI')
 sheet_name = gsheet_name.worksheet('ARA Courses')
 course_links = sheet_name.col_values(1)
