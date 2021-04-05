@@ -3,6 +3,8 @@
 
 from ..standard_libs import *
 from ..scratch_file import *
+import os
+import gspread
 
 
 def research_coursework(course_item):
@@ -40,12 +42,18 @@ def get_total(field_to_use, field_to_update, course_item):
                                                / 52
 
 
+filename = os.getcwd() + '\\prosple_education_spiders\\' + 'erudite-mote-285607-b80c9a7fd152.json'
+google_json = gspread.service_account(filename=filename)
+gsheet_name = google_json.open_by_key('1Ik-mLfkkK_iOwRD6nM87pXHsXNTyhU2Ecjh5b3J-KuI')
+sheet_name = gsheet_name.worksheet('ARA Courses')
+course_links = sheet_name.col_values(1)
+
+
 class AraSpiderSpider(scrapy.Spider):
     name = 'ara_spider'
-    start_urls = ['https://www.ara.ac.nz/course-search-page']
-    http_user = 'b4a56de85d954e9b924ec0e0b7696641'
-    institution = "Australian Catholic University (ACU)"
-    uidPrefix = "AU-ACU-"
+    start_urls = course_links[1:]
+    institution = "Ara Institute of Canterbury"
+    uidPrefix = "NZ-ARA-"
 
     campuses = {
         "Sydney": "509",
@@ -104,41 +112,40 @@ class AraSpiderSpider(scrapy.Spider):
         "December": "12"
     }
 
-    lua = """
-        function main(splash, args)
-          assert(splash:go(args.url))
-          assert(splash:wait(2.0))
-          local category = splash:select(args.selector_category)
-          assert(category:mouse_click())
-          assert(splash:wait(2.0))
-          return splash:html()
-        end
-    """
-
     def get_period(self, string_to_use, course_item):
         for item in self.teaching_periods:
             if re.search(item, string_to_use):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        yield SplashRequest(response.request.url, callback=self.category_parse, args={'wait': 20})
-
-        yield SplashRequest(response.request.url, callback=self.parse, endpoint='execute',
-                            args={'lua_source': self.lua, 'url': response.request.url,
-                                  'selector_category': 'li.paginationjs-next a', 'wait': 20})
-
-    def category_parse(self, response):
-        courses = response.xpath("//a[@data-blk='CourseSearchResultItemBlock']/@href").getall()
-
-        for item in courses:
-            yield response.follow(item, callback=self.course_parse)
-
-    def course_parse(self, response):
         course_item = Course()
 
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
+
+        course_name = response.xpath("//h1/text()").get()
+        if course_name:
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
+
+        overview = response.xpath("//div[@aria-labelledby='Overview']//div[@class='list-dash']/*").getall()
+        if overview:
+            overview = [x for x in overview if strip_tags(x) != '']
+        holder = []
+        for item in overview:
+            if re.search('^<(p|u|o|h)', item):
+                holder.append(item)
+        if holder:
+            if re.search('[.?!]$', strip_tags(holder[0]), re.M):
+                holder[0] += '.'
+            summary = [strip_tags(x) for x in holder]
+            course_item.set_summary(' '.join(summary))
+            course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
+
+        course_item['group'] = 2
+        course_item['canonicalGroup'] = 'GradNewZealand'
 
         yield course_item
