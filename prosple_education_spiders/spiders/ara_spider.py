@@ -42,11 +42,11 @@ def get_total(field_to_use, field_to_update, course_item):
                                                / 52
 
 
-# filename = os.getcwd() + '/prosple_education_spiders/' + 'erudite-mote-285607-b80c9a7fd152.json'
-# google_json = gspread.service_account(filename=filename)
-# googlesheet_name = google_json.open_by_key('1Ik-mLfkkK_iOwRD6nM87pXHsXNTyhU2Ecjh5b3J-KuI')
-# sheet_name = googlesheet_name.worksheet('ARA Courses')
-# course_links = sheet_name.col_values(1)
+filename = re.sub('spiders/ara_spider.py', 'erudite-mote-285607-b80c9a7fd152.json', os.getcwd() + __file__)
+google_json = gspread.service_account(filename=filename)
+googlesheet_name = google_json.open_by_key('1Ik-mLfkkK_iOwRD6nM87pXHsXNTyhU2Ecjh5b3J-KuI')
+sheet_name = googlesheet_name.worksheet('ARA Courses')
+course_links = sheet_name.col_values(1)
 
 
 class AraSpiderSpider(scrapy.Spider):
@@ -126,30 +126,27 @@ class AraSpiderSpider(scrapy.Spider):
         course_item["published"] = 1
         course_item["institution"] = self.institution
 
-        course_item['overview'] = os.getcwd()
-        course_item['overviewSummary'] = __file__
+        course_name = response.xpath("//h1/text()").get()
+        if course_name:
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        # course_name = response.xpath("//h1/text()").get()
-        # if course_name:
-        #     course_item.set_course_name(course_name.strip(), self.uidPrefix)
-        #
-        # overview = response.xpath("//div[@aria-labelledby='Overview']//div[@class='list-dash']/*").getall()
-        # if overview:
-        #     overview = [x for x in overview if strip_tags(x) != '']
-        # holder = []
-        # for item in overview:
-        #     if re.search('^<(p|u|o|h)', item):
-        #         holder.append(item)
-        # if holder:
-        #     if re.search('[.?!]$', strip_tags(holder[0]), re.M):
-        #         holder[0] += '.'
-        #     summary = [strip_tags(x) for x in holder]
-        #     course_item.set_summary(' '.join(summary))
-        #     course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
-        #
-        # course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
-        #
-        # course_item['group'] = 2
-        # course_item['canonicalGroup'] = 'GradNewZealand'
+        overview = response.xpath("//div[@aria-labelledby='Overview']//div[@class='list-dash']/*").getall()
+        if overview:
+            overview = [x for x in overview if strip_tags(x) != '']
+        holder = []
+        for item in overview:
+            if re.search('^<(p|u|o|h)', item):
+                holder.append(item)
+        if holder:
+            if re.search('[.?!]$', strip_tags(holder[0]), re.M):
+                holder[0] += '.'
+            summary = [strip_tags(x) for x in holder]
+            course_item.set_summary(' '.join(summary))
+            course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
+
+        course_item['group'] = 2
+        course_item['canonicalGroup'] = 'GradNewZealand'
 
         yield course_item
