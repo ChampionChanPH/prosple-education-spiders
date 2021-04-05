@@ -52,6 +52,7 @@ for company in tqdm(company_holder, desc='Adding to documents: '):
     series_obj = Series(company)
     docs = docs.append(series_obj, ignore_index=True)
 
-docs.to_csv('jobstreet_employers.csv', ",", index=False, header=['Company Name', 'Profile Link', 'Rating', 'Rating Count'])
+docs.to_csv('jobstreet_employers.csv', ",", index=False,
+            header=['Company Name', 'Profile Link', 'Rating', 'Rating Count'])
 
 driver.quit()
