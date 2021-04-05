@@ -42,7 +42,7 @@ def get_total(field_to_use, field_to_update, course_item):
                                                / 52
 
 
-filename = re.sub('spiders/ara_spider.py', 'erudite-mote-285607-b80c9a7fd152.json', PATH_NAME)
+filename = re.sub('spiders/ara_spider.py', 'erudite-mote-285607-b80c9a7fd152.json', __file__)
 google_json = gspread.service_account(filename=filename)
 googlesheet_name = google_json.open_by_key('1Ik-mLfkkK_iOwRD6nM87pXHsXNTyhU2Ecjh5b3J-KuI')
 sheet_name = googlesheet_name.worksheet('ARA Courses')
