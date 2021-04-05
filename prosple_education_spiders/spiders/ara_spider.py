@@ -127,6 +127,7 @@ class AraSpiderSpider(scrapy.Spider):
         course_item["institution"] = self.institution
 
         course_item['overview'] = os.getcwd()
+        course_item['overviewSummary'] = __file__
 
         # course_name = response.xpath("//h1/text()").get()
         # if course_name:
