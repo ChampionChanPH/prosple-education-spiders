@@ -6,7 +6,9 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
-import time, os
+import time
+import os
+import re
 from pandas import DataFrame, Series
 from tqdm import tqdm
 
@@ -38,8 +40,7 @@ for course in tqdm(course_holder, desc='Adding to documents: '):
     docs = docs.append(series_obj, ignore_index=True)
 
 file_directory = os.getcwd()
-file_folder = '\\prosple_education_spiders\\resources\\'
-file_name = 'ara_courses.csv'
-docs.to_csv(file_directory + file_folder + file_name, ",", index=False, header=['Course Link'])
+file_path = re.sub('selenium_spiders', r'resources\\ara_courses.csv', file_directory)
+docs.to_csv(file_path, ",", index=False, header=['Course Link'])
 
 driver.quit()
