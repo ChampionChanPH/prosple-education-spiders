@@ -41,7 +41,7 @@ def get_total(field_to_use, field_to_update, course_item):
                                                / 52
 
 
-course_data = pkgutil.get_data("prosple_education_spiders", "resources/ara_courses_1.csv").decode("utf-8")
+course_data = pkgutil.get_data("prosple_education_spiders", "resources/ara_courses - TEST.csv").decode("utf-8")
 course_data = re.split('\r\n', course_data)
 
 
