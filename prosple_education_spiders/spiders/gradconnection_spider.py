@@ -2,8 +2,8 @@ from ..standard_libs import *
 
 
 class Employer(scrapy.Item):
-    name = scrapy.Field()
-    url = scrapy.Field()
+    employer_name = scrapy.Field()
+    profile_link = scrapy.Field()
 
 
 class GradconnectionSpiderSpider(scrapy.Spider):
@@ -28,9 +28,9 @@ class GradconnectionSpiderSpider(scrapy.Spider):
     def employer_parse(self, response):
         employer_item = Employer()
 
-        employer_item['sourceURL'] = response.request.url
+        employer_item['profile_link'] = response.request.url
         name = response.xpath("//p[@class='employers-panel-title']/text()").get()
         if name:
-            employer_item['name'] = name.strip()
+            employer_item['employer_name'] = name.strip()
 
         yield employer_item
