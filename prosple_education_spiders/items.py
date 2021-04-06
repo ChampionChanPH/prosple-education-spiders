@@ -185,7 +185,8 @@ class Course(scrapy.Item):
         "masters (research)": "12",
         "non-award": "13",
         "professional certificate": "14",
-        "no match": "15"
+        "no match": "15",
+        "short course or microcredential": "16",
     }
 
     # level is for course level. rank is for double degree selection logic
