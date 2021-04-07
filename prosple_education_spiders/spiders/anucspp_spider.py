@@ -81,6 +81,21 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         "day": 365
     }
 
+    months = {
+        "January": "01",
+        "February": "02",
+        "March": "03",
+        "April": "04",
+        "May": "05",
+        "June": "06",
+        "July": "07",
+        "August": "08",
+        "September": "09",
+        "October": "10",
+        "November": "11",
+        "December": "12"
+    }
+
     def get_period(self, string_to_use, course_item):
         for item in self.teaching_periods:
             if re.search(item, string_to_use):
@@ -89,7 +104,7 @@ class AnuCsppSpiderSpider(scrapy.Spider):
     def parse(self, response):
         if re.search('executive', response.request.url):
             courses = response.xpath(
-                "//caption[not(contains(text(), 'Upcoming'))]/following-sibling::tbody//strong/a/@href").getall()
+                "//caption/following-sibling::tbody//strong/a/@href").getall()
 
             for item in courses:
                 if item not in self.banned_urls:
@@ -252,6 +267,27 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         if holder and 'overview' in course_item:
             course_item['overview'] += '<strong>Course presenter(s)</strong>'\
                                        + strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        info = response.xpath("//div[@class='field-label'][contains(text(), 'Cost')]/following-sibling::*").getall()
+        if info:
+            dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", info, re.M)
+            dom_fee = [float(''.join(x)) for x in dom_fee]
+            if dom_fee:
+                course_item["domesticFeeTotal"] = max(dom_fee)
+                # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+            start_holder = []
+            for item in self.months:
+                if re.search(item, info, re.M):
+                    start_holder.append(self.months[item])
+            if start_holder:
+                course_item["startMonths"] = "|".join(start_holder)
+
+        study = response.xpath("//div[@class='field-label'][contains(text(), 'Venue')]/following-sibling::*").getall()
+        if study:
+            if re.search('online', info, re.I | re.M):
+                course_item['modeOfStudy'] = 'Online'
+
+        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by", "Of"])
 
         course_item['degreeType'] = 'Short course or microcredential'
 
