@@ -43,7 +43,10 @@ def get_total(field_to_use, field_to_update, course_item):
 class AnuCsppSpiderSpider(scrapy.Spider):
     name = 'anucspp_spider'
     allowed_domains = ['crawford.anu.edu.au', 'programsandcourses.anu.edu.au']
-    start_urls = ['https://crawford.anu.edu.au/study/graduate-degrees']
+    start_urls = [
+        'https://crawford.anu.edu.au/study/graduate-degrees',
+        'https://crawford.anu.edu.au/executive-education/course/all'
+    ]
     banned_urls = ['/study/graduate-degrees/phd-programs']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "Crawford School of Public Policy"
@@ -84,11 +87,19 @@ class AnuCsppSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//div[contains(@class, 'panel-display')]//a/@href").getall()
+        if re.search('executive', response.request.url):
+            courses = response.xpath(
+                "//caption[not(contains(text(), 'Upcoming'))]/following-sibling::tbody//strong/a/@href").getall()
 
-        for item in courses:
-            if item not in self.banned_urls:
-                yield response.follow(item, callback=self.sub_parse)
+            for item in courses:
+                if item not in self.banned_urls:
+                    yield response.follow(item, callback=self.short_parse)
+        else:
+            courses = response.xpath("//div[contains(@class, 'panel-display')]//a/@href").getall()
+
+            for item in courses:
+                if item not in self.banned_urls:
+                    yield response.follow(item, callback=self.sub_parse)
 
     def sub_parse(self, response):
         course_name = response.xpath("//h1[@class='title']/text()").get()
@@ -205,5 +216,43 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         course_item["campusNID"] = '569'
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"])
+
+        yield course_item
+
+    def short_parse(self, response):
+        course_item = Course()
+
+        course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
+        course_item["sourceURL"] = response.request.url
+        course_item["published"] = 1
+        course_item["institution"] = self.institution
+        course_item["domesticApplyURL"] = response.request.url
+
+        course_name = response.xpath("//h1/text()").get()
+        if course_name:
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
+
+        overview = response.xpath("//div[contains(@class, 'field-name-field-feature-excerpt')]//p").getall()
+        if overview:
+            summary = [strip_tags(x) for x in overview]
+            course_item.set_summary(' '.join(summary))
+            course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
+
+        learn = response.xpath(
+            "//*[text()='Course overview']/following-sibling::*[1]//div[@class='field-item even']/*").getall()
+        if learn:
+            course_item['whatLearn'] = strip_tags(''.join(learn), remove_all_tags=False, remove_hyperlinks=True)
+
+        presenter = response.xpath(
+            "//*[text()='Course presenter(s)']/following-sibling::*[1]//div[@class='content']/*").getall()
+        holder = []
+        for item in presenter:
+            if not re.search('<img', item):
+                holder.append(item)
+        if holder and 'overview' in course_item:
+            course_item['overview'] += '<strong>Course presenter(s)</strong>'\
+                                       + strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        course_item['degreeType'] = 'Short course or microcredential'
 
         yield course_item
