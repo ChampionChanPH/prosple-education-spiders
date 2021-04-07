@@ -270,6 +270,7 @@ class AnuCsppSpiderSpider(scrapy.Spider):
 
         info = response.xpath("//div[@class='field-label'][contains(text(), 'Cost')]/following-sibling::*").getall()
         if info:
+            info = ''.join(info)
             dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", info, re.M)
             dom_fee = [float(''.join(x)) for x in dom_fee]
             if dom_fee:
