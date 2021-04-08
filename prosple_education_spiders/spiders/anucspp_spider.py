@@ -175,14 +175,16 @@ class AnuCsppSpiderSpider(scrapy.Spider):
                     course_item["durationMinFull"] = float(duration[0][0])
                     self.get_period(duration[0][1], course_item)
 
-        dom_fee = response.xpath("//dt[contains(text(), 'Annual indicative fee for domestic "
-                                 "students')]/following-sibling::*").get()
+        dom_fee = response.xpath("//*[strong/text()='Indicative Program Fees']/following-sibling::*").getall()
         if dom_fee:
-            dom_fee = re.findall("\$\d*,?\d+", dom_fee, re.M)
-            if len(dom_fee) > 0:
-                dom_fee = float(re.sub("[$,]", "", dom_fee[0]))
-                course_item["domesticFeeAnnual"] = dom_fee
-                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+            dom_fee = ''.join(dom_fee)
+            dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
+            dom_fee = [float(''.join(x)) for x in dom_fee]
+            if len(dom_fee) >= 2:
+                course_item["domesticFeeAnnual"] = max(dom_fee)
+                course_item["domesticSubFeeAnnual"] = max(dom_fee)
+            if len(dom_fee) == 1:
+                course_item["domesticFeeAnnual"] = max(dom_fee)
 
         int_fee = response.xpath("//dt[contains(text(), 'Annual indicative fee for international "
                                  "students')]/following-sibling::*").get()
@@ -190,7 +192,7 @@ class AnuCsppSpiderSpider(scrapy.Spider):
             int_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
             int_fee = [float(''.join(x)) for x in int_fee]
             if int_fee:
-                course_item["internationalFeeAnnual"] = max(int_fee) * 2
+                course_item["internationalFeeAnnual"] = max(int_fee)
                 get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
         course_code = response.xpath("//*[preceding-sibling::*[contains(text(), 'Academic plan')]]/text()").get()
@@ -223,10 +225,16 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         if study_holder:
             course_item["modeOfStudy"] = "|".join(study_holder)
 
-        entry = response.xpath("//*[not(self::div)][preceding-sibling::*[contains(text(), 'Admission Requirements')]]").getall()
-        if entry:
-            entry = ''.join(entry)
-            course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False, remove_hyperlinks=True)
+        entry = response.xpath("//*[@id='admission-requirements']/following-sibling::*").getall()
+        holder = []
+        for item in entry:
+            if re.search('Indicative Program Fees', item, re.I | re.M):
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item["entryRequirements"] = strip_tags(''.join(holder), remove_all_tags=False,
+                                                          remove_hyperlinks=True)
 
         course_item["campusNID"] = '569'
 
