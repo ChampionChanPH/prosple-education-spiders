@@ -255,6 +255,11 @@ class AnuCsppSpiderSpider(scrapy.Spider):
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
+        if 'sourceURL' in course_item and 'uid' in course_item:
+            code = re.findall('(?<=/)\d+', course_item['sourceURL'])
+            if code:
+                course_item['uid'] += '-' + code[0]
+
         overview = response.xpath("//div[contains(@class, 'field-name-field-feature-excerpt')]//p").getall()
         if overview:
             summary = [strip_tags(x) for x in overview]
