@@ -180,10 +180,10 @@ class AnuCsppSpiderSpider(scrapy.Spider):
             dom_fee = ''.join(dom_fee)
             dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
             dom_fee = [float(''.join(x)) for x in dom_fee]
-            if len(dom_fee) >= 2:
-                course_item["domesticFeeAnnual"] = max(dom_fee)
-                course_item["domesticSubFeeAnnual"] = min(dom_fee)
-            if len(dom_fee) == 1:
+            # if len(dom_fee) >= 2:
+            #     course_item["domesticFeeAnnual"] = max(dom_fee)
+            #     course_item["domesticSubFeeAnnual"] = min(dom_fee)
+            if dom_fee:
                 course_item["domesticFeeAnnual"] = max(dom_fee)
 
         int_fee = response.xpath("//dt[contains(text(), 'Annual indicative fee for international "
