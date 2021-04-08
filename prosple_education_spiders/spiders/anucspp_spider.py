@@ -182,7 +182,7 @@ class AnuCsppSpiderSpider(scrapy.Spider):
             dom_fee = [float(''.join(x)) for x in dom_fee]
             if len(dom_fee) >= 2:
                 course_item["domesticFeeAnnual"] = max(dom_fee)
-                course_item["domesticSubFeeAnnual"] = max(dom_fee)
+                course_item["domesticSubFeeAnnual"] = min(dom_fee)
             if len(dom_fee) == 1:
                 course_item["domesticFeeAnnual"] = max(dom_fee)
 
