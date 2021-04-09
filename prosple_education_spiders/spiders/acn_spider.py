@@ -100,7 +100,7 @@ class AcnSpiderSpider(scrapy.Spider):
         yield SplashRequest(response.request.url, callback=self.postgrad_catalog, args={'wait': 10})
 
     def postgrad_catalog(self, response):
-        courses = response.css(".standard-arrow a::attr(href)").getall()
+        courses = response.xpath("//div[contains(@class, 'standard-arrow')]//li/a/@href").getall()
         for course in courses:
             if course not in self.blacklist_urls and course not in self.scraped_urls:
                 if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
