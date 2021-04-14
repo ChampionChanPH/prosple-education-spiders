@@ -134,16 +134,16 @@ class AraSpiderSpider(scrapy.Spider):
             if 'productTitle' in course:
                 course_item.set_course_name(course['productTitle'].strip(), self.uidPrefix)
 
-            if 'longDescription' in course:
+            if 'longDescription' in course and course['longDescription']:
                 course_item['overview'] = strip_tags(course['longDescription'], remove_all_tags=False,
                                                      remove_hyperlinks=True)
 
-            if 'shortDescription' in course:
+            if 'shortDescription' in course and course['shortDescription']:
                 course_item.set_summary(strip_tags(course['shortDescription']))
-            elif 'longDescription' in course:
+            elif 'longDescription' in course and course['longDescription']:
                 course_item.set_summary(strip_tags(course['longDescription']))
 
-            if 'sdrCode' in course:
+            if 'sdrCode' in course and course['sdrCode']:
                 course_item['courseCode'] = course['sdrCode']
 
             if 'fees' in course and '2021' in course['fees'] and 'domesticTuitionMaxFee' in course['fees']['2021']:
