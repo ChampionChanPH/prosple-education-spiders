@@ -156,7 +156,7 @@ class AraSpiderSpider(scrapy.Spider):
                 course_item['careerPathways'] = strip_tags(course['outcome'], remove_all_tags=False,
                                                            remove_hyperlinks=True)
 
-            if 'duration' in course:
+            if 'duration' in course and course['duration']:
                 duration_full = re.findall(
                     "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
                     course['duration'], re.I | re.M | re.DOTALL)
