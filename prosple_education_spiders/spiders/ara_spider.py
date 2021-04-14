@@ -143,8 +143,11 @@ class AraSpiderSpider(scrapy.Spider):
             elif 'longDescription' in course and course['longDescription']:
                 course_item.set_summary(strip_tags(course['longDescription']))
 
-            if 'sdrCode' in course and course['sdrCode']:
-                course_item['courseCode'] = course['sdrCode']
+            # if 'sdrCode' in course and course['sdrCode']:
+            #     course_item['courseCode'] = course['sdrCode']
+
+            if 'uiCode' in course and course['uiCode']:
+                course_item['courseCode'] = course['uiCode']
 
             if 'fees' in course and '2021' in course['fees'] and 'domesticTuitionMaxFee' in course['fees']['2021']:
                 course_item['domesticFeeTotal'] = course['fees']['2021']['domesticTuitionMaxFee']
