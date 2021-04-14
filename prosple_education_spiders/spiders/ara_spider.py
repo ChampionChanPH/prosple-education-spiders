@@ -3,7 +3,19 @@
 
 from ..standard_libs import *
 from ..scratch_file import *
-import pkgutil
+import requests
+# import pkgutil
+
+
+MAIN_URL = 'https://ara-test.apigee.net/productdata/api/v1/'
+api_key = 'jGhux5kJNO7AcRlXi5ZYMWjohBIjGwE7'
+
+payload = {
+    'x-api-key': api_key,
+}
+
+courses = requests.get(MAIN_URL + 'programme', params=payload)
+courses = courses.json()
 
 
 def research_coursework(course_item):
@@ -41,26 +53,17 @@ def get_total(field_to_use, field_to_update, course_item):
                                                / 52
 
 
-course_data = pkgutil.get_data("prosple_education_spiders", "resources/ara_courses - TEST.csv").decode("utf-8")
-course_data = re.split('\r\n', course_data)
+# course_data = pkgutil.get_data("prosple_education_spiders", "resources/ara_courses - TEST.csv").decode("utf-8")
+# course_data = re.split('\r\n', course_data)
 
 
 class AraSpiderSpider(scrapy.Spider):
     name = 'ara_spider'
-    start_urls = course_data[1:]
+    start_urls = ['https://www.ara.ac.nz/course-search-page']
     institution = "Ara Institute of Canterbury"
     uidPrefix = "NZ-ARA-"
 
     campuses = {
-        "Sydney": "509",
-        "Adelaide": "508",
-        "National": "510",
-        "Ballarat": "506",
-        "North Sydney": "504",
-        "Canberra": "505",
-        "Strathfield": "503",
-        "Melbourne": "501",
-        "Brisbane": "502"
     }
 
     degrees = {
@@ -114,34 +117,79 @@ class AraSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        course_item = Course()
+        for item in courses:
+            course = requests.get(MAIN_URL + 'programme/' + item, params=payload)
+            course = course.json()
 
-        course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
-        course_item["sourceURL"] = response.request.url
-        course_item["published"] = 1
-        course_item["institution"] = self.institution
+            course_item = Course()
 
-        course_name = response.xpath("//h1/text()").get()
-        if course_name:
-            course_item.set_course_name(course_name.strip(), self.uidPrefix)
+            course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
 
-        overview = response.xpath("//div[@aria-labelledby='Overview']//div[@class='list-dash']/*").getall()
-        if overview:
-            overview = [x for x in overview if strip_tags(x) != '']
-        holder = []
-        for item in overview:
-            if re.search('^<(p|u|o|h)', item):
-                holder.append(item)
-        if holder:
-            if re.search('[.?!]$', strip_tags(holder[0]), re.M):
-                holder[0] += '.'
-            summary = [strip_tags(x) for x in holder]
-            course_item.set_summary(' '.join(summary))
-            course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+            if 'url' in course:
+                course_item["sourceURL"] = course['url']
 
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
+            course_item["published"] = 1
+            course_item["institution"] = self.institution
 
-        course_item['group'] = 2
-        course_item['canonicalGroup'] = 'GradNewZealand'
+            if 'productTitle' in course:
+                course_item.set_course_name(course['productTitle'].strip(), self.uidPrefix)
 
-        yield course_item
+            if 'longDescription' in course:
+                course_item['overview'] = strip_tags(course['longDescription'], remove_all_tags=False,
+                                                     remove_hyperlinks=True)
+
+            if 'shortDescription' in course:
+                course_item.set_summary(strip_tags(course['shortDescription']))
+            elif 'longDescription' in course:
+                course_item.set_summary(strip_tags(course['longDescription']))
+
+            if 'sdrCode' in course:
+                course_item['courseCode'] = course['sdrCode']
+
+            if 'fees' in course and '2021' in course['fees'] and 'domesticTuitionMaxFee' in course['fees']['2021']:
+                course_item['domesticFeeTotal'] = course['fees']['2021']['domesticTuitionMaxFee']
+
+            if 'fees' in course and '2021' in course['fees'] and 'internationalTuitionFee' in course['fees']['2021']:
+                course_item['internationalFeeTotal'] = course['fees']['2021']['internationalTuitionFee']
+
+            if 'studyPathWay' in course:
+                course_item['careerPathways'] = strip_tags(course['studyPathWay'], remove_all_tags=False,
+                                                           remove_hyperlinks=True)
+
+            if 'outcome' in course:
+                course_item['careerPathways'] = strip_tags(course['outcome'], remove_all_tags=False,
+                                                           remove_hyperlinks=True)
+
+            if 'duration' in course:
+                duration_full = re.findall(
+                    "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
+                    course['duration'], re.I | re.M | re.DOTALL)
+                duration_part = re.findall(
+                    "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
+                    course['duration'], re.I | re.M | re.DOTALL)
+                if not duration_full and duration_part:
+                    self.get_period(duration_part[0][1].lower(), course_item)
+                if duration_full:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                if duration_part:
+                    if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                        course_item["durationMinPart"] = float(duration_part[0][0])
+                    else:
+                        course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                         / self.teaching_periods[duration_part[0][1].lower()]
+                if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                    duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                               course['duration'], re.I | re.M | re.DOTALL)
+                    if duration_full:
+                        course_item["durationMinFull"] = float(duration_full[0][0])
+                        self.get_period(duration_full[0][1].lower(), course_item)
+                        # if len(duration_full) == 1:
+                        #     course_item["durationMinFull"] = float(duration_full[0][0])
+                        #     self.get_period(duration_full[0][1].lower(), course_item)
+                        # if len(duration_full) == 2:
+                        #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                        #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                        #     self.get_period(duration_full[1][1].lower(), course_item)
+
+            yield course_item
