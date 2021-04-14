@@ -152,7 +152,7 @@ class AraSpiderSpider(scrapy.Spider):
             if 'fees' in course and '2021' in course['fees'] and 'internationalTuitionFee' in course['fees']['2021']:
                 course_item['internationalFeeTotal'] = course['fees']['2021']['internationalTuitionFee']
 
-            if 'studyPathWay' in course:
+            if 'studyPathWay' in course and course['studyPathWay']:
                 course_item['careerPathways'] = strip_tags(course['studyPathWay'], remove_all_tags=False,
                                                            remove_hyperlinks=True)
 
