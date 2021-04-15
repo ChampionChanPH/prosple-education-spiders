@@ -178,7 +178,8 @@ class AnuSpiderSpider(scrapy.Spider):
         if 'teachingPeriod' in course_item and 'durationMinFull' in course_item and \
                 ((course_item['teachingPeriod'] == 1 and course_item['durationMinFull'] <= 0.5) or
                  (course_item['teachingPeriod'] == 12 and course_item['durationMinFull'] <= 6)):
-            course_item['degreeType'] = 'Short course or microcredential'
+            if 'degreeType' in course_item and course_item['degreeType'] == '13':
+                course_item['degreeType'] = '16'
 
         # if "flag" in course_item:
         if not re.search('Non.Award', course_item['courseName'], re.I | re.DOTALL) and \
