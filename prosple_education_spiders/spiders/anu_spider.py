@@ -4,20 +4,20 @@
 from ..standard_libs import *
 from ..scratch_file import *
 
-def bachelor(course_item):
-    if "doubleDegree" in course_item:
-        if course_item["doubleDegree"] == 1:
-            index = 1 if "degreeType" in course_item else 0
-            if "honour" in course_item["rawStudyfield"][index]:
-                return "3"
-            else:
-                return "2"
 
-    elif "honour" in course_item["courseName"].lower() or "hons" in course_item["courseName"].lower():
+def research_coursework(course_item):
+    if re.search("research", course_item["courseName"], re.I):
+        return "12"
+    else:
+        return "11"
+
+
+def bachelor_honours(course_item):
+    if re.search("honours", course_item["courseName"], re.I):
         return "3"
-
     else:
         return "2"
+
 
 class AnuSpiderSpider(scrapy.Spider):
     name = 'anu_spider'
@@ -41,8 +41,9 @@ class AnuSpiderSpider(scrapy.Spider):
 
     degrees = {
         'doctor': '6',
-        "master": "11",
-        "bachelor": bachelor,
+        "master": research_coursework,
+        "executive master": research_coursework,
+        "bachelor": bachelor_honours,
         "postgraduate certificate": "7",
         "undergraduate certificate": "4",
         "postgraduate diploma": "8",
@@ -52,7 +53,6 @@ class AnuSpiderSpider(scrapy.Spider):
         "juris doctor (honours)": "10",
         "flexible double masters": "11",
         "flexible double degree": "2",
-        "executive master": "11",
         "graduate non-award": "8",  # assigning a graduate type to get right course level then just assign non-award override after
         # "foundation certificate": "4"
     }
@@ -122,20 +122,6 @@ class AnuSpiderSpider(scrapy.Spider):
             course_item.set_course_name(name, self.uidPrefix)
         course_item.set_sf_dt(self.degrees, type_delims=["of", "in", "-"])
 
-        # Overrides
-        level = response.meta["level"]
-        # print([level])
-        if level in ["Postgraduate", "Research"]:
-            course_item["courseLevel"] = "2"
-            if level == "Research":
-                course_item["degreeType"] = "12"
-
-        elif level == "Undergraduate":
-            course_item["courseLevel"] = "1"
-
-        elif level == "Non-award":
-            course_item["degreeType"] = "13"
-
         atar = response.xpath("//abbr[@title='Australian Tertiary Admission Rank']/following-sibling::*/text()").get()
         if atar:
             try:
@@ -186,6 +172,13 @@ class AnuSpiderSpider(scrapy.Spider):
             duration = float(duration)
             course_item["teachingPeriod"] = 1
             course_item["durationMinFull"] = duration
+
+        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+
+        if 'teachingPeriod' in course_item and 'durationMinFull' in course_item and \
+                ((course_item['teachingPeriod'] == 1 and course_item['durationMinFull'] <= 0.5) or
+                 (course_item['teachingPeriod'] == 12 and course_item['durationMinFull'] <= 6)):
+            course_item['degreeType'] = 'Short course or microcredential'
 
         # if "flag" in course_item:
         if not re.search('Non.Award', course_item['courseName'], re.I | re.DOTALL) and \
