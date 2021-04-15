@@ -26,7 +26,12 @@ class AnuSpiderSpider(scrapy.Spider):
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     blacklist_urls = [
         "https://programsandcourses.anu.edu.au/2020/program/5050XNAWD",
-        "https://programsandcourses.anu.edu.au/2021/program/1302XNAWD"
+        "https://programsandcourses.anu.edu.au/2021/program/1302XNAWD",
+        'https://programsandcourses.anu.edu.au/2021/program/5035XJOINT',
+        'https://programsandcourses.anu.edu.au/2021/program/5034XNAWD',
+        'https://programsandcourses.anu.edu.au/2021/program/5082XCRWFD',
+        'https://programsandcourses.anu.edu.au/2021/program/1305XGSPU',
+        'https://programsandcourses.anu.edu.au/2021/program/5036XGSPP',
     ]
     scraped_urls = []
     superlist_urls = []
@@ -35,6 +40,7 @@ class AnuSpiderSpider(scrapy.Spider):
     uidPrefix = "AU-ANU-"
 
     degrees = {
+        'doctor': '6',
         "master": "11",
         "bachelor": bachelor,
         "postgraduate certificate": "7",
@@ -130,6 +136,12 @@ class AnuSpiderSpider(scrapy.Spider):
         elif level == "Non-award":
             course_item["degreeType"] = "13"
 
+        atar = response.xpath("//abbr[@title='Australian Tertiary Admission Rank']/following-sibling::*/text()").get()
+        if atar:
+            try:
+                course_item['guaranteedEntryScore'] = int(atar)
+            except ValueError:
+                pass
 
         code = response.meta["code"]
         if code:
@@ -150,6 +162,8 @@ class AnuSpiderSpider(scrapy.Spider):
                 course_item.add_flag("modeOfStudy", "New keyword found: " + study_mode)
 
         overview = response.xpath("//div[@id='introduction']/*").getall()
+        if not overview:
+            overview = response.xpath("//*[@id='further-info']/following-sibling::text()").getall()
         if overview:
             summary = [strip_tags(x) for x in overview]
             course_item.set_summary(' '.join(summary))
@@ -173,9 +187,8 @@ class AnuSpiderSpider(scrapy.Spider):
             course_item["teachingPeriod"] = 1
             course_item["durationMinFull"] = duration
 
-
         # if "flag" in course_item:
-        if not re.search('Non-Award', course_item['courseName'], re.I) and \
+        if not re.search('Non.Award', course_item['courseName'], re.I | re.DOTALL) and \
                 not re.search('Scholarship', course_item['courseName'], re.I):
             yield course_item
 
