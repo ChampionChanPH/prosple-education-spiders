@@ -32,7 +32,8 @@ class AnuSpiderSpider(scrapy.Spider):
         'https://programsandcourses.anu.edu.au/2021/program/5082XCRWFD',
         'https://programsandcourses.anu.edu.au/2021/program/1305XGSPU',
         'https://programsandcourses.anu.edu.au/2021/program/5036XGSPP',
-        'https://programsandcourses.anu.edu.au/2021/program/5031XNAWD'
+        'https://programsandcourses.anu.edu.au/2021/program/5031XNAWD',
+        'https://programsandcourses.anu.edu.au/2021/program/1152XNAWD'
     ]
     scraped_urls = []
     superlist_urls = []
