@@ -2,6 +2,7 @@
 # by: Johnel Bacani
 
 from ..standard_libs import *
+from ..scratch_file import *
 
 def bachelor(course_item):
     if "doubleDegree" in course_item:
@@ -24,7 +25,8 @@ class AnuSpiderSpider(scrapy.Spider):
     start_urls = ['https://programsandcourses.anu.edu.au/catalogue']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     blacklist_urls = [
-        "https://programsandcourses.anu.edu.au/2020/program/5050XNAWD"
+        "https://programsandcourses.anu.edu.au/2020/program/5050XNAWD",
+        "https://programsandcourses.anu.edu.au/2021/program/1302XNAWD"
     ]
     scraped_urls = []
     superlist_urls = []
@@ -147,11 +149,11 @@ class AnuSpiderSpider(scrapy.Spider):
             else:
                 course_item.add_flag("modeOfStudy", "New keyword found: " + study_mode)
 
-        overview = response.css("div.introduction p::text").getall()
+        overview = response.xpath("//div[@id='introduction']/*").getall()
         if overview:
-            overview = [cleanspace(x) for x in overview]
-            course_item["overview"] = "\n".join(overview)
-            course_item.set_summary(" ".join(overview))
+            summary = [strip_tags(x) for x in overview]
+            course_item.set_summary(' '.join(summary))
+            course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
         int_fee = response.css("div#indicative-fees__international dd::text").get()
         if int_fee:
@@ -173,5 +175,7 @@ class AnuSpiderSpider(scrapy.Spider):
 
 
         # if "flag" in course_item:
-        yield course_item
+        if not re.search('Non-Award', course_item['courseName'], re.I) and \
+                not re.search('Scholarship', course_item['courseName'], re.I):
+            yield course_item
 
