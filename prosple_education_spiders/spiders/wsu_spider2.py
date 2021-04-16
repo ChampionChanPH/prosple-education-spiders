@@ -216,10 +216,10 @@ class WsuSpider2Spider(scrapy.Spider):
                 course_item["domesticFeeAnnual"] = max(int_fee)
                 get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-        career1 = response.xpath("//div[contains(@class, 'component--title')][*/text()='Your "
-                                 "career']/following-sibling::*/*").getall()
-        career2 = response.xpath("//div[*/*/*/text()='Your Career']/following-sibling::*[1]//*["
-                                 "@class='tile-carousel__text']/*").getall()
+        career1 = response.xpath("//div[contains(@class, 'component--title')][*/text()='Your career' or */text("
+                                 ")='Your Career']/following-sibling::*/*").getall()
+        career2 = response.xpath("//div[*/*/*/text()='Your career' or */*/*/text()='Your "
+                                 "Career']/following-sibling::*[1]//*[@class='tile-carousel__text']/*").getall()
         holder = []
         if career1:
             holder.extend(career1)
