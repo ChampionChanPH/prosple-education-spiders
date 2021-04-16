@@ -176,21 +176,20 @@ class AraSpiderSpider(scrapy.Spider):
                     if duration_full:
                         course_item["durationMinFull"] = float(duration_full[0][0])
                         self.get_period(duration_full[0][1].lower(), course_item)
-                        # if len(duration_full) == 1:
-                        #     course_item["durationMinFull"] = float(duration_full[0][0])
-                        #     self.get_period(duration_full[0][1].lower(), course_item)
-                        # if len(duration_full) == 2:
-                        #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
-                        #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
-                        #     self.get_period(duration_full[1][1].lower(), course_item)
 
-            if 'fees' in course and '2021' in course['fees'] and 'domesticTuitionMaxFee' in course['fees']['2021']:
-                course_item['domesticFeeAnnual'] = course['fees']['2021']['domesticTuitionMaxFee']
-                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+            if 'fees' in course and course['fees']:
+                if '2021' in course['fees'] and course['fees']['2021']:
+                    if 'domesticTuitionMaxFee' in course['fees']['2021'] and \
+                            course['fees']['2021']['domesticTuitionMaxFee']:
+                        course_item['domesticFeeAnnual'] = course['fees']['2021']['domesticTuitionMaxFee']
+                        get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-            if 'fees' in course and '2021' in course['fees'] and 'internationalTuitionFee' in course['fees']['2021']:
-                course_item['internationalFeeAnnual'] = course['fees']['2021']['internationalTuitionFee']
-                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+            if 'fees' in course and course['fees']:
+                if '2021' in course['fees'] and course['fees']['2021']:
+                    if 'internationalTuitionFee' in course['fees']['2021'] and \
+                            course['fees']['2021']['internationalTuitionFee']:
+                        course_item['internationalFeeAnnual'] = course['fees']['2021']['internationalTuitionFee']
+                        get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
             course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
