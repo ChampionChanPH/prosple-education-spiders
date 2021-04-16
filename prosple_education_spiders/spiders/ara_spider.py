@@ -7,7 +7,8 @@ import requests
 # import pkgutil
 
 
-MAIN_URL = 'https://ara-test.apigee.net/productdata/api/v1/'
+TEST_URL = 'https://ara-test.apigee.net/productdata/api/v1/'
+MAIN_URL = 'https://ara-prod.apigee.net/productdata/api/v1/'
 api_key = 'jGhux5kJNO7AcRlXi5ZYMWjohBIjGwE7'
 
 payload = {
@@ -80,6 +81,7 @@ class AraSpiderSpider(scrapy.Spider):
         "certificate iv": "4",
         "undergraduate certificate": "4",
         "advanced diploma": "5",
+        "new zealand diploma": "5",
         "diploma": "5",
         "associate degree": "1",
         "non-award": "13",
@@ -125,13 +127,13 @@ class AraSpiderSpider(scrapy.Spider):
 
             course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
 
-            if 'url' in course:
+            if 'url' in course and course['url']:
                 course_item["sourceURL"] = course['url']
 
             course_item["published"] = 1
             course_item["institution"] = self.institution
 
-            if 'productTitle' in course:
+            if 'productTitle' in course and course['productTitle']:
                 course_item.set_course_name(course['productTitle'].strip(), self.uidPrefix)
 
             if 'longDescription' in course and course['longDescription']:
@@ -143,17 +145,8 @@ class AraSpiderSpider(scrapy.Spider):
             elif 'longDescription' in course and course['longDescription']:
                 course_item.set_summary(strip_tags(course['longDescription']))
 
-            # if 'sdrCode' in course and course['sdrCode']:
-            #     course_item['courseCode'] = course['sdrCode']
-
             if 'uiCode' in course and course['uiCode']:
                 course_item['courseCode'] = course['uiCode']
-
-            if 'fees' in course and '2021' in course['fees'] and 'domesticTuitionMaxFee' in course['fees']['2021']:
-                course_item['domesticFeeTotal'] = course['fees']['2021']['domesticTuitionMaxFee']
-
-            if 'fees' in course and '2021' in course['fees'] and 'internationalTuitionFee' in course['fees']['2021']:
-                course_item['internationalFeeTotal'] = course['fees']['2021']['internationalTuitionFee']
 
             if 'outcome' in course and course['outcome']:
                 course_item['careerPathways'] = strip_tags(course['outcome'], remove_all_tags=False,
@@ -190,5 +183,23 @@ class AraSpiderSpider(scrapy.Spider):
                         #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
                         #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                         #     self.get_period(duration_full[1][1].lower(), course_item)
+
+            if 'fees' in course and '2021' in course['fees'] and 'domesticTuitionMaxFee' in course['fees']['2021']:
+                course_item['domesticFeeAnnual'] = course['fees']['2021']['domesticTuitionMaxFee']
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+            if 'fees' in course and '2021' in course['fees'] and 'internationalTuitionFee' in course['fees']['2021']:
+                course_item['internationalFeeAnnual'] = course['fees']['2021']['internationalTuitionFee']
+                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+
+            course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+
+            if 'teachingPeriod' in course_item and 'durationMinFull' in course_item and \
+                    ((course_item['teachingPeriod'] == 1 and course_item['durationMinFull'] <= 0.5) or
+                     (course_item['teachingPeriod'] == 12 and course_item['durationMinFull'] <= 6)):
+                course_item['degreeType'] = 'Short course or microcredential'
+
+            course_item['group'] = 2
+            course_item['canonicalGroup'] = 'GradNewZealand'
 
             yield course_item
