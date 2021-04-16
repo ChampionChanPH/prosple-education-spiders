@@ -156,6 +156,7 @@ class WsuSpider2Spider(scrapy.Spider):
             "//div[contains(@class, 'head')][div/text()='Start times']/following-sibling::*").getall()
         holder = []
         if intake:
+            intake = '|'.join(intake)
             for month in self.months:
                 if re.search(month, intake, re.M):
                     holder.append(self.months[month])
