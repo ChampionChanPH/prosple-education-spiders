@@ -45,6 +45,15 @@ class WsuSpider2Spider(scrapy.Spider):
     start_urls = ['https://www.westernsydney.edu.au/future/study/courses.html']
     institution = "Western Sydney University"
     uidPrefix = "AU-WSU-"
+    banned_urls = [
+        'https://www.westernsydney.edu.au/future/study/courses/research.html',
+        'https://www.westernsydney.edu.au/future/study/courses/undergraduate.html',
+        'https://www.westernsydney.edu.au/future/study/courses/postgraduate.html',
+        'https://www.westernsydney.edu.au/future/study/application-pathways/the-college/courses.html',
+        'https://www.westernsydney.edu.au/future/study/application-pathways/the-college/study-with-us/how-to-apply'
+        '-international.html ',
+        'https://www.westernsydney.edu.au/future/study/courses/tesol-and-interpreting-and-translation-courses.html',
+    ]
 
     degrees = {
         "graduate certificate": "7",
@@ -118,7 +127,8 @@ class WsuSpider2Spider(scrapy.Spider):
                                  "'tile__1x1')]/a/@href").getall()
 
         for item in set(courses):
-            yield response.follow(item, callback=self.course_parse)
+            if item not in self.banned_urls:
+                yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
