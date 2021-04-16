@@ -225,11 +225,11 @@ class WsuSpider2Spider(scrapy.Spider):
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.append(self.campuses[campus])
+            if re.search('online', location, re.I | re.M):
+                study_holder.append('Online')
         if campus_holder:
             course_item["campusNID"] = "|".join(campus_holder)
             study_holder.append('In Person')
-        if re.search('online', location, re.I | re.M):
-            study_holder.append('Online')
         if study_holder:
             course_item["modeOfStudy"] = "|".join(study_holder)
 
