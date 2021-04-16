@@ -135,9 +135,8 @@ class WsuSpider2Spider(scrapy.Spider):
 
         overview = response.xpath("//div[contains(@class, 'section')][2]//div[@class='tile-carousel-side']/*/*").get()
         if overview:
-            summary = [strip_tags(x) for x in overview]
-            course_item.set_summary(' '.join(summary))
-            course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
+            course_item.set_summary(strip_tags(overview))
+            course_item['overview'] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
 
         code = response.xpath("//dt[text()='COURSE CODE']/following-sibling::*").get()
         if code:
