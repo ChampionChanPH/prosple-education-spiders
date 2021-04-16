@@ -51,7 +51,7 @@ class WsuSpider2Spider(scrapy.Spider):
         'https://www.westernsydney.edu.au/future/study/courses/postgraduate.html',
         'https://www.westernsydney.edu.au/future/study/application-pathways/the-college/courses.html',
         'https://www.westernsydney.edu.au/future/study/application-pathways/the-college/study-with-us/how-to-apply'
-        '-international.html ',
+        '-international.html',
         'https://www.westernsydney.edu.au/future/study/courses/tesol-and-interpreting-and-translation-courses.html',
     ]
 
