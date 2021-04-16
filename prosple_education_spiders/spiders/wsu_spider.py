@@ -1,44 +1,94 @@
 # -*- coding: utf-8 -*-
-# by: Johnel Bacani
+# by Christian Anasco
 
-import scrapy
-import re
-from ..items import Course
-from ..misc_functions import *
-from datetime import date
-from time import strptime
-from scrapy_splash import SplashRequest
+from ..standard_libs import *
+from ..scratch_file import strip_tags
 
 
 def research_coursework(course_item):
-    if "research" in course_item["sourceURL"]:
+    if re.search("research", course_item["courseName"], re.I):
         return "12"
     else:
         return "11"
 
 
 def bachelor_honours(course_item):
-    if "honours" in course_item["sourceURL"]:
+    if re.search("honours", course_item["courseName"], re.I):
         return "3"
     else:
         return "2"
 
 
-def doctor(course_item):
-    if course_item["courseLevel"] == "Undergraduate":
-        return "2"
-    else:
-        return "6"
+def get_total(field_to_use, field_to_update, course_item):
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
+        if course_item["teachingPeriod"] == 1:
+            if float(course_item["durationMinFull"]) < 1:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 52
 
 
-class WsuSpiderSpider(scrapy.Spider):
-    name = 'wsu_spider'
+class WsuSpider2Spider(scrapy.Spider):
+    name = 'wsu_spider2'
     start_urls = ['https://www.westernsydney.edu.au/future/study/courses.html']
-    http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = "Western Sydney University"
     uidPrefix = "AU-WSU-"
+    banned_urls = [
+        'https://www.westernsydney.edu.au/future/study/courses/research.html',
+        'https://www.westernsydney.edu.au/future/study/courses/undergraduate.html',
+        'https://www.westernsydney.edu.au/future/study/courses/postgraduate.html',
+        'https://www.westernsydney.edu.au/future/study/application-pathways/the-college/courses.html',
+        'https://www.westernsydney.edu.au/future/study/application-pathways/the-college/study-with-us/how-to-apply'
+        '-international.html',
+        'https://www.westernsydney.edu.au/future/study/courses/tesol-and-interpreting-and-translation-courses.html',
+    ]
 
-    campus_map = {
+    degrees = {
+        "graduate certificate": "7",
+        "executive graduate certificate": "7",
+        "graduate diploma": "8",
+        "master": research_coursework,
+        "executive master": research_coursework,
+        "bachelor": bachelor_honours,
+        "doctor": "6",
+        "undergraduate certificate": "4",
+        "university certificate": "4",
+        "certificate": "4",
+        "advanced diploma": "5",
+        "diploma": "5",
+        "associate degree": "1",
+        "non-award": "13",
+        "no match": "15"
+    }
+
+    months = {
+        "January": "01",
+        "February": "02",
+        "March": "03",
+        "April": "04",
+        "May": "05",
+        "June": "06",
+        "July": "07",
+        "August": "08",
+        "September": "09",
+        "October": "10",
+        "November": "11",
+        "December": "12"
+    }
+
+    campuses = {
         "Bankstown": "855",
         "Campbelltown": "857",
         "Hawkesbury": "11718",
@@ -52,149 +102,150 @@ class WsuSpiderSpider(scrapy.Spider):
         "Sydney Olympic Park": "39902"
     }
 
-    fee_map = {
-        "domestic student": ["domesticFeeTotal", "internationalFeeTotal"],
-        "international student": ["internationalFeeTotal", "domesticFeeTotal"]
+    teaching_periods = {
+        "year": 1,
+        "semester": 2,
+        "trimester": 3,
+        "quarter": 4,
+        "month": 12,
+        "week": 52,
+        "day": 365
     }
 
-    degrees = {"graduate certificate": "7",
-               "graduate diploma": "8",
-               "master": research_coursework,
-               "bachelor": bachelor_honours,
-               "doctor": doctor,
-               "certificate": "4",
-               "diploma": "5",
-               "associate degree": "1",
-               "university foundation studies": "13",
-               "non-award": "13",
-               "no match": "15"
-    }
-
-    count = 0
-    courses_scraped = []
-    blacklist = ["http://www.westernsydney.edu.au/future/study/courses/tesol-and-interpreting-and-translation-courses.html"]
-    superlist = []
+    def get_period(self, string_to_use, course_item):
+        for item in self.teaching_periods:
+            if re.search(item, string_to_use):
+                course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        print(response.request.url)
-        yield SplashRequest(response.request.url, callback=self.mainpage_splash, args={'wait': 10}) #need to load js for main page.
+        categories = response.xpath("//div[contains(@class, 'component--tile')]//article[contains(@class, "
+                                    "'tile__theme tile__2x2')]/a")
+        yield from response.follow_all(categories, callback=self.sub_parse)
 
-    def mainpage_splash(self, response):
-        categories = response.css("article.tile__2x2 a::attr(href)").extract()
-        for category in categories:
-            if category != "http://www.westernsydney.edu.au/future/why-western.html":
-                yield SplashRequest(category, callback=self.category_splash, args={'wait': 10})
+    def sub_parse(self, response):
+        courses = response.xpath("//div[contains(@class, 'component--tile')]//article[contains(@class, "
+                                 "'tile__1x1')]/a/@href").getall()
 
-    def category_splash(self, response):
-        courses = response.css("article.tile__1x1 a::attr(href)").extract()
-        courses = list(dict.fromkeys(courses, 0).keys())
-        if "#" in courses:
-            del courses[courses.index("#")]
-
-        for course in courses:
-            if course not in self.courses_scraped and course not in self.blacklist:
-                if (len(self.superlist) != 0 and course in self.superlist) or len(self.superlist) == 0:
-                    self.count += 1
-                    self.courses_scraped.append(course)
-                    yield SplashRequest(course, callback=self.course_parse, args={'wait': 20}, meta={'url': course})
+        for item in set(courses):
+            yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
+
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
-        course_item["sourceURL"] = response.meta['url']
+        course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
+        course_item["domesticApplyURL"] = response.request.url
 
-        course_item["domesticApplyURL"] = response.meta['url']
+        course_name = response.xpath("//h1/text()").get()
+        if course_name:
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        course_item["courseName"] = response.css("h1.title__text::text").extract_first()
-        course_item["uid"] = self.uidPrefix + course_item["courseName"]
-        course_level = response.css("div.pb__content-inner span::text").extract_first()
-        if course_level in ["Undergraduate", "The College"]:
-            course_item["courseLevel"] = "Undergraduate"
+        overview = response.xpath("//div[contains(@class, 'section')][2]//div[@class='tile-carousel-side']/*/*").get()
+        if overview:
+            course_item.set_summary(strip_tags(overview))
+            course_item['overview'] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
 
-        else:
-            course_item["courseLevel"] = "Postgraduate"
+        code = response.xpath("//dt[text()='COURSE CODE']/following-sibling::*").get()
+        if code:
+            code = re.findall("\d+", code, re.M)
+            if code:
+                course_item['courseCode'] = ", ".join(code)
 
-        course_item.set_sf_dt(self.degrees)
+        cricos = response.xpath("//dt[text()='CRICOS CODE']/following-sibling::*").get()
+        if cricos:
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if cricos:
+                course_item["cricosCode"] = ", ".join(cricos)
+                course_item["internationalApps"] = 1
+                course_item["internationalApplyURL"] = response.request.url
 
-        info_block = response.css("div.tile-carousel-side")#get block that has overview, duration and intake
-        course_description = info_block[0].css("div.component--wysiwyg p::text").extract()
-        course_item["overviewSummary"] = cleanspace(course_description[0])
-        course_item["overview"] = "\n".join([cleanspace(x) for x in course_description])
+        intake = response.xpath(
+            "//div[contains(@class, 'head')][div/text()='Start times']/following-sibling::*").getall()
+        holder = []
+        if intake:
+            intake = '|'.join(intake)
+            for month in self.months:
+                if re.search(month, intake, re.M):
+                    holder.append(self.months[month])
+        if holder:
+            course_item["startMonths"] = "|".join(holder)
 
-        columns = info_block[0].css("div.col-sm-6")
-
-        for column in columns:
-            # print(column.extract())
-            header = column.css("div.h3::text").extract_first()
-            if header == "Start times":
-                months = column.css("span::text").extract()
-                months = convert_months(" ".join(months).split(" "))
-                course_item["startMonths"] = "|".join(months)
-
-            elif header == "Study options":
-                rows = column.css("div.cols-2__body")
-                for row in rows:
-                    # print(row.extract())
-                    cat = row.css("div.h6::text").extract_first()
-                    value = row.css("span::text").extract_first()
-                    duration = re.findall("[\d.]+",value)[0]
-                    period = re.findall("[a-zA-Z]+",value)[0]
-                    # print(duration)
-                    if "teachingPeriod" in course_item:
-                        if get_period(period.lower()) != course_item["teachingPeriod"]:
-                            course_item.add_flag("teachingPeriod", "durations have different periods")
-                    else:
-                        course_item["teachingPeriod"] = get_period(period.lower())
-
-                    if cat == "PART TIME":
-                        course_item["durationMinPart"] = duration
-
-                    elif cat == "FULL TIME":
-                        course_item["durationMinFull"] = duration
-
-        campus_blocks = response.css("div.col-lg-7 div.tile-carousel__text")
-        campuses = campus_blocks.css("h3::text").extract()
-        course_item["campusNID"] = "|".join([self.campus_map[x] for x in campuses if x != "Online"])
-        if "Online" in campuses:
-            if len(campuses) == 1:
-                course_item["modeOfStudy"] = "Online"
+        full_time = response.xpath("//div[contains(@class, 'label')][text()='FULL TIME']/following-sibling::*").get()
+        part_time = response.xpath("//div[contains(@class, 'label')][text()='PART TIME']/following-sibling::*").get()
+        duration_full = None
+        duration_part = None
+        if full_time:
+            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                       full_time, re.I | re.M | re.DOTALL)
+        if part_time:
+            duration_part = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                       part_time, re.I | re.M | re.DOTALL)
+        if not duration_full and duration_part:
+            self.get_period(duration_part[0][1].lower(), course_item)
+        if duration_full:
+            course_item["durationMinFull"] = float(duration_full[0][0])
+            self.get_period(duration_full[0][1].lower(), course_item)
+        if duration_part:
+            if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                course_item["durationMinPart"] = float(duration_part[0][0])
             else:
-                course_item["modeOfStudy"] = "In person|Online"
-        else:
-            course_item["modeOfStudy"] = "In person"
-        for campus_block in campus_blocks:
-            codes = campus_block.css("dl")
-            for code in codes:
-                label = code.css("dt::text").extract_first()
-                value = code.css("dd::text").extract_first()
-                if label == "COURSE CODE":
-                    if "courseCode" in course_item and value != course_item["courseCode"]:
-                        course_item.add_flag("courseCode", "Inconsistent course code")
-                    else:
-                        if re.match("\d+", value):
-                            course_item["courseCode"] = value
+                course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                 / self.teaching_periods[duration_part[0][1].lower()]
 
-                elif label == "CRICOS CODE":
-                    course_item["internationalApps"] = 1
-                    course_item["internationalApplyURL"] = response.meta['url']
-                    if "cricosCode" in course_item and value != course_item["cricosCode"]:
-                        course_item.add_flag("courseCode", "Inconsistent cricos code")
-                    else:
-                        course_item["cricosCode"] = value
+        dom_fee = response.xpath("//div[contains(@class, 'col-sm-6')][contains(*/*/text(), 'Fees and "
+                                 "delivery')]/following-sibling::*[1]//div[@class='tabs__content']/div[contains(@id, "
+                                 "'panel0')]").getall()
+        if dom_fee:
+            dom_fee = ''.join(dom_fee)
+            dom_fee = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", dom_fee, re.M)
+            dom_fee = [float(''.join(x)) for x in dom_fee]
+            if dom_fee:
+                course_item["domesticFeeAnnual"] = max(dom_fee)
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-        rows = response.css("div.section div.row")
-        for row in rows:
-            title = row.css("h3.title__text::text").extract_first()
-            if title:
-                title = cleanspace(title)
-            if title == "Fees and delivery":
-                field_case = self.fee_map[row.css("option[aria-selected='true']::text").extract_first().lower()]
-                fees = row.css("div.tabs__pane")
-                for i in range(len(fees)):
-                    holder = re.findall("\$([\d,]+)", " ".join(fees[i].css("p::text").extract()))
-                    if holder:
-                        course_item[field_case[i]] = re.sub(",", "", holder[0])
+        int_fee = response.xpath("//div[contains(@class, 'col-sm-6')][contains(*/*/text(), 'Fees and "
+                                 "delivery')]/following-sibling::*[1]//div[@class='tabs__content']/div[contains(@id, "
+                                 "'panel1')]").getall()
+        if int_fee:
+            int_fee = ''.join(int_fee)
+            int_fee = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", int_fee, re.M)
+            int_fee = [float(''.join(x)) for x in int_fee]
+            if int_fee:
+                course_item["domesticFeeAnnual"] = max(int_fee)
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-        yield course_item
+        career1 = response.xpath("//div[contains(@class, 'component--title')][*/text()='Your career' or */text("
+                                 ")='Your Career']/following-sibling::*/*").getall()
+        career2 = response.xpath("//div[*/*/*/text()='Your career' or */*/*/text()='Your "
+                                 "Career']/following-sibling::*[1]//*[@class='tile-carousel__text']/*").getall()
+        holder = []
+        if career1:
+            holder.extend(career1)
+        if career2:
+            holder.extend(career2)
+        if holder:
+            course_item['careerPathways'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        location = response.xpath("//div[contains(@class, 'component--title')][*/text()='Available "
+                                  "campuses']/following-sibling::*[1]//*[@class='tile-carousel__caption']").getall()
+        campus_holder = []
+        study_holder = []
+        if location:
+            location = ''.join(location)
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.append(self.campuses[campus])
+            if re.search('online', location, re.I | re.M):
+                study_holder.append('Online')
+        if campus_holder:
+            course_item["campusNID"] = "|".join(campus_holder)
+            study_holder.append('In Person')
+        if study_holder:
+            course_item["modeOfStudy"] = "|".join(study_holder)
+
+        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+
+        if course_item['sourceURL'] not in self.banned_urls:
+            yield course_item
