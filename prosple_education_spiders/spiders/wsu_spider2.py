@@ -127,8 +127,7 @@ class WsuSpider2Spider(scrapy.Spider):
                                  "'tile__1x1')]/a/@href").getall()
 
         for item in set(courses):
-            if item not in self.banned_urls:
-                yield response.follow(item, callback=self.course_parse)
+            yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -248,4 +247,5 @@ class WsuSpider2Spider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
-        yield course_item
+        if course_item['sourceURL'] not in self.banned_urls:
+            yield course_item
