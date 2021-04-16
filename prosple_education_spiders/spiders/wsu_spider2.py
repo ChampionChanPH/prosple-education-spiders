@@ -209,7 +209,8 @@ class WsuSpider2Spider(scrapy.Spider):
 
         career1 = response.xpath("//div[contains(@class, 'component--title')][*/text()='Your "
                                  "career']/following-sibling::*/*").getall()
-        career2 = response.xpath("//*[@class='tile-carousel__text']").getall()[1:]
+        career2 = response.xpath("//div[*/*/*/text()='Your Career']/following-sibling::*[1]//*["
+                                 "@class='tile-carousel__text']/*").getall()
         holder = []
         if career1:
             holder.extend(career1)
@@ -218,10 +219,12 @@ class WsuSpider2Spider(scrapy.Spider):
         if holder:
             course_item['careerPathways'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        location = response.xpath("//*[@class='tile-carousel__text']").get()
+        location = response.xpath("//div[contains(@class, 'component--title')][*/text()='Available "
+                                  "campuses']/following-sibling::*[1]//*[@class='tile-carousel__caption']").getall()
         campus_holder = []
         study_holder = []
         if location:
+            location = ''.join(location)
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.append(self.campuses[campus])
