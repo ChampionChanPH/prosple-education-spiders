@@ -144,7 +144,7 @@ class WsuSpiderSpider(scrapy.Spider):
             name = course_name
             if re.search('\(.*(master|bachelor|diploma)', course_name, flags=re.I | re.M | re.DOTALL):
                 course_name = re.sub('\(.*(master|bachelor|diploma).*', '', course_name, flags=re.I | re.M | re.DOTALL)
-                course_item.set_course_name(course_name.strip(), self.uidPrefix)
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[contains(@class, 'section')][2]//div[@class='tile-carousel-side']/*/*").get()
         if overview:
