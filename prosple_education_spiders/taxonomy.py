@@ -66,5 +66,6 @@ special_chars = {
     u"\u016B": "u",
     u"\u016A": "U",
     u"\u200B": '',
+    u"\u014D": 'o',
 }
 
