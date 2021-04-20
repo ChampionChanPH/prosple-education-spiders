@@ -214,4 +214,7 @@ class AraSpiderSpider(scrapy.Spider):
             if name:
                 course_item.set_course_name(name.strip(), self.uidPrefix)
 
+            if 'uid' in course_item and 'courseCode' in course_item:
+                course_item['uid'] += '-' + course_item['courseCode']
+
             yield course_item
