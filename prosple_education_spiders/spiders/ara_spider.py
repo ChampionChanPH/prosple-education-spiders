@@ -139,21 +139,12 @@ class AraSpiderSpider(scrapy.Spider):
             name = None
             if 'productTitle' in course and course['productTitle']:
                 course_name = course['productTitle']
-                name = course_name[:]
+                name = course_name
                 if re.search('\(.*(master|bachelor|diploma)', course_name, flags=re.I | re.M | re.DOTALL):
                     course_name = re.sub('\(.*(master|bachelor|diploma).*', '', course_name,
                                          flags=re.I | re.M | re.DOTALL)
                 if course_name:
                     course_item.set_course_name(course_name.strip(), self.uidPrefix)
-
-            course_name = response.xpath("//h1/text()").get()
-            name = None
-            if course_name:
-                name = course_name
-                if re.search('\(.*(master|bachelor|diploma)', course_name, flags=re.I | re.M | re.DOTALL):
-                    course_name = re.sub('\(.*(master|bachelor|diploma).*', '', course_name,
-                                         flags=re.I | re.M | re.DOTALL)
-                course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
             if 'longDescription' in course and course['longDescription']:
                 course_item['overview'] = strip_tags(course['longDescription'], remove_all_tags=False,
