@@ -252,7 +252,7 @@ class WsuSpiderSpider(scrapy.Spider):
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
         if name:
-            course_item['courseName'] = name.strip()
+            course_item.set_course_name(name.strip(), self.uidPrefix)
 
         if course_item['sourceURL'] not in self.banned_urls:
             yield course_item
