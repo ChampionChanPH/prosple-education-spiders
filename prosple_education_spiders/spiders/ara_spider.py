@@ -82,6 +82,9 @@ class AraSpiderSpider(scrapy.Spider):
         "undergraduate certificate": "4",
         "advanced diploma": "5",
         "new zealand diploma": "5",
+        "new zealand certificate": "4",
+        'n.z. certificate': '4',
+        'n.z. cert.': '4',
         "diploma": "5",
         "associate degree": "1",
         "non-award": "13",
@@ -133,8 +136,24 @@ class AraSpiderSpider(scrapy.Spider):
             course_item["published"] = 1
             course_item["institution"] = self.institution
 
+            name = None
             if 'productTitle' in course and course['productTitle']:
-                course_item.set_course_name(course['productTitle'].strip(), self.uidPrefix)
+                course_name = course['productTitle']
+                name = course_name
+                if re.search('\(.*(master|bachelor|diploma)', course_name, flags=re.I | re.M | re.DOTALL):
+                    course_name = re.sub('\(.*(master|bachelor|diploma).*', '', course_name,
+                                         flags=re.I | re.M | re.DOTALL)
+                if course_name:
+                    course_item.set_course_name(course_name.strip(), self.uidPrefix)
+
+            course_name = response.xpath("//h1/text()").get()
+            name = None
+            if course_name:
+                name = course_name
+                if re.search('\(.*(master|bachelor|diploma)', course_name, flags=re.I | re.M | re.DOTALL):
+                    course_name = re.sub('\(.*(master|bachelor|diploma).*', '', course_name,
+                                         flags=re.I | re.M | re.DOTALL)
+                course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
             if 'longDescription' in course and course['longDescription']:
                 course_item['overview'] = strip_tags(course['longDescription'], remove_all_tags=False,
@@ -200,5 +219,8 @@ class AraSpiderSpider(scrapy.Spider):
 
             course_item['group'] = 2
             course_item['canonicalGroup'] = 'GradNewZealand'
+
+            if name:
+                course_item.set_course_name(name.strip(), self.uidPrefix)
 
             yield course_item
