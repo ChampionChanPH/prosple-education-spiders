@@ -139,7 +139,7 @@ class AraSpiderSpider(scrapy.Spider):
             name = None
             if 'productTitle' in course and course['productTitle']:
                 course_name = course['productTitle']
-                name = course_name
+                name = course_name[:]
                 if re.search('\(.*(master|bachelor|diploma)', course_name, flags=re.I | re.M | re.DOTALL):
                     course_name = re.sub('\(.*(master|bachelor|diploma).*', '', course_name,
                                          flags=re.I | re.M | re.DOTALL)
