@@ -65,7 +65,7 @@ class EcuSpiderSpider(scrapy.Spider):
     }
 
     def parse(self, response):
-        courses = response.css('.cardList__listItem')
+        courses = response.css('.card')
         next_page = response.css("a[title='Next Page']::attr(href)").get()
         if next_page:
             yield response.follow(next_page, callback=self.parse)
@@ -74,8 +74,7 @@ class EcuSpiderSpider(scrapy.Spider):
             course_link = course.css("a::attr(href)").extract_first()
             fields = {}
             fields["name"] = course.css("a::text").extract_first()
-            description = course.css("div").extract_first()
-            description = re.findall("</h3>(.(?s)*?)<br>", description)[0]
+            description = course.css("p::text").extract_first()
             fields["description"] = cleanspace(description)
             items = course.css("li")
             for item in items:
@@ -98,7 +97,7 @@ class EcuSpiderSpider(scrapy.Spider):
 
         course_item["courseName"] = response.meta["fields"]["name"]
         course_item["uid"] = self.uidPrefix + course_item["courseName"]
-        course_item["courseCode"] = response.meta["fields"]["Code"]
+        course_item["courseCode"] = cleanspace(response.meta["fields"]["Code"])
         # Test course name
         pattern = "^\w+?\s-\s.*$"
         if re.search(pattern, course_item["courseName"]):
@@ -107,7 +106,7 @@ class EcuSpiderSpider(scrapy.Spider):
         course_item["overviewSummary"] = response.meta["fields"]["description"]
         course_item.set_sf_dt(self.degrees)
         
-        course_item["overview"] = "<br>".join(response.css("#introduction p:not(.courseCode)::text").extract())
+        course_item["overview"] = "".join(response.css(".heroBanner__intro .bannerContent--wide p:not(.heroBanner__courseCode)").extract())
 
         # Fees
         domestic_fee = response.css(".audience__panel--domestic p.base__subheading::text").extract_first()
@@ -166,6 +165,7 @@ class EcuSpiderSpider(scrapy.Spider):
 
         what_learn = response.xpath("//ol[@class='learning-outcome-list']/li/text()").getall()
         if what_learn:
-            course_item["whatLearn"] = "<br>".join(["* " + x for x in what_learn])
+            what_learn = "\n".join(["<li>" + x + "</li>" for x in what_learn])
+            course_item["whatLearn"] = "<ul>\n"+what_learn+"\n</ul>"
         # if "flag" in course_item:
         yield course_item
