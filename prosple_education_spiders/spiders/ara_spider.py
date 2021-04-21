@@ -15,7 +15,7 @@ payload = {
     'x-api-key': api_key,
 }
 
-courses = requests.get(TEST_URL + 'programme', params=payload)
+courses = requests.get(MAIN_URL + 'programme', params=payload)
 courses = courses.json()
 
 
@@ -123,7 +123,7 @@ class AraSpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         for item in courses:
-            course = requests.get(TEST_URL + 'programme/' + item, params=payload)
+            course = requests.get(MAIN_URL + 'programme/' + item, params=payload)
             course = course.json()
 
             course_item = Course()
