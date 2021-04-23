@@ -45,16 +45,72 @@ class QutSpiderSpider(scrapy.Spider):
     allowed_domains = ['www.qut.edu.au', 'qut.edu.au']
     start_urls = ['https://www.qut.edu.au/study/undergraduate-study',
                   'https://www.qut.edu.au/study/postgraduate']
-    banned_urls = ['https://www.qut.edu.au/law/study/professional-development',
-                   'https://www.qut.edu.au/law/research/study',
-                   'https://www.qut.edu.au/law/study/scholarships-and-support',
-                   'https://www.qut.edu.au/law/study/real-world-learning',
-                   'https://www.qut.edu.au/study/professional-and-executive-education/single-unit-study/law-and-justice',
-                   'https://www.qut.edu.au/law/research/our-experts',
-                   'https://www.qut.edu.au/law/study/international-experience',
-                   'https://www.qut.edu.au/law/study/work-experience',
-                   'https://www.qut.edu.au/study/fees-and-scholarships/scholarships/excellence-scholarship-academic'
-                   ]
+    banned_urls = [
+        'https://www.qut.edu.au/law/study/professional-development',
+        'https://www.qut.edu.au/law/research/study',
+        'https://www.qut.edu.au/law/study/scholarships-and-support',
+        'https://www.qut.edu.au/law/study/real-world-learning',
+        'https://www.qut.edu.au/study/professional-and-executive-education/single-unit-study/law-and-justice',
+        'https://www.qut.edu.au/law/research/our-experts',
+        'https://www.qut.edu.au/law/study/international-experience',
+        'https://www.qut.edu.au/law/study/work-experience',
+        'https://www.qut.edu.au/study/fees-and-scholarships/scholarships/excellence-scholarship-academic'
+    ]
+    allowed_urls = [
+        'https://www.qut.edu.au/courses/master-of-architecture-DE83',
+        'https://www.qut.edu.au/courses/master-of-architecture',
+        'https://www.qut.edu.au/courses/graduate-certificate-in-business',
+        'https://www.qut.edu.au/courses/graduate-diploma-in-business-financial-planning',
+        'https://www.qut.edu.au/courses/master-of-business',
+        'https://www.qut.edu.au/courses/master-of-business-administration-mba',
+        'https://www.qut.edu.au/courses/graduate-certificate-in-business-administration',
+        'https://www.qut.edu.au/courses/master-of-digital-communication',
+        'https://www.qut.edu.au/courses/master-of-education',
+        'https://www.qut.edu.au/courses/master-of-teaching-early-childhood',
+        'https://www.qut.edu.au/courses/master-of-teaching-primary',
+        'https://www.qut.edu.au/courses/master-of-teaching-secondary',
+        'https://www.qut.edu.au/courses/master-of-clinical-psychology',
+        'https://www.qut.edu.au/courses/master-of-counselling',
+        'https://www.qut.edu.au/courses/master-of-optometry',
+        'https://www.qut.edu.au/courses/master-of-social-work-qualifying',
+        'https://www.qut.edu.au/courses/master-of-health-management',
+        'https://www.qut.edu.au/courses/master-of-health-safety-and-environment',
+        'https://www.qut.edu.au/courses/master-of-psychology-educational-and-developmental',
+        'https://www.qut.edu.au/courses/graduate-diploma-in-environmental-health',
+        'https://www.qut.edu.au/courses/graduate-diploma-in-health-management',
+        'https://www.qut.edu.au/courses/graduate-diploma-in-occupational-health-and-safety',
+        'https://www.qut.edu.au/courses/graduate-diploma-in-public-health',
+        'https://www.qut.edu.au/courses/master-of-advanced-practice-nursing',
+        'https://www.qut.edu.au/courses/master-of-public-health',
+        'https://www.qut.edu.au/courses/master-of-diagnostic-genomics',
+        'https://www.qut.edu.au/courses/graduate-diploma-in-applied-science-medical-physics',
+        'https://www.qut.edu.au/courses/graduate-certificate-in-future-law-technologies',
+        'https://www.qut.edu.au/courses/graduate-certificate-in-applied-law',
+        'https://www.qut.edu.au/courses/graduate-diploma-in-legal-practice',
+        'https://www.qut.edu.au/courses/graduate-certificate-in-project-management',
+        'https://www.qut.edu.au/courses/master-of-data-analytics',
+        'https://www.qut.edu.au/courses/master-of-business-process-management',
+        'https://www.qut.edu.au/courses/master-of-information-technology',
+        'https://www.qut.edu.au/courses/master-of-project-management',
+        'https://www.qut.edu.au/courses/master-of-engineering',
+        'https://www.qut.edu.au/courses/master-of-engineering-management',
+        'https://www.qut.edu.au/courses/master-of-professional-engineering',
+        'https://www.qut.edu.au/courses/master-of-applied-science-medical-physics',
+        'https://www.qut.edu.au/courses/master-of-philosophy',
+        'https://www.qut.edu.au/courses/graduate-certificate-in-business-analysis',
+        'https://www.qut.edu.au/courses/graduate-certificate-in-business-process-management',
+        'https://www.qut.edu.au/courses/graduate-certificate-in-computer-science',
+        'https://www.qut.edu.au/courses/graduate-certificate-in-cyber-security-and-networks',
+        'https://www.qut.edu.au/courses/graduate-certificate-in-data-analytics',
+        'https://www.qut.edu.au/courses/graduate-certificate-in-information-technology',
+        'https://www.qut.edu.au/courses/graduate-diploma-in-information-technology',
+        'https://www.qut.edu.au/courses/doctor-of-philosophy-business',
+        'https://www.qut.edu.au/courses/doctor-of-creative-industries',
+        'https://www.qut.edu.au/courses/doctor-of-philosophy-creative-industries',
+        'https://www.qut.edu.au/courses/doctor-of-philosophy-health',
+        'https://www.qut.edu.au/courses/doctor-of-philosophy-law',
+        'https://www.qut.edu.au/courses/doctor-of-philosophy-science-engineering'
+    ]
     institution = "QUT (Queensland University of Technology)"
     uidPrefix = "AU-QUT-"
 
@@ -120,16 +176,15 @@ class QutSpiderSpider(scrapy.Spider):
 
     def sub_parse(self, response):
         sub = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a")
-
-        for item in sub:
-            yield response.follow(item, callback=self.link_parse)
+        yield from response.follow_all(sub, callback=self.link_parse)
 
     def link_parse(self, response):
         courses = response.xpath("//a[contains(@class, 'course-page-link')]/@href").getall()
         courses = [x for x in courses if not re.search("online.qut.edu.au", x)]
 
         for item in courses:
-            yield response.follow(item, callback=self.course_parse)
+            if item in self.allowed_urls and item not in self.banned_urls:
+                yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -308,6 +363,4 @@ class QutSpiderSpider(scrapy.Spider):
             course_item["courseLevel"] = "Postgraduate"
             course_item["canonicalGroup"] = "PostgradAustralia"
 
-        if response.request.url not in self.banned_urls and \
-                not re.search("last offered 2019", course_item["courseName"], re.I):
-            yield course_item
+        yield course_item
