@@ -43,8 +43,10 @@ def get_total(field_to_use, field_to_update, course_item):
 class QutSpiderSpider(scrapy.Spider):
     name = 'qut_spider'
     allowed_domains = ['www.qut.edu.au', 'qut.edu.au']
-    start_urls = ['https://www.qut.edu.au/study/undergraduate-study',
-                  'https://www.qut.edu.au/study/postgraduate']
+    start_urls = [
+        'https://www.qut.edu.au/study/undergraduate-study',
+        # 'https://www.qut.edu.au/study/postgraduate'
+    ]
     banned_urls = [
         'https://www.qut.edu.au/law/study/professional-development',
         'https://www.qut.edu.au/law/research/study',
@@ -171,20 +173,23 @@ class QutSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        categories = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a")
-        yield from response.follow_all(categories, callback=self.sub_parse)
+        # categories = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a")
+        # yield from response.follow_all(categories, callback=self.sub_parse)
+        for item in self.allowed_urls:
+            yield response.follow(item, callback=self.course_parse)
 
-    def sub_parse(self, response):
-        sub = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a")
-        yield from response.follow_all(sub, callback=self.link_parse)
 
-    def link_parse(self, response):
-        courses = response.xpath("//a[contains(@class, 'course-page-link')]/@href").getall()
-        courses = [x for x in courses if not re.search("online.qut.edu.au", x)]
-
-        for item in courses:
-            if item in self.allowed_urls and item not in self.banned_urls:
-                yield response.follow(item, callback=self.course_parse)
+    # def sub_parse(self, response):
+    #     sub = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a")
+    #     yield from response.follow_all(sub, callback=self.link_parse)
+    #
+    # def link_parse(self, response):
+    #     courses = response.xpath("//a[contains(@class, 'course-page-link')]/@href").getall()
+    #     courses = [x for x in courses if not re.search("online.qut.edu.au", x)]
+    #
+    #     for item in courses:
+    #         if item in self.allowed_urls and item not in self.banned_urls:
+    #             yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
