@@ -125,7 +125,9 @@ class DnaSpiderSpider(scrapy.Spider):
                 course_code = re.findall('^[A-Z]+[0-9]+', name)
                 if course_code:
                     course_item['courseCode'] = ', '.join(course_code)
-                course_item.set_course_name(course_name.strip(), self.uidPrefix)
+            else:
+                course_name = name
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@id='main']//div[contains(@class, 'vc_row-fluid')][1]//div[contains(@class, "
                                   "'wpb_content_element')]/div[@class='wpb_wrapper'][1]/*[self::* or self::text("
