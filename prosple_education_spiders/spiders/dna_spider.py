@@ -118,14 +118,14 @@ class DnaSpiderSpider(scrapy.Spider):
         course_item["institution"] = self.institution
         course_item["domesticApplyURL"] = response.request.url
 
-        course_name = response.xpath("//h1/text()").get()
-        if course_name:
-            if re.search('^[A-Z]+[0-9]+', course_name):
-                course_name = re.sub('^[A-Z]+[0-9]+', '', course_name)
-                course_code = re.findall('^[A-Z]+[0-9]+', course_name)
+        name = response.xpath("//h1/text()").get()
+        if name:
+            if re.search('^[A-Z]+[0-9]+', name):
+                course_name = re.sub('^[A-Z]+[0-9]+', '', name)
+                course_code = re.findall('^[A-Z]+[0-9]+', name)
                 if course_code:
                     course_item['courseCode'] = ', '.join(course_code)
-            course_item.set_course_name(course_name.strip(), self.uidPrefix)
+                course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@id='main']//div[contains(@class, 'vc_row-fluid')][1]//div[contains(@class, "
                                   "'wpb_content_element')]/div[@class='wpb_wrapper'][1]/*[self::* or self::text("
