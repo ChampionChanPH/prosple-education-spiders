@@ -146,8 +146,9 @@ class CquSpiderSpider(scrapy.Spider):
 
         overview = response.xpath("//label[contains(span/text(), 'Course Details')]/following-sibling::*").getall()
         if overview:
-            course_item.set_summary(strip_tags(overview[0]))
-            course_item["overview"] = strip_tags("".join(overview), False)
+            summary = [strip_tags(x) for x in overview if strip_tags(x) != '']
+            course_item.set_summary(' '.join(summary))
+            course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
         duration = response.xpath("//span[@class='course-info-highlight'][contains(text(), "
                                   "'DURATION')]/following-sibling::*").get()
@@ -232,12 +233,12 @@ class CquSpiderSpider(scrapy.Spider):
 
         entry = response.xpath("//label[contains(span/text(), 'Entry Requirements')]/following-sibling::*").getall()
         if entry:
-            course_item["entryRequirements"] = strip_tags("".join(entry), False)
+            course_item["entryRequirements"] = strip_tags("".join(entry), remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath("//label[contains(span/text(), 'Career Opportunities and "
                                 "Outcomes')]/following-sibling::*").getall()
         if career:
-            course_item["careerPathways"] = strip_tags("".join(career), False)
+            course_item["careerPathways"] = strip_tags("".join(career), remove_all_tags=False, remove_hyperlinks=True)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
