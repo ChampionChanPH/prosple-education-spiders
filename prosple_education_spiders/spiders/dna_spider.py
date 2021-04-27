@@ -140,7 +140,7 @@ class DnaSpiderSpider(scrapy.Spider):
 
         if 'Entry requirements' in menu:
             index = menu.index('Entry requirements')
-            entry_xpath = "//div[@class='et-content-wrap']/section[" + index + "]//div[@class='wpb_wrapper']/*"
+            entry_xpath = "//div[@class='et-content-wrap']/section[" + str(index) + "]//div[@class='wpb_wrapper']/*"
             entry = response.xpath(entry_xpath).getall()
             if entry:
                 entry = [x for x in entry if strip_tags(x) != '']
@@ -150,7 +150,7 @@ class DnaSpiderSpider(scrapy.Spider):
 
         if 'Career' in menu:
             index = menu.index('Career')
-            career_xpath = "//div[@class='et-content-wrap']/section[" + index + "]//div[@class='wpb_wrapper']/*"
+            career_xpath = "//div[@class='et-content-wrap']/section[" + str(index) + "]//div[@class='wpb_wrapper']/*"
             career = response.xpath(career_xpath).getall()
             if career:
                 career = [x for x in career if strip_tags(x) != '']
@@ -160,7 +160,7 @@ class DnaSpiderSpider(scrapy.Spider):
 
         if 'International students' in menu:
             index = menu.index('International students')
-            int_xpath = "//div[@class='et-content-wrap']/section[" + index + "]//div[@class='wpb_wrapper']/*"
+            int_xpath = "//div[@class='et-content-wrap']/section[" + str(index) + "]//div[@class='wpb_wrapper']/*"
             international = response.xpath(int_xpath).getall()
             if international:
                 international = ''.join(international)
