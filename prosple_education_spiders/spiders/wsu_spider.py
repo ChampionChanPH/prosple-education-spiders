@@ -217,8 +217,8 @@ class WsuSpiderSpider(scrapy.Spider):
             int_fee = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", int_fee, re.M)
             int_fee = [float(''.join(x)) for x in int_fee]
             if int_fee:
-                course_item["domesticFeeAnnual"] = max(int_fee)
-                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+                course_item["internationalFeeAnnual"] = max(int_fee)
+                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
 
         career1 = response.xpath("//div[contains(@class, 'component--title')][*/text()='Your career' or */text("
                                  ")='Your Career']/following-sibling::*/*").getall()
