@@ -136,6 +136,9 @@ class DnaSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[@id='main']//div[contains(@class, 'vc_row-fluid')][1]//div[contains(@class, "
                                   "'wpb_content_element')]/div[@class='wpb_wrapper'][1]/*[self::* or self::text("
                                   ")]").getall()
+        if not overview:
+            response.xpath("//div[@id='main']//div[contains(@class, 'vc_row-fluid')][2]//div[contains(@class, "
+                           "'wpb_content_element')]/div[@class='wpb_wrapper'][1]/*[self::* or self::text()]").getall()
         if overview:
             overview = [x for x in overview if strip_tags(x) != '']
             overview = [x for x in overview if not re.search('<img', x)]
