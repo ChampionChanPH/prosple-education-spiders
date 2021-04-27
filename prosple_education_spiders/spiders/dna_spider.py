@@ -137,15 +137,32 @@ class DnaSpiderSpider(scrapy.Spider):
                                   "'wpb_content_element')]/div[@class='wpb_wrapper'][1]/*[self::* or self::text("
                                   ")]").getall()
         if not overview:
-            response.xpath("//div[@id='main']//div[contains(@class, 'vc_row-fluid')][2]//div[contains(@class, "
-                           "'wpb_content_element')]/div[@class='wpb_wrapper'][1]/*[self::* or self::text()]").getall()
+            overview = response.xpath("//div[@id='main']//div[contains(@class, 'vc_row-fluid')][2]//div[contains("
+                                      "@class, 'wpb_content_element')]/div[@class='wpb_wrapper'][1]/*[self::* or "
+                                      "self::text()]").getall()
+        if not overview:
+            overview = response.xpath("//p").getall()[0]
         if overview:
             overview = [x for x in overview if strip_tags(x) != '']
-            overview = [x for x in overview if not re.search('<img', x)]
             if overview:
                 summary = [strip_tags(x) for x in overview]
                 course_item.set_summary(' '.join(summary))
                 course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
+        if 'overview' not in course_item:
+            overview = response.xpath("//div[@id='main']//div[contains(@class, 'vc_row-fluid')][1]//div[contains("
+                                      "@class, 'wpb_content_element')]/div[@class='wpb_wrapper'][1]").getall()
+            if overview:
+                overview = [x for x in overview if strip_tags(x) != '']
+                if overview:
+                    summary = [strip_tags(x) for x in overview]
+                    course_item.set_summary(' '.join(summary))
+                    course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False,
+                                                         remove_hyperlinks=True)
+
+        learn = response.xpath(
+            "//div[div/*/text()='What you will learn']/following-sibling::*//*[self::p or self::ul]").getall()
+        if learn:
+            course_item['whatLearn'] = strip_tags(''.join(learn), remove_all_tags=False, remove_hyperlinks=True)
 
         menu = response.xpath("//nav//span/text()").getall()
 
