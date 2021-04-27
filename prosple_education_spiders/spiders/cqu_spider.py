@@ -64,6 +64,7 @@ class CquSpiderSpider(scrapy.Spider):
         "doctor": "6",
         "phd": "6",
         "advanced certificate": "7",
+        "undergraduate certificate": "4",
         "certificate": "4",
         "certificate i": "4",
         "certificate ii": "4",
