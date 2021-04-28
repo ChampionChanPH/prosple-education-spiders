@@ -45,7 +45,7 @@ class DnaSpiderSpider(scrapy.Spider):
     start_urls = ['http://www.dnakingstontraining.edu.au/courses/']
     banned_urls = ['http://www.dnakingstontraining.edu.au/#']
     institution = "DNA Kingston Training"
-    uidPrefix = "AU-DNA-"
+    uidPrefix = "AU-DNAKT-"
 
     degrees = {
         "graduate certificate": "7",
