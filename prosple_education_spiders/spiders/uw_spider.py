@@ -45,11 +45,11 @@ class UwSpiderSpider(scrapy.Spider):
     name = 'uw_spider'
     allowed_domains = ['www.waikato.ac.nz']
     start_urls = ['https://www.waikato.ac.nz/study/qualifications']
-    blacklist_urls = [
-        "https://www.waikato.ac.nz/study/qualifications/conjoint-degree",
-        "https://www.waikato.ac.nz/study/qualifications/individual-paper-credit",
+    banned_urls = [
+        "qualifications/conjoint-degree",
+        "qualifications/individual-paper-credit",
+        'qualifications/pathways-programmes',
     ]
-
     institution = "University of Waikato"
     uidPrefix = "NZ-UW-"
 
@@ -114,8 +114,10 @@ class UwSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//a[@class='course-finder__result-title']")
-        yield from response.follow_all(courses, callback=self.course_parse)
+        courses = response.xpath("//a[@class='course-finder__result-title']/@href").getall()
+        for item in courses:
+            if item not in self.banned_urls:
+                yield response.follow(item, callback=self.course_parse)
 
         # for card in course_cards: summary = card.css("div.course-finder__result-description p").getall() if
         # summary: summary = re.sub("<.*?>", "", summary[-1]) name = card.css("h3::text").get() code = card.css(
@@ -239,8 +241,7 @@ class UwSpiderSpider(scrapy.Spider):
         course_item["group"] = 2
         course_item["canonicalGroup"] = "GradNewZealand"
 
-        if course_item['sourceURL'] not in self.blacklist_urls:
-            yield course_item
+        yield course_item
 
 
 
