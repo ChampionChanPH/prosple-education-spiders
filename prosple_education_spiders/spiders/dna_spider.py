@@ -186,7 +186,7 @@ class DnaSpiderSpider(scrapy.Spider):
             if international:
                 international = ''.join(international)
 
-                duration = re.sub(' \([0-9]+\)', '', international)
+                duration = re.sub('[()]', '', international)
                 if duration:
                     duration_full = re.findall(
                         "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
