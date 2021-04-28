@@ -156,15 +156,15 @@ class UwSpiderSpider(scrapy.Spider):
                 course_item.set_summary(' '.join(summary))
             course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
-        duration = response.xpath("//table[contains(@class, 'key-info-table')]//tr[1]/*/text()").getall()
+        duration = response.xpath("//table[contains(@class, 'key-info-table')]/tbody/tr[1]/*/text()").getall()
         if len(duration) == 2:
             duration = duration[1] + ' ' + duration[0]
             if duration:
                 duration_full = re.findall(
-                    "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
+                    "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?\(full)",
                     duration, re.I | re.M | re.DOTALL)
                 duration_part = re.findall(
-                    "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
+                    "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?\(part)",
                     duration, re.I | re.M | re.DOTALL)
                 if not duration_full and duration_part:
                     self.get_period(duration_part[0][1].lower(), course_item)
