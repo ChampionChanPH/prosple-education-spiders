@@ -134,30 +134,22 @@ class DnaSpiderSpider(scrapy.Spider):
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[@id='main']//div[contains(@class, 'vc_row-fluid')][1]//div[contains(@class, "
-                                  "'wpb_content_element')]/div[@class='wpb_wrapper'][1]/*[self::* or self::text("
-                                  ")]").getall()
+                                  "'wpb_content_element')]/div[@class='wpb_wrapper'][1]").getall()
         if not overview:
             overview = response.xpath("//div[@id='main']//div[contains(@class, 'vc_row-fluid')][2]//div[contains("
-                                      "@class, 'wpb_content_element')]/div[@class='wpb_wrapper'][1]/*[self::* or "
-                                      "self::text()]").getall()
+                                      "@class, 'wpb_content_element')]/div[@class='wpb_wrapper'][1]").getall()
         if not overview:
-            overview = response.xpath("//p").getall()[0]
+            overview = [response.xpath("//p").get(), ]
         if overview:
             overview = [x for x in overview if strip_tags(x) != '']
             if overview:
                 summary = [strip_tags(x) for x in overview]
-                course_item.set_summary(' '.join(summary))
+                summary = ' '.join(summary)
+                if re.search('OVERVIEW', summary):
+                    index = summary.find('OVERVIEW')
+                    summary = summary[index + 9:]
+                course_item.set_summary(summary)
                 course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
-        if 'overview' not in course_item:
-            overview = response.xpath("//div[@id='main']//div[contains(@class, 'vc_row-fluid')][1]//div[contains("
-                                      "@class, 'wpb_content_element')]/div[@class='wpb_wrapper'][1]").getall()
-            if overview:
-                overview = [x for x in overview if strip_tags(x) != '']
-                if overview:
-                    summary = [strip_tags(x) for x in overview]
-                    course_item.set_summary(' '.join(summary))
-                    course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False,
-                                                         remove_hyperlinks=True)
 
         learn = response.xpath(
             "//div[div/*/text()='What you will learn']/following-sibling::*//*[self::p or self::ul]").getall()
@@ -168,7 +160,7 @@ class DnaSpiderSpider(scrapy.Spider):
 
         if 'Entry requirements' in menu:
             index = menu.index('Entry requirements')
-            entry_xpath = "//div[@class='et-content-wrap']/section[" + str(index) + "]//div[@class='wpb_wrapper']/*"
+            entry_xpath = "//div[@class='et-content-wrap']/section[" + str(index + 1) + "]//div[@class='wpb_wrapper']/*"
             entry = response.xpath(entry_xpath).getall()
             if entry:
                 entry = [x for x in entry if strip_tags(x) != '']
@@ -178,7 +170,8 @@ class DnaSpiderSpider(scrapy.Spider):
 
         if 'Career' in menu:
             index = menu.index('Career')
-            career_xpath = "//div[@class='et-content-wrap']/section[" + str(index) + "]//div[@class='wpb_wrapper']/*"
+            career_xpath = "//div[@class='et-content-wrap']/section[" + str(index + 1) + "]//div[@class='wpb_wrapper" \
+                                                                                         "']/* "
             career = response.xpath(career_xpath).getall()
             if career:
                 career = [x for x in career if strip_tags(x) != '']
@@ -188,7 +181,7 @@ class DnaSpiderSpider(scrapy.Spider):
 
         if 'International students' in menu:
             index = menu.index('International students')
-            int_xpath = "//div[@class='et-content-wrap']/section[" + str(index) + "]//div[@class='wpb_wrapper']/*"
+            int_xpath = "//div[@class='et-content-wrap']/section[" + str(index + 1) + "]//div[@class='wpb_wrapper']/*"
             international = response.xpath(int_xpath).getall()
             if international:
                 international = ''.join(international)
@@ -224,6 +217,28 @@ class DnaSpiderSpider(scrapy.Spider):
                 if int_fee:
                     course_item["internationalFeeAnnual"] = max(int_fee)
                     get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+
+        if 'Fees' in menu:
+            index = menu.index('Fees')
+            dom_xpath = "//div[@class='et-content-wrap']/section[" + str(index + 1) + "]//div[@class='wpb_wrapper']/*"
+            domestic = response.xpath(dom_xpath).getall()
+            if domestic:
+                domestic = ''.join(domestic)
+
+                dom_fee = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", domestic, re.M)
+                dom_fee = [float(''.join(x)) for x in dom_fee]
+                if dom_fee:
+                    course_item["domesticFeeAnnual"] = max(dom_fee)
+                    get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+        if 'domesticFeeAnnual' not in course_item and 'domesticFeeTotal' not in course_item:
+            dom_fee = response.xpath("//*[contains(text(), 'Cost per person')]").get()
+            if dom_fee:
+                dom_fee = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", dom_fee, re.M)
+                dom_fee = [float(''.join(x)) for x in dom_fee]
+                if dom_fee:
+                    course_item["domesticFeeTotal"] = max(dom_fee)
+                    # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         cricos = response.xpath("//*[contains(text(), 'CRICOS')]").get()
         if cricos:
