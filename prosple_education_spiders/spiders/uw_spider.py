@@ -43,6 +43,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class UwSpiderSpider(scrapy.Spider):
     name = 'uw_spider'
+    allowed_domains = ['www.waikato.ac.nz']
     start_urls = ['https://www.waikato.ac.nz/study/qualifications']
     blacklist_urls = [
         "https://www.waikato.ac.nz/study/qualifications/conjoint-degree",
