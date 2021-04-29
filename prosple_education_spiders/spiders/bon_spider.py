@@ -50,6 +50,7 @@ class BonSpiderSpider(scrapy.Spider):
 
     degrees = {
         "graduate certificate": "7",
+        'bond-bbt graduate certificate': '7',
         "executive graduate certificate": "7",
         "graduate diploma": "8",
         "master": research_coursework,
@@ -117,7 +118,7 @@ class BonSpiderSpider(scrapy.Spider):
                                   "@id='show-more-0']/*/text()").getall()
         if not overview:
             overview = response.xpath(
-                "//*[contains(text(), 'About the program')]/following-sibling::*[1]/text()").getall()
+                "//*[contains(text(), 'About the program')]/following-sibling::*[1]//text()").getall()
         if overview:
             summary = [strip_tags(x) for x in overview]
             course_item.set_summary(' '.join(summary))
