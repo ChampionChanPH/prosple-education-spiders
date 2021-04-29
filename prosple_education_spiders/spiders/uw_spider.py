@@ -268,10 +268,13 @@ class UwSpiderSpider(scrapy.Spider):
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
+        if course_item['courseName'] == 'Bachelor of Engineering with Honours & Diploma in Engineering Management':
+            course_item['rawStudyField'] = ['engineering', 'engineering management']
+            course_item['specificStudyField'] = 'Engineering Management'
+            course_item['degreeType'] = 'Bachelor (Honours)'
+            course_item['courseLevel'] = 'Postgraduate'
+
         course_item["group"] = 2
         course_item["canonicalGroup"] = "GradNewZealand"
 
         yield course_item
-
-
-
