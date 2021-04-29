@@ -116,7 +116,8 @@ class BonSpiderSpider(scrapy.Spider):
         overview = response.xpath("//*[contains(text(), 'About the program')]/following-sibling::*[1]/div["
                                   "@id='show-more-0']/*/text()").getall()
         if not overview:
-            overview = response.xpath("//*[contains(text(), 'About the program')]/following-sibling::*[1]/text()").getall()
+            overview = response.xpath(
+                "//*[contains(text(), 'About the program')]/following-sibling::*[1]/text()").getall()
         if overview:
             summary = [strip_tags(x) for x in overview]
             course_item.set_summary(' '.join(summary))
