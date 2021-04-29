@@ -20,12 +20,24 @@ def bachelor_honours(course_item):
 
 
 def get_total(field_to_use, field_to_update, course_item):
-    if "durationMinFull" in course_item:
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
         if course_item["teachingPeriod"] == 1:
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) *\
+                                               float(course_item["durationMinFull"]) / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) *\
+                                               float(course_item["durationMinFull"]) / 52
 
 
 class BonSpiderSpider(scrapy.Spider):
@@ -106,9 +118,9 @@ class BonSpiderSpider(scrapy.Spider):
         if not overview:
             overview = response.xpath("//*[contains(text(), 'About the program')]/following-sibling::*[1]/text()").getall()
         if overview:
-            course_item.set_summary(strip_tags(overview[0]))
-            overview = [strip_tags(x.strip(), False) for x in overview if x.strip()]
-            course_item["overview"] = "".join(overview)
+            summary = [strip_tags(x) for x in overview]
+            course_item.set_summary(' '.join(summary))
+            course_item["overview"] = strip_tags("".join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
         start = response.xpath("//td[contains(*/text(), 'Starting semesters')]/following-sibling::*").get()
         if start:
@@ -131,23 +143,47 @@ class BonSpiderSpider(scrapy.Spider):
 
         career = response.xpath("//div[contains(*/*/text(), 'Professional outcomes')]/following-sibling::*[1]//p").getall()
         if career:
-            course_item["careerPathways"] = strip_tags("".join(career), False)
+            course_item["careerPathways"] = strip_tags("".join(career), remove_all_tags=False, remove_hyperlinks=True)
 
         credit = response.xpath("//h4[contains(text(), 'Credit for prior study')]/following-sibling::*").get()
         if credit:
-            course_item["creditTransfer"] = strip_tags(credit, False)
+            course_item["creditTransfer"] = strip_tags(credit, remove_all_tags=False, remove_hyperlinks=True)
 
         apply = response.xpath("//h4[contains(text(), 'How to apply')]/following-sibling::*").getall()
         if apply:
-            course_item["howToApply"] = strip_tags("".join(apply), False)
+            course_item["howToApply"] = strip_tags("".join(apply), remove_all_tags=False, remove_hyperlinks=True)
 
         duration = response.xpath("//td[contains(*/text(), 'Duration')]/following-sibling::*").get()
         if duration:
-            duration_full = re.findall("[^\(](\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration,
-                                       re.I | re.M | re.DOTALL)
+            duration = ''.join(duration)
+            duration_full = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?full)",
+                duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?part)",
+                duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
             if duration_full:
                 course_item["durationMinFull"] = float(duration_full[0][0])
                 self.get_period(duration_full[0][1].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    if len(duration_full) == 1:
+                        course_item["durationMinFull"] = float(duration_full[0][0])
+                        self.get_period(duration_full[0][1].lower(), course_item)
+                    if len(duration_full) == 2:
+                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                        self.get_period(duration_full[1][1].lower(), course_item)
 
         course_code = response.xpath("//td[contains(*/text(), 'Program code')]/following-sibling::*/text()").get()
         if course_code:
@@ -156,7 +192,8 @@ class BonSpiderSpider(scrapy.Spider):
         course_structure = response.xpath("//div[contains(*/*/text(), 'Structure and "
                                           "subjects')]/following-sibling::*[1]/*/*").getall()
         if course_structure:
-            course_item["courseStructure"] = strip_tags("".join(course_structure), False)
+            course_item["courseStructure"] = strip_tags("".join(course_structure),
+                                                        remove_all_tags=False, remove_hyperlinks=True)
 
         cricos = response.xpath("//td[contains(*/text(), 'CRICOS code')]/following-sibling::*").get()
         if cricos:
