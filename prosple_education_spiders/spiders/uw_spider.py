@@ -49,6 +49,7 @@ class UwSpiderSpider(scrapy.Spider):
         "qualifications/conjoint-degree",
         "qualifications/individual-paper-credit",
         'qualifications/pathways-programmes',
+        'qualifications/certificate',
     ]
     institution = "University of Waikato"
     uidPrefix = "NZ-UW-"
@@ -163,7 +164,9 @@ class UwSpiderSpider(scrapy.Spider):
             overview = response.xpath("//section[@id='content']/div[@class='clearfix']/*").getall()
             holder = []
             for index, item in enumerate(overview):
-                if re.search('^<(p|u|o)', item):
+                if re.search('^<(p|u|o)', item) and re.search('#success-stories', item):
+                    pass
+                elif re.search('^<(p|u|o)', item):
                     holder.append(item)
                 elif index == 0:
                     pass
