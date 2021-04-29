@@ -162,7 +162,7 @@ class UwSpiderSpider(scrapy.Spider):
         if 'overview' not in course_item:
             overview = response.xpath("//section[@id='content']/div[@class='clearfix']/*").getall()
             holder = []
-            for index, item in overview:
+            for index, item in enumerate(overview):
                 if re.search('^<(p|u|o)', item):
                     holder.append(item)
                 elif index == 0:
