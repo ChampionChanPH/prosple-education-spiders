@@ -176,11 +176,11 @@ class UwSpiderSpider(scrapy.Spider):
 
         period = response.xpath("//table[contains(@class, 'key-info-table')]//tr[1]/th[contains(text(), 'Year') or "
                                 "contains(text(), 'Week') or contains(text(), 'Month') or contains(text(), "
-                                "'Duration Of Study')]/text()").getall()
+                                "'Duration Of Study')]/text()").get()
         if period:
             num = response.xpath("//table[contains(@class, 'key-info-table')]//tr[1]/th[contains(text(), 'Year') or "
                                  "contains(text(), 'Week') or contains(text(), 'Month') or contains(text(), "
-                                 "'Duration Of Study')]/following-sibling::td/text()").getall()
+                                 "'Duration Of Study')]/following-sibling::td/text()").get()
             if num:
                 duration = num + ' ' + period
 
