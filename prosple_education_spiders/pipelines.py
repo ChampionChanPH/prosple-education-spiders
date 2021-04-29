@@ -32,7 +32,8 @@ class CoursesPipeline(object):
             'summary',
             'name',
             'overview',
-            'criteria'
+            'criteria',
+            'courseCode',
         ]
 
         for field in [x for x in fields_to_clean if x in item]:
