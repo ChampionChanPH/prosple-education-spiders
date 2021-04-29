@@ -156,10 +156,34 @@ class UwSpiderSpider(scrapy.Spider):
                 course_item.set_summary(' '.join(summary))
             course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
-        duration = response.xpath("//table[contains(@class, 'key-info-table')]/tbody/tr[1]/*/text()").getall()
-        if len(duration) == 2:
-            duration = duration[1] + ' ' + duration[0]
-            if duration:
+        if 'overview' not in course_item and 'overviewSummary' in course_item:
+            course_item['overview'] = course_item['overviewSummary']
+
+        if 'overview' not in course_item:
+            overview = response.xpath("//section[@id='content']/div[@class='clearfix']/*").getall()
+            holder = []
+            for index, item in overview:
+                if re.search('^<(p|u|o)', item):
+                    holder.append(item)
+                elif index == 0:
+                    pass
+                else:
+                    break
+            if holder:
+                summary = [strip_tags(x) for x in holder]
+                course_item.set_summary(' '.join(summary))
+                course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        period = response.xpath("//table[contains(@class, 'key-info-table')]//tr[1]/th[contains(text(), 'Year') or "
+                                "contains(text(), 'Week') or contains(text(), 'Month') or contains(text(), "
+                                "'Duration Of Study')]/text()").getall()
+        if period:
+            num = response.xpath("//table[contains(@class, 'key-info-table')]//tr[1]/th[contains(text(), 'Year') or "
+                                 "contains(text(), 'Week') or contains(text(), 'Month') or contains(text(), "
+                                 "'Duration Of Study')]/following-sibling::td/text()").getall()
+            if num:
+                duration = num + ' ' + period
+
                 duration_full = re.findall(
                     "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?\(full)",
                     duration, re.I | re.M | re.DOTALL)
@@ -202,6 +226,9 @@ class UwSpiderSpider(scrapy.Spider):
 
         intake = response.xpath("//table[contains(@class, 'key-info-table')]//th[contains(text(), 'Start "
                                 "Dates:')]/following-sibling::*").get()
+        if not intake:
+            intake = response.xpath("//section[@id='content']/div[@class='clearfix']/*").getall()
+            intake = ''.join(intake)
         holder = []
         if intake:
             for month in self.months:
