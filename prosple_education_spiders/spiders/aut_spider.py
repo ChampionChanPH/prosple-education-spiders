@@ -137,6 +137,7 @@ class AutSpiderSpider(scrapy.Spider):
         course_item['sourceURL'] = response.request.url
         course_item['published'] = 1
         course_item['institution'] = self.institution
+        course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1/text()").get()
         name = re.split(' - ', course_name.strip())
@@ -260,6 +261,7 @@ class AutSpiderSpider(scrapy.Spider):
                 int_fee = [float(''.join(x)) for x in int_fee]
                 course_item["internationalFeeAnnual"] = max(int_fee)
                 get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+                course_item["internationalApplyURL"] = response.request.url
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
 
