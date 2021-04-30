@@ -134,6 +134,7 @@ class AraSpiderSpider(scrapy.Spider):
 
             if 'url' in course and course['url']:
                 course_item["sourceURL"] = course['url']
+                course_item["domesticApplyURL"] = course['url']
 
             course_item["published"] = 1
             course_item["institution"] = self.institution
@@ -203,6 +204,8 @@ class AraSpiderSpider(scrapy.Spider):
                         course['fees']['2021']['internationalTuitionFee']:
                     course_item['internationalFeeAnnual'] = course['fees']['2021']['internationalTuitionFee']
                     get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+                    if 'url' in course and course['url']:
+                        course_item["internationalApplyURL"] = course['url']
 
             course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
