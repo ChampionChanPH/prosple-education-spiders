@@ -74,6 +74,7 @@ class LtuSpiderSpider(scrapy.Spider):
         "certificate": "4",
         "specialist certificate": "4",
         "professional certificate": "14",
+        "undergraduate certificate": "4",
         "certificate i": "4",
         "certificate ii": "4",
         "certificate iii": "4",
