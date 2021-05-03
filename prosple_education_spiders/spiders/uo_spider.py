@@ -95,10 +95,16 @@ class UoSpiderSpider(scrapy.Spider):
         if course_code:
             course_item["courseCode"] = course_code[0]
 
-        overview = response.xpath("//h2[contains(text(), 'About') or text()='Overview']/following-sibling::*").getall()
+        overview = response.xpath(
+            "//h2[contains(text(), 'About') or contains(text(), 'Overview')]/following-sibling::*").getall()
+        if not overview:
+            overview = response.xpath("//*[@id='overview']/*").getall()
+        if not overview:
+            overview = response.xpath("//*[@class='pagesubnav']/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(overview):
-            if re.search('^<(p|u|o)', item):
+            if re.search('^<p', item) and not re.search('topofpage', item) and strip_tags(item) != '' \
+                    and not re.search('<img', item):
                 holder.append(item)
             elif index == 0:
                 pass
@@ -109,15 +115,62 @@ class UoSpiderSpider(scrapy.Spider):
             course_item.set_summary(' '.join(summary))
             course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
+        if 'overview' not in course_item:
+            overview = response.xpath(
+                "//h2[contains(text(), 'Study in') or contains(text(), 'Take a')]/following-sibling::*").getall()
+            if overview:
+                holder = []
+                for index, item in enumerate(overview):
+                    if re.search('^<(p|u|o)', item) and not re.search('topofpage', item) and strip_tags(item) != '' \
+                            and not re.search('<img', item):
+                        holder.append(item)
+                    elif index == 0:
+                        pass
+                    else:
+                        break
+                if holder:
+                    summary = [strip_tags(x) for x in holder]
+                    course_item.set_summary(' '.join(summary))
+                    course_item['overview'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
         credit = response.xpath("//*[text()='Cross Credits']/following-sibling::*").getall()
         if credit:
             course_item['creditTransfer'] = strip_tags(''.join(credit), remove_all_tags=False, remove_hyperlinks=True)
 
+        career = response.xpath("//*[text()='Career opportunities']/following-sibling::*").getall()
+        holder = []
+        for index, item in enumerate(career):
+            if re.search('^<p', item) and not re.search('topofpage', item) and strip_tags(item) != '' \
+                    and not re.search('<img', item):
+                holder.append(item)
+            elif index == 0:
+                pass
+            else:
+                break
+        if holder:
+            course_item['careerPathways'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
         entry = response.xpath("//*[text()='Admission to the Programme' or text()='Prerequisites, Corequisites and "
-                               "Restrictions']/following-sibling::*").getall()
+                               "Restrictions' or text()='Eligibility']/following-sibling::*").getall()
         if entry:
             course_item['entryRequirements'] = strip_tags(''.join(credit), remove_all_tags=False,
                                                           remove_hyperlinks=True)
+
+        if 'entryRequirements' not in course_item:
+            entry = response.xpath("//h2[text()='Entry requirements']/following-sibling::*").getall()
+            if entry:
+                holder = []
+                for index, item in enumerate(entry):
+                    if re.search('^<p', item) and not re.search('topofpage', item) and strip_tags(item) != '' \
+                            and not re.search('<img', item):
+                        holder.append(item)
+                    elif index == 0:
+                        pass
+                    else:
+                        break
+                if holder:
+                    course_item['entryRequirements'] = strip_tags(''.join(holder), remove_all_tags=False,
+                                                                  remove_hyperlinks=True)
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/', ','], type_delims=['of', 'in', 'by'])
 
