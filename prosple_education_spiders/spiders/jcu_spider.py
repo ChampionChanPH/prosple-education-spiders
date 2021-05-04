@@ -294,7 +294,7 @@ class JcuSpiderSpider(scrapy.Spider):
                 course_item["domesticSubFeeAnnual"] = max(csp_fee)
                 get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/', ','], type_delims=['of', 'in', 'by'])
+        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/', ',', '-'], type_delims=['of', 'in', 'by'])
 
         international = response.xpath("//*[@class='course-fast-facts__header-links']//a[contains(text(), "
                                        "'International')]/@href").get()
