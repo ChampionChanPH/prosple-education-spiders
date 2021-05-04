@@ -182,7 +182,7 @@ class JcuSpiderSpider(scrapy.Spider):
         course_item["institution"] = self.institution
         course_item["domesticApplyURL"] = response.request.url
 
-        course_name = response.xpath("//h1/text()").getall()
+        course_name = response.xpath("//h1/text()").get()
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
