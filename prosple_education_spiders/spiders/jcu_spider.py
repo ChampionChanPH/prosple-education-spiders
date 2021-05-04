@@ -43,18 +43,10 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class JcuSpiderSpider(scrapy.Spider):
     name = 'jcu_spider'
-    # allowed_domains = ['https://www.jcu.edu.au/courses-and-study/study-areas']
     start_urls = ['https://www.jcu.edu.au/courses/study']
-    http_user = 'b4a56de85d954e9b924ec0e0b7696641'
-    blacklist_urls = []
-    scraped_urls = []
-    superlist_urls = []
-
     institution = "James Cook University (JCU)"
     uidPrefix = "AU-JCU-"
 
-    holder = []
-    counter = 0
     campuses = {
         "mount isa": "53598",
         "mackay": "53604",
