@@ -40,8 +40,8 @@ def get_total(field_to_use, field_to_update, course_item):
                                                / 52
 
 
-class WsuSpiderSpider(scrapy.Spider):
-    name = 'wsu_spider'
+class WsuSpider2Spider(scrapy.Spider):
+    name = 'wsu_spider2'
     start_urls = ['https://www.westernsydney.edu.au/future/study/courses.html']
     institution = "Western Sydney University"
     uidPrefix = "AU-WSU-"
@@ -139,11 +139,7 @@ class WsuSpiderSpider(scrapy.Spider):
         course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1/text()").get()
-        name = None
         if course_name:
-            name = course_name
-            if re.search('\(.*(master|bachelor|diploma)', course_name, flags=re.I | re.M | re.DOTALL):
-                course_name = re.sub('\(.*(master|bachelor|diploma).*', '', course_name, flags=re.I | re.M | re.DOTALL)
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//div[contains(@class, 'section')][2]//div[@class='tile-carousel-side']/*/*").get()
@@ -217,8 +213,8 @@ class WsuSpiderSpider(scrapy.Spider):
             int_fee = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", int_fee, re.M)
             int_fee = [float(''.join(x)) for x in int_fee]
             if int_fee:
-                course_item["internationalFeeAnnual"] = max(int_fee)
-                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+                course_item["domesticFeeAnnual"] = max(int_fee)
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         career1 = response.xpath("//div[contains(@class, 'component--title')][*/text()='Your career' or */text("
                                  ")='Your Career']/following-sibling::*/*").getall()
@@ -250,9 +246,6 @@ class WsuSpiderSpider(scrapy.Spider):
             course_item["modeOfStudy"] = "|".join(study_holder)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
-
-        if name:
-            course_item.set_course_name(name.strip(), self.uidPrefix)
 
         if course_item['sourceURL'] not in self.banned_urls:
             yield course_item
