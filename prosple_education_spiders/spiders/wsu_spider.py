@@ -40,8 +40,8 @@ def get_total(field_to_use, field_to_update, course_item):
                                                / 52
 
 
-class WsuSpider2Spider(scrapy.Spider):
-    name = 'wsu_spider2'
+class WsuSpiderSpider(scrapy.Spider):
+    name = 'wsu_spider'
     start_urls = ['https://www.westernsydney.edu.au/future/study/courses.html']
     institution = "Western Sydney University"
     uidPrefix = "AU-WSU-"
