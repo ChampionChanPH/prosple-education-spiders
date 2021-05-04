@@ -1,6 +1,10 @@
+# -*- coding: utf-8 -*-
 # by: Johnel Bacani
+# updated by: Christian Anasco on 4th May, 2021
 
 from ..standard_libs import *
+from ..scratch_file import strip_tags
+
 
 def bachelor(course_item):
     if "honour" in course_item["courseName"].lower() or "hons" in course_item["courseName"].lower():
@@ -8,6 +12,7 @@ def bachelor(course_item):
 
     else:
         return "2"
+
 
 class JcuSpiderSpider(scrapy.Spider):
     name = 'jcu_spider'
@@ -40,9 +45,8 @@ class JcuSpiderSpider(scrapy.Spider):
     }
 
     def parse(self, response):
-        categories = response.css("li.jcu-v1__ct__link-list__item a::attr(href)").getall()
-        for category in categories:
-            yield response.follow(category, callback=self.category_parse)
+        categories = response.xpath("//ul[@class='jcu-v1__ct__link-list__container']//a")
+        yield from response.follow_all(categories, callback=self.category_parse)
 
     def category_parse(self, response):
         courses = response.css("a.jcu-v1__course-table--name__link::attr(href)").getall()
@@ -166,13 +170,14 @@ class JcuSpiderSpider(scrapy.Spider):
 
         career = response.css("div#accordion_career p::text").getall()
         if career:
-            course_item["careerPathways"] = "\n".join(career)
+            course_item["careerPathways"] = strip_tags(''.join(career), remove_all_tags=False, remove_hyperlinks=True)
 
         overview = response.css("div#accordion_what-to-expect div.jcu-v1__accordion__content div")
         if overview:
             overview = overview[0].css("p::text").getall()
             if overview:
-                course_item["overview"] = "\n".join(overview[:-1])
+                course_item["overview"] = strip_tags(''.join(overview[:-1]), remove_all_tags=False,
+                                                     remove_hyperlinks=True)
 
         fee = response.css("div.course-fast-facts__tile__body-top__lrg p::text").get()
         if fee:
