@@ -142,8 +142,9 @@ class DeaSpiderSpider(scrapy.Spider):
                 if not re.search('Read More', item, re.M):
                     holder.append(item)
             if holder:
-                course_item.set_summary(strip_tags(holder[0]))
-                course_item["overview"] = strip_tags("".join(holder), False)
+                summary = [strip_tags(x) for x in holder]
+                course_item.set_summary(' '.join(summary))
+                course_item['overview'] = strip_tags(' '.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         cricos = response.xpath("//div[@class='module__key-information--item-title'][contains(*/text(), "
                                 "'CRICOS')]/following-sibling::*["
@@ -172,25 +173,27 @@ class DeaSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item['courseStructure'] = strip_tags("".join(holder), False)
+            course_item['courseStructure'] = strip_tags(' '.join(holder), remove_all_tags=False,
+                                                        remove_hyperlinks=True)
 
         entry = response.xpath("//div[@class='module__content-panel--title'][*[text()='Entry "
                                "information']]/following-sibling::*[contains(@class, "
                                "'module__content-panel--text')]/*").getall()
         if entry:
-            course_item['entryRequirements'] = strip_tags("".join(entry), False)
+            course_item['entryRequirements'] = strip_tags(' '.join(entry), remove_all_tags=False,
+                                                          remove_hyperlinks=True)
 
         credit = response.xpath("//div[@class='module__content-panel--title'][*[text()='Recognition of prior "
                                 "learning']]/following-sibling::*[contains(@class, "
                                 "'module__content-panel--text')]/*").getall()
         if credit:
-            course_item['creditTransfer'] = strip_tags("".join(credit), False)
+            course_item['creditTransfer'] = strip_tags(' '.join(credit), remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath("//div[@class='module__content-panel--title'][*[text()='Career "
                                 "outcomes']]/following-sibling::*[contains(@class, "
                                 "'module__content-panel--text')]/*").getall()
         if career:
-            course_item['careerPathways'] = strip_tags("".join(career), False)
+            course_item['careerPathways'] = strip_tags(' '.join(career), remove_all_tags=False, remove_hyperlinks=True)
 
         location = response.xpath("//div[@class='module__summary--icon-wrapper'][*[contains(text(), "
                                   "'Campuses')]]/following-sibling::*[contains(@class, "
