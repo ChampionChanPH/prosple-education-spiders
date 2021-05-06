@@ -19,11 +19,30 @@ def bachelor_honours(course_item):
         return "2"
 
 
+def get_total(field_to_use, field_to_update, course_item):
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
+        if course_item["teachingPeriod"] == 1:
+            if float(course_item["durationMinFull"]) < 1:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 52
+
+
 class EccSpiderSpider(scrapy.Spider):
     name = 'ecc_spider'
-    allowed_domains = ['www.edithcowancollege.edu.au', 'edithcowancollege.edu.au']
     start_urls = ['https://www.edithcowancollege.edu.au/']
-    banned_urls = []
     institution = "Edith Cowan College"
     uidPrefix = "AU-ECC-"
 
@@ -97,9 +116,9 @@ class EccSpiderSpider(scrapy.Spider):
 
         overview = response.xpath("//div[contains(@class, 'course-description')]/*/text()").getall()
         if overview:
-            overview = [x.strip() for x in overview]
-            course_item["overview"] = strip_tags("".join(overview), remove_all_tags=False)
-            course_item.set_summary("".join(overview))
+            summary = [strip_tags(x) for x in overview]
+            course_item.set_summary(' '.join(summary))
+            course_item['overview'] = strip_tags(' '.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
         table = response.xpath("//table[@id='coursePrices']").get()
         if table:
@@ -123,15 +142,38 @@ class EccSpiderSpider(scrapy.Spider):
 
         duration = response.xpath("//div[@class='grayback']/*[contains(text(), 'Duration')]/following-sibling::*").get()
         if duration:
-            duration_full = re.findall("(\d*\.?\d*)\s?o?r?\s?(\d*\.?\d+)(?=\s("
-                                       "year|month|semester|trimester|quarter|week|day))", duration, re.I | re.M)
+            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\sfull)",
+                                       duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\spart)",
+                                       duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
             if duration_full:
-                if duration_full[0][0] == "":
-                    course_item["durationMinFull"] = float(duration_full[0][1])
-                else:
+                if len(duration_full[0]) == 2:
                     course_item["durationMinFull"] = float(duration_full[0][0])
-                    course_item["durationMaxFull"] = float(duration_full[0][1])
-                self.get_period(duration_full[0][2].lower(), course_item)
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                if len(duration_full[0]) == 3:
+                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[0][1]))
+                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[0][1]))
+                    self.get_period(duration_full[0][2].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration,
+                                           re.I | re.M | re.DOTALL)
+                if duration_full:
+                    if len(duration_full) == 1:
+                        course_item["durationMinFull"] = float(duration_full[0][0])
+                        self.get_period(duration_full[0][1].lower(), course_item)
+                    if len(duration_full) == 2:
+                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                        self.get_period(duration_full[1][1].lower(), course_item)
 
         course_item.set_sf_dt(self.degrees)
 
