@@ -43,6 +43,9 @@ def get_total(field_to_use, field_to_update, course_item):
 class SowSpiderSpider(scrapy.Spider):
     name = 'sow_spider'
     start_urls = ['https://www.swtafe.edu.au/courses/free-tafe-courses']
+    banned_urls = [
+        'https://www.swtafe.edu.au/courses/free-tafe-courses'
+    ]
     institution = "South West Institute of TAFE"
     uidPrefix = "AU-SOW-"
 
@@ -122,7 +125,8 @@ class SowSpiderSpider(scrapy.Spider):
             "//h3[contains(@class, 'content-heading-secondary')]/following-sibling::*[1]//a/@href").getall()
 
         for item in courses:
-            yield response.follow(item, callback=self.course_parse)
+            if item not in self.banned_urls:
+                yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
