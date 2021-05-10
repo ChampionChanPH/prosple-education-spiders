@@ -61,6 +61,7 @@ class SuiSpiderSpider(scrapy.Spider):
         "diploma": "5",
         "associate degree": "1",
         "vcal victorian certificate": "9",
+        "victorian certificate": "9",
         "vcal in": "9",
         "non-award": "13",
         "no match": "15"
