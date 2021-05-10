@@ -44,7 +44,7 @@ class SowSpiderSpider(scrapy.Spider):
     name = 'sow_spider'
     start_urls = ['https://www.swtafe.edu.au/courses/free-tafe-courses']
     banned_urls = [
-        'https://www.swtafe.edu.au/courses/free-tafe-courses'
+        '#'
     ]
     institution = "South West Institute of TAFE"
     uidPrefix = "AU-SOW-"
