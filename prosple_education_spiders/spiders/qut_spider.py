@@ -213,12 +213,11 @@ class QutSpiderSpider(scrapy.Spider):
                 summary = response.xpath("//div[contains(@class, 'hero__header__blurb')]/p/text()").get()
             course_item.set_summary(summary)
         if 'overviewSummary' not in course_item:
-            summary = response.xpath("//*[contains(text(), 'Highlights')]/following-sibling::ul/*").getall()
+            summary = response.xpath("//*[contains(text(), 'Highlights')]/following-sibling::ul/*").get()
             if not summary:
                 summary = response.xpath("//*[contains(text(), 'Highlights')]/following-sibling::*").get()
             if summary:
-                summary = [strip_tags(x) for x in summary]
-                course_item.set_summary(' '.join(summary))
+                course_item.set_summary(strip_tags(summary))
 
         overview = response.xpath("//*[contains(text(), 'Highlights')]/following-sibling::ul").get()
         if not overview:
