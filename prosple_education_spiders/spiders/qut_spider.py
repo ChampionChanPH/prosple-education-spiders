@@ -178,7 +178,6 @@ class QutSpiderSpider(scrapy.Spider):
         for item in self.allowed_urls:
             yield response.follow(item, callback=self.course_parse)
 
-
     # def sub_parse(self, response):
     #     sub = response.xpath("//ul[contains(@class, 'study-area-links')]/li/a")
     #     yield from response.follow_all(sub, callback=self.link_parse)
