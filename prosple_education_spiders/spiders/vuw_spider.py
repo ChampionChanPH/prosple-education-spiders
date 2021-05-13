@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # by: Johnel Bacani
+# updated by: Christian Anasco, 13th May, 2012 - added executive master
 
 from ..standard_libs import *
 
@@ -34,6 +35,7 @@ class VuwSpiderSpider(scrapy.Spider):
 
     degrees = {
         "master": "11",
+        "executive master": "11",
         "bachelor": bachelor,
         "postgraduate certificate": "7",
         "postgraduate diploma": "8",
