@@ -99,6 +99,7 @@ class MonSpiderSpider(scrapy.Spider):
         "Bachelor degree": {'begin': 'Bachelor of ', 'end': ''},
         "Short course": {'begin': '', 'end': ''},
         "Tailored program": {'begin': '', 'end': ''},
+        "Tailored executive education program": {'begin': '', 'end': ''},
         "Single-day program": {'begin': '', 'end': ''},
         "Master degree": {'begin': 'Master of ', 'end': ''},
         "Expert master degree": {'begin': 'Expert Master of ', 'end': ''},
