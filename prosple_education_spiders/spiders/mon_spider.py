@@ -32,14 +32,14 @@ def get_total(field_to_use, field_to_update, course_item):
 class MonSpiderSpider(scrapy.Spider):
     name = 'mon_spider'
     allowed_domains = ['mon3-search.clients.squiz.net', 'www.monash.edu', 'monash.edu']
-    start_urls = ['https://www.monash.edu/study/courses/find-a-course?f.Tabs%7CcourseTab=Undergraduate&f'
-                  '.InterestAreas%7CcourseInterestAreas=',
-                  'https://www.monash.edu/study/courses/find-a-course?f.Tabs%7CcourseTab=Graduate&f.InterestAreas'
-                  '%7CcourseInterestAreas=',
-                  'https://www.monash.edu/study/courses/find-a-course?f.Tabs%7CcourseTab=Double+degrees&f'
-                  '.InterestAreas%7CcourseInterestAreas=',
-                  'https://www.monash.edu/study/courses/find-a-course?f.Tabs%7CcourseTab=Professional+development&f'
-                  '.InterestAreas%7CcourseInterestAreas=']
+    start_urls = ['https://www.monash.edu/study/courses/find-a-course?collection=study-monash-courses-meta&f.Tabs'
+                  '%7CcourseTab=Undergraduate&f.InterestAreas%7CcourseInterestAreas=',
+                  'https://www.monash.edu/study/courses/find-a-course?collection=study-monash-courses-meta&f.Tabs'
+                  '%7CcourseTab=Graduate&f.InterestAreas%7CcourseInterestAreas=',
+                  'https://www.monash.edu/study/courses/find-a-course?collection=study-monash-courses-meta&f.Tabs'
+                  '%7CcourseTab=Double+degrees&f.InterestAreas%7CcourseInterestAreas=',
+                  'https://www.monash.edu/study/courses/find-a-course?collection=study-monash-courses-meta&f.Tabs'
+                  '%7CcourseTab=Professional+development&f.InterestAreas%7CcourseInterestAreas=']
     banned_urls = []
     courses = []
     institution = "Monash University"
@@ -151,10 +151,10 @@ class MonSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        boxes = response.xpath("//div[contains(@class, 'search-results')]/div[contains(@class, "
+        boxes = response.xpath("//div[contains(@class, 'box-featured__group')]/div[contains(@class, "
                                "'box-featured__wrapper')]")
         for item in boxes:
-            url = item.xpath("//div[@class='box-featured']/a/@href").get()
+            url = item.xpath(".//div[@class='box-featured']/a/@href").get()
             degree = item.xpath(".//div[contains(@class, 'box-featured__blurb')]//span[contains(@class, "
                                 "'box-featured__level')]/text()").get()
             yield response.follow(url, callback=self.course_parse, meta={'degree': degree})
