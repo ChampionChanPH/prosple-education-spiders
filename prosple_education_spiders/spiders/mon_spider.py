@@ -154,8 +154,7 @@ class MonSpiderSpider(scrapy.Spider):
         boxes = response.xpath("//div[contains(@class, 'search-results')]/div[contains(@class, "
                                "'box-featured__wrapper')]")
         for item in boxes:
-            url = item.xpath(".//div[contains(@class, 'box-featured__blurb')]//h2[contains(@class, "
-                             "'box-featured__heading')]/a/@href").get()
+            url = item.xpath("//div[@class='box-featured']/a/@href").get()
             degree = item.xpath(".//div[contains(@class, 'box-featured__blurb')]//span[contains(@class, "
                                 "'box-featured__level')]/text()").get()
             yield response.follow(url, callback=self.course_parse, meta={'degree': degree})
@@ -167,33 +166,33 @@ class MonSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        # course_item["domesticApplyURL"] = response.request.url
+        course_item["domesticApplyURL"] = response.request.url
 
-        name = response.xpath("//h1/text()").get()
-        if not name:
-            name = response.xpath("//strong[@class='h1']/text()").get()
-        if name:
-            split_name = re.findall(r"(.*) - ([0-9A-Z]+)\b", name)
+        course_name = response.xpath("//h1/text()").get()
+        if not course_name:
+            course_name = response.xpath("//strong[@class='h1']/text()").get()
+        if course_name:
+            split_name = re.findall(r"(.*) - ([0-9A-Z]+)\b", course_name)
             if split_name:
-                name = split_name[0][0]
+                course_name = split_name[0][0]
                 code = split_name[0][1]
                 course_item["courseCode"] = code.strip()
-            name = name.strip()
+            course_name = course_name.strip()
         degree = str(response.meta['degree'])
         if degree:
             degree = degree.strip()
             degree = degree.split("/")
         if response.meta['degree'] not in ["Short course", "Tailored program", "Single-day program", "Seminar",
                                            "Enabling course"] and len(degree) > 1:
-            name = name.split(" and ")
+            course_name = course_name.split(" and ")
         else:
-            name = [name]
+            course_name = [course_name]
         holder = []
-        for name, degree in zip(name, degree):
-            if name == "Juris Doctor":
-                holder.append(name)
+        for course_name, degree in zip(course_name, degree):
+            if course_name == "Juris Doctor":
+                holder.append(course_name)
             else:
-                holder.append(self.degree_split[degree]["begin"] + name + self.degree_split[degree]["end"])
+                holder.append(self.degree_split[degree]["begin"] + course_name + self.degree_split[degree]["end"])
         if holder:
             course_item.set_course_name(" / ".join(holder), self.uidPrefix)
 
@@ -365,6 +364,6 @@ class MonSpiderSpider(scrapy.Spider):
             course_item["uid"] = course_item["uid"] + "-" + course_item["cricosCode"]
 
         course_item["internationalApps"] = 1
-        # course_item["internationalApplyURL"] = course_item["sourceURL"]
+        course_item["internationalApplyURL"] = course_item["sourceURL"]
 
         yield course_item
