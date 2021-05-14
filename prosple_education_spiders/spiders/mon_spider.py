@@ -31,7 +31,6 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class MonSpiderSpider(scrapy.Spider):
     name = 'mon_spider'
-    allowed_domains = ['mon3-search.clients.squiz.net', 'www.monash.edu', 'monash.edu']
     start_urls = ['https://www.monash.edu/study/courses/find-a-course?collection=study-monash-courses-meta&f.Tabs'
                   '%7CcourseTab=Undergraduate&f.InterestAreas%7CcourseInterestAreas=',
                   'https://www.monash.edu/study/courses/find-a-course?collection=study-monash-courses-meta&f.Tabs'
