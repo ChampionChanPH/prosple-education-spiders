@@ -20,17 +20,28 @@ def bachelor_honours(course_item):
 
 
 def get_total(field_to_use, field_to_update, course_item):
-    if "durationMinFull" in course_item:
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
         if course_item["teachingPeriod"] == 1:
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 52
 
 
 class MurSpiderSpider(scrapy.Spider):
     name = 'mur_spider'
-    allowed_domains = ['search.murdoch.edu.au', 'murdoch.edu.au']
     start_urls = ['https://search.murdoch.edu.au/s/search.html?collection=mu-course-search']
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     banned_urls = []
