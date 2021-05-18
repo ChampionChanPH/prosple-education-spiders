@@ -149,7 +149,7 @@ class MurSpiderSpider(scrapy.Spider):
         if course_code:
             course_item["courseCode"] = course_code
 
-        cricos = response.xpath("//h4[text()='CRICOS code']/following-sibling::*").getall()
+        cricos = response.xpath("//h4[text()='CRICOS code']/following-sibling::*").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
@@ -157,7 +157,7 @@ class MurSpiderSpider(scrapy.Spider):
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
-        atar = response.xpath("//h4[text()='Selection rank']/following-sibling::*").getall()
+        atar = response.xpath("//h4[text()='Selection rank']/following-sibling::*").get()
         if atar:
             atar = re.findall("\d+", atar, re.M)
             if atar:
