@@ -42,7 +42,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class GitSpiderSpider(scrapy.Spider):
     name = 'git_spider'
-    start_urls = ['https://www.thegordon.edu.au/courses/international-courses']
+    start_urls = ['https://www.thegordon.edu.au/courses/all-courses']
 
     international_courses = []
 
@@ -110,14 +110,16 @@ class GitSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        self.international_courses.extend(response.xpath("//*[@id='pageCourseSearchDiv']//a/text()").getall())
-
-        courses_link = 'https://www.thegordon.edu.au/courses/all-courses'
-        yield response.follow(courses_link, callback=self.link_parse)
-
-    def link_parse(self, response):
-        courses = response.xpath("//*[@id='pageCourseSearchDiv']//a")
+        courses = response.xpath("//*[@id='pageCourseSearchDiv']//*[@class='ResultRow']//a")
         yield from response.follow_all(courses, callback=self.course_parse)
+
+        check_page = response.xpath("//*[@class='Pages']").get()
+        if check_page:
+            check_page = re.findall('(\d+) of (\d+)', check_page)
+            if check_page and check_page[0][0] != check_page[0][1]:
+                next_page = response.xpath("//a[text()='>']/@href").get()
+                if next_page:
+                    yield response.follow(next_page, callback=self.parse)
 
     def course_parse(self, response):
         course_item = Course()
