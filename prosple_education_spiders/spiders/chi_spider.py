@@ -61,6 +61,7 @@ class ChiSpiderSpider(scrapy.Spider):
         "certificate ii": "4",
         "certificate iii": "4",
         "certificate iv": "4",
+        "undergraduate certificate": "4",
         "advanced diploma": "5",
         "diploma": "5",
         "associate degree": "1",
