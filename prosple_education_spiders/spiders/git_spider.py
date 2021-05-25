@@ -42,7 +42,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class GitSpiderSpider(scrapy.Spider):
     name = 'git_spider'
-    start_urls = ['https://www.thegordon.edu.au/courses/all-courses']
+    start_urls = ['https://www.thegordon.edu.au/courses/international']
 
     international_courses = []
 
@@ -110,6 +110,23 @@ class GitSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
+        courses = response.xpath("//*[@id='pageCourseSearchDiv']//*[@class='ResultRow']//a/text()").getall()
+        courses = [x.strip() for x in courses]
+        self.international_courses.extend(courses)
+
+        check_page = response.xpath("//*[@class='Pages']").get()
+        if check_page:
+            check_page = re.findall('(\d+) of (\d+)', check_page)
+            if check_page:
+                if check_page[0][0] != check_page[0][1]:
+                    next_page = response.xpath("//a[text()='>']/@href").get()
+                    if next_page:
+                        yield response.follow(next_page, callback=self.parse)
+                else:
+                    all_course = 'https://www.thegordon.edu.au/courses/all-courses'
+                    yield response.follow(all_course, callback=self.sub_parse)
+
+    def sub_parse(self, response):
         courses = response.xpath("//*[@id='pageCourseSearchDiv']//*[@class='ResultRow']//a")
         yield from response.follow_all(courses, callback=self.course_parse)
 
@@ -139,62 +156,38 @@ class GitSpiderSpider(scrapy.Spider):
                 course_name = re.sub('~', '', course_name[0])
                 course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//div[@id='courseDiv']/div[@style='display: block;']/div[@style='display: "
-                                  "block;']/*[text()='Course Description']/following-sibling::*").getall()
-        if not overview:
-            overview = response.xpath(
-                "//div[@id='courseDiv']/*[text()='Course Description']/following-sibling::*").getall()
+        overview = response.xpath("//*[text()='Course description']/following-sibling::node()").getall()
         holder = []
         for index, item in enumerate(overview):
-            if not re.search('^<(p|o|u|d)', item) and index != 0 and index != 1:
-                break
-            elif not re.search('^<(p|o|u|d)', item):
-                pass
+            if re.search('^<(h|a|d)', item):
+                if index == 0:
+                    pass
+                else:
+                    break
             else:
                 holder.append(item)
         if holder:
-            summary = [strip_tags(x) for x in holder if strip_tags(x) != '']
-            course_item.set_summary(' '.join(summary))
-            course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
-        if 'overview' not in course_item:
-            overview = response.xpath("//div[@id='courseDiv']/div[@style='display: block;']/div[@style='display: "
-                                      "block;']/*[text()='Course Description']/following-sibling::*/*").getall()
-            holder = []
-            for index, item in enumerate(overview):
-                if not re.search('^<(p|o|u|d)', item) and index != 0 and index != 1:
-                    break
-                elif not re.search('^<(p|o|u|d)', item):
-                    pass
-                else:
-                    holder.append(item)
+            holder = [x for x in holder if strip_tags(x) != '']
             if holder:
-                summary = [strip_tags(x) for x in holder if strip_tags(x) != '']
-                course_item.set_summary(' '.join(summary))
-                course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
-        if 'overview' not in course_item:
-            overview = response.xpath("//div[@id='courseDiv']/div[@style='display: block;']/div[@style='display: "
-                                      "block;']/*[text()='Course Description']/following-sibling::node()").getall()
-            if overview:
-                summary = [strip_tags(x) for x in overview if strip_tags(x) != '']
-                course_item.set_summary(' '.join(summary))
-                course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
-        if 'overview' not in course_item:
-            overview = response.xpath(
-                "//div[@id='courseDiv']/*[text()='Course Description']/following-sibling::node()").getall()
-            holder = []
-            for index, item in enumerate(overview):
-                if re.search('^<(a|s)', item) and index != 0 and index != 1:
-                    break
-                else:
-                    holder.append(item)
-            if holder:
-                summary = [strip_tags(x) for x in holder if strip_tags(x) != '']
+                summary = [strip_tags(x) for x in holder]
                 course_item.set_summary(' '.join(summary))
                 course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        career = response.xpath("//*[text()='Possible Career Outcomes']/following-sibling::*").get()
-        if career:
-            course_item['careerPathways'] = strip_tags(career, remove_all_tags=False)
+        career = response.xpath("//*[text()='Possible career outcomes']/following-sibling::node()").getall()
+        holder = []
+        for index, item in enumerate(career):
+            if re.search('^<(h|a|d)', item):
+                if index == 0:
+                    pass
+                else:
+                    break
+            else:
+                holder.append(item)
+        if holder:
+            holder = [x for x in holder if strip_tags(x) != '']
+            if holder:
+                course_item["careerPathways"] = strip_tags(''.join(holder), remove_all_tags=False,
+                                                           remove_hyperlinks=True)
 
         intake = response.xpath("//div[@id='IntakesTable']").get()
         if intake:
@@ -237,11 +230,10 @@ class GitSpiderSpider(scrapy.Spider):
                     #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                     #     self.get_period(duration_full[1][1].lower(), course_item)
 
-        location = response.xpath("//div[@id='IntakesTable']/div[@class='row']/span[2]/text()").getall()
+        location = response.xpath("//div[@id='IntakesTable']").get()
         campus_holder = set()
         study_holder = set()
         if location:
-            location = '|'.join(location)
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.add(self.campuses[campus])
@@ -254,10 +246,20 @@ class GitSpiderSpider(scrapy.Spider):
         entry = response.xpath("//*[contains(@class, 'accordionHeader')][contains(text(), 'Entrance "
                                "Requirements')]/following-sibling::*/*/*/*[@style='display: block;']/*[text("
                                ")='Entrance Requirements / Pre-requisites']/following-sibling::*").getall()
-        if entry:
-            entry = [x for x in entry if strip_tags(x) != '']
-            if entry:
-                course_item['entryRequirements'] = strip_tags(''.join(entry), remove_all_tags=False)
+        holder = []
+        for index, item in enumerate(entry):
+            if re.search('display: none', item):
+                if index == 0:
+                    pass
+                else:
+                    break
+            else:
+                holder.append(item)
+        if holder:
+            holder = [x for x in holder if strip_tags(x) != '']
+            if holder:
+                course_item["entryRequirements"] = strip_tags(''.join(holder), remove_all_tags=False,
+                                                              remove_hyperlinks=True)
 
         dom_fee = response.xpath("//div[@id='FeeTable']/div[@class='row']/*[contains(text(), 'Full Fee "
                                  "Tuition')]/following-sibling::*[last()-1]").get()
@@ -295,13 +297,13 @@ class GitSpiderSpider(scrapy.Spider):
     def int_parse(self, response):
         course_item = response.meta['item']
 
-        cricos = response.xpath("//*[text()='Cricos Code']/following-sibling::*/text()").get()
+        cricos = response.xpath("//*[contains(text(), 'CRICOS code:')]").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
                 course_item["cricosCode"] = ", ".join(set(cricos))
 
-        int_fee = response.xpath("//*[contains(text(), 'Annual Tuition Fee')]/following-sibling::*").get()
+        int_fee = response.xpath("//*[contains(text(), 'Total tuition fee:')]/following-sibling::*").get()
         if int_fee:
             int_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
             int_fee = [float(''.join(x)) for x in int_fee]
