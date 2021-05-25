@@ -136,7 +136,7 @@ class GitSpiderSpider(scrapy.Spider):
             if check_page and check_page[0][0] != check_page[0][1]:
                 next_page = response.xpath("//a[text()='>']/@href").get()
                 if next_page:
-                    yield response.follow(next_page, callback=self.parse)
+                    yield response.follow(next_page, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
