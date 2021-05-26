@@ -59,6 +59,7 @@ class BonSpiderSpider(scrapy.Spider):
         "doctor": "6",
         "certificate": "4",
         "diploma": "5",
+        "the diploma": "5",
         "associate degree": "1",
         "non-award": "13",
         "no match": "15"
