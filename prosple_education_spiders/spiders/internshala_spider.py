@@ -19,8 +19,7 @@ class InternshalaSpiderSpider(scrapy.Spider):
         if total_jobs:
             total_jobs = int(re.findall('(\d+) total internship', total_jobs)[0])
             if total_jobs:
-                # for num in range(1, total_jobs + 1):
-                for num in range(1, 2):
+                for num in range(1, total_jobs + 1):
                     url = f'https://internshala.com/internships/page-{num}'
                     yield response.follow(url, callback=self.sub_parse)
 
