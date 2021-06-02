@@ -25,7 +25,7 @@ class InternshalaSpiderSpider(scrapy.Spider):
 
     def sub_parse(self, response):
         jobs = response.xpath("//a[@class='view_detail_button']")
-        yield response.follow_all(jobs, callback=self.job_parse)
+        yield from response.follow_all(jobs, callback=self.job_parse)
 
     def job_parse(self, response):
         job_item = Opportunity()
