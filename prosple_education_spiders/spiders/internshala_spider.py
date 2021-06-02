@@ -7,7 +7,7 @@ from ..scratch_file import strip_tags
 
 class Opportunity(scrapy.Item):
     opportunity_name = scrapy.Field()
-
+    employer_name = scrapy.Field()
 
 class InternshalaSpiderSpider(scrapy.Spider):
     name = 'internshala_spider'
@@ -19,7 +19,8 @@ class InternshalaSpiderSpider(scrapy.Spider):
         if total_jobs:
             total_jobs = int(re.findall('(\d+) total internship', total_jobs)[0])
             if total_jobs:
-                for num in range(1, total_jobs + 1):
+                # for num in range(1, total_jobs + 1):
+                for num in range(1, 2):
                     url = f'https://internshala.com/internships/page-{num}'
                     yield response.follow(url, callback=self.sub_parse)
 
@@ -36,4 +37,8 @@ class InternshalaSpiderSpider(scrapy.Spider):
         if job_name:
             job_item['opportunity_name'] = job_name.strip()
 
-        yield job_name
+        employer_name = response.xpath("//a[@class='link_display_like_text']/text()").get
+        if employer_name:
+            job_item['employer_name'] = employer_name.strip()
+
+        yield job_item
