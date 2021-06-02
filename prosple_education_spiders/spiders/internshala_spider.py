@@ -21,7 +21,11 @@ class InternshalaSpiderSpider(scrapy.Spider):
             if total_jobs:
                 for num in range(1, total_jobs + 1):
                     url = f'https://internshala.com/internships/page-{num}'
-                    yield response.follow(url, callback=self.job_parse)
+                    yield response.follow(url, callback=self.sub_parse)
+
+    def sub_parse(self, response):
+        jobs = response.xpath("//a[@class='view_detail_button']")
+        yield response.follow_all(jobs, callback=self.job_parse)
 
     def job_parse(self, response):
         job_item = Opportunity()
