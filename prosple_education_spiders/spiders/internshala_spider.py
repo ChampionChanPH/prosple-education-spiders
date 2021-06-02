@@ -36,7 +36,7 @@ class InternshalaSpiderSpider(scrapy.Spider):
         if job_name:
             job_item['opportunity_name'] = job_name.strip()
 
-        employer_name = response.xpath("//a[@class='link_display_like_text']/text()").get
+        employer_name = response.xpath("//a[@class='link_display_like_text']/text()").get()
         if employer_name:
             job_item['employer_name'] = employer_name.strip()
 
