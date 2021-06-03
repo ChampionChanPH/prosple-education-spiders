@@ -7,7 +7,7 @@ from ..scratch_file import *
 
 class FirstnaukriSpiderSpider(scrapy.Spider):
     name = 'firstnaukri_spider'
-    start_urls = ['https://www.firstnaukri.com/fnJobSearch/search?sortBy=&jobType=&rId=&qp=&ql=&course=&qcourse=']
+    start_urls = ['https://www.firstnaukri.com/fnJobSearch/search-1?sortBy=&jobType=&rId=&qp=&ql=&course=&qcourse=']
 
     def parse(self, response):
         jobs = response.xpath("//a[@class='header']/@href").getall()
