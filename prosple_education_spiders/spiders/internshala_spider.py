@@ -17,6 +17,7 @@ class Opportunity(scrapy.Item):
     employer_description = scrapy.Field()
     job_description = scrapy.Field()
     vacancies = scrapy.Field()
+    source_url = scrapy.Field()
 
 
 class InternshalaSpiderSpider(scrapy.Spider):
@@ -42,6 +43,8 @@ class InternshalaSpiderSpider(scrapy.Spider):
 
     def job_parse(self, response):
         job_item = Opportunity()
+
+        job_item['source_url'] = response.request.url
 
         job_name = response.xpath("//div[contains(@class, 'heading_title')]/text()").get()
         if job_name:
