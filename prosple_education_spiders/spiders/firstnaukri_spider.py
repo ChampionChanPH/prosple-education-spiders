@@ -8,6 +8,7 @@ from ..scratch_file import *
 class FirstnaukriSpiderSpider(scrapy.Spider):
     name = 'firstnaukri_spider'
     start_urls = ['https://www.firstnaukri.com/fnJobSearch/search-1?sortBy=&jobType=&rId=&qp=&ql=&course=&qcourse=']
+    banned_urls = ['https://www.firstnaukri.com/fnJobSearch/viewAllJobs?nf=1']
 
     def parse(self, response):
         jobs = response.xpath("//div[@class='groupTupples']//a[@class='header']/@href").getall()
@@ -74,4 +75,5 @@ class FirstnaukriSpiderSpider(scrapy.Spider):
         if location:
             job_item["location"] = location.strip()
 
-        yield job_item
+        if response.request.url not in self.banned_urls:
+            yield job_item
