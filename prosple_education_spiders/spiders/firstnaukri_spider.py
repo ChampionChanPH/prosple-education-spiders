@@ -10,7 +10,7 @@ class FirstnaukriSpiderSpider(scrapy.Spider):
     start_urls = ['https://www.firstnaukri.com/fnJobSearch/search-1?sortBy=&jobType=&rId=&qp=&ql=&course=&qcourse=']
 
     def parse(self, response):
-        jobs = response.xpath("//a[@class='header']/@href").getall()
+        jobs = response.xpath("//div[@class='groupTupples']//a[@class='header']/@href").getall()
         yield from response.follow_all(jobs, callback=self.job_parse)
 
         next_page = response.xpath("//a[@class='next']/@href").get()
@@ -61,8 +61,8 @@ class FirstnaukriSpiderSpider(scrapy.Spider):
         if industry_sector:
             job_item['industry_sector'] = industry_sector.strip()
 
-        employer_url = response.xpath("//span[@class='jdCell' and text()='Website']/following-sibling::*["
-                                      "@class='jdCell2']/text()").get()
+        employer_url = response.xpath("//span[@class='jdCell' and text()='Website']/following-sibling::*[contains("
+                                      "@class, 'jdCell2')]/a/@href").get()
         if employer_url:
             job_item['employer_url'] = employer_url.strip()
 
