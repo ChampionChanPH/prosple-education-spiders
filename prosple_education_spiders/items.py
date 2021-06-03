@@ -10,14 +10,79 @@ import re
 from .misc_functions import *
 
 
+class Opportunity(scrapy.Item):
+    group = scrapy.Field()
+    source_url = scrapy.Field()
+    uid = scrapy.Field()
+
+    opportunity_name = scrapy.Field()
+    canonical_group = scrapy.Field()
+    employer_name = scrapy.Field()
+    employer_description = scrapy.Field()
+    employer_url = scrapy.Field()
+    application_link = scrapy.Field()
+    expired = scrapy.Field()
+    industry_sector = scrapy.Field()
+    no_of_vacancies = scrapy.Field()
+    start_date = scrapy.Field()
+    overview = scrapy.Field()
+    summary = scrapy.Field()
+    minimum_salary = scrapy.Field()
+    maximum_salary = scrapy.Field()
+    salary_description = scrapy.Field()
+    location = scrapy.Field()
+    application_open = scrapy.Field()
+    application_close = scrapy.Field()
+    degree_type = scrapy.Field()
+    international_apply = scrapy.Field()
+    study_field = scrapy.Field()
+    time_zone = scrapy.Field()
+    opportunity_type = scrapy.Field()
+
+    def set_summary(self, text):
+        """
+        :param text: sentence or paragraph you wanted to set as overview summary for the course.
+        :return: None. It will automatically assign the transformed overview summary.
+        """
+        max_characters = 300
+        summary = None
+
+        text = re.split('(?<=[.?!])\s', text)
+        if len(text) == 1:
+            if len(text[0]) < max_characters:
+                summary = text[0]
+            else:
+                cut_summary = text[0][:max_characters + 1]
+                last_space = cut_summary.rindex(' ')
+                summary = cut_summary[:last_space] + '...'
+        if len(text) > 1:
+            temp_holder = []
+            char_count = 0
+            for index, item in enumerate(text):
+                if index == 0 and len(item) > max_characters:
+                    cut_summary = text[0][:max_characters + 1]
+                    last_space = cut_summary.rindex(' ')
+                    summary = cut_summary[:last_space] + '...'
+                    temp_holder.append(summary)
+                    break
+                elif char_count + len(item) > max_characters:
+                    break
+                else:
+                    char_count += len(item) + 1
+                    temp_holder.append(item)
+            summary = ' '.join(temp_holder).strip()
+
+        self["summary"] = summary
+
+
 class Scholarship(scrapy.Item):
     group = scrapy.Field()
     source_url = scrapy.Field()
     uid = scrapy.Field()
-    name = scrapy.Field() #unique, like uid on courses
+    name = scrapy.Field()  # unique, like uid on courses
     code = scrapy.Field()
     canonical_group = scrapy.Field()
-    time_zone = scrapy.Field() #required
+    time_zone = scrapy.Field()  # required
     provider_name = scrapy.Field()
     eligible = scrapy.Field()
     degree_types = scrapy.Field()
