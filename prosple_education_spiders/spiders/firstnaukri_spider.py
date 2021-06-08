@@ -38,11 +38,13 @@ class FirstnaukriSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[@class='tableStr']/*[last()]/*").getall()
         if overview:
             summary = [strip_tags(x) for x in overview]
-            job_item.set_summary(' '.join(summary))
+            job_item.set_summary(' '.join(summary), "summary")
             job_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
         employer_profile = response.xpath("//*[text()='Company Profile']/following-sibling::*").getall()
         if employer_profile:
+            summary = [strip_tags(x) for x in employer_profile]
+            job_item.set_summary(' '.join(summary), "employer_summary")
             job_item["employer_description"] = strip_tags(''.join(employer_profile), remove_all_tags=False,
                                                           remove_hyperlinks=True)
 

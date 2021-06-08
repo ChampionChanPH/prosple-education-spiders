@@ -19,6 +19,7 @@ class Opportunity(scrapy.Item):
     canonical_group = scrapy.Field()
     employer_name = scrapy.Field()
     employer_description = scrapy.Field()
+    employer_summary = scrapy.Field()
     employer_url = scrapy.Field()
     application_link = scrapy.Field()
     expired = scrapy.Field()
@@ -39,7 +40,7 @@ class Opportunity(scrapy.Item):
     time_zone = scrapy.Field()
     opportunity_type = scrapy.Field()
 
-    def set_summary(self, text):
+    def set_summary(self, text, field):
         """
         :param text: sentence or paragraph you wanted to set as overview summary for the course.
         :return: None. It will automatically assign the transformed overview summary.
@@ -72,7 +73,7 @@ class Opportunity(scrapy.Item):
                     temp_holder.append(item)
             summary = ' '.join(temp_holder).strip()
 
-        self["summary"] = summary
+        self[field] = summary
 
 
 class Scholarship(scrapy.Item):
