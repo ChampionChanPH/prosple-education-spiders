@@ -42,8 +42,8 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class UotSpiderSpider(scrapy.Spider):
     name = 'uot_spider'
-    start_urls = ['https://www.utas.edu.au/courses/undergraduate',
-                  'https://www.utas.edu.au/courses/postgraduate']
+    start_urls = ['https://www.utas.edu.au/search??collection=utas-meta&form=matrix&query=&f.Tabs%7Chandbook-courses'
+                  '=Courses&num_ranks=50']
     institution = "University of Tasmania"
     uidPrefix = "AU-UOT-"
 
@@ -102,10 +102,14 @@ class UotSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//div[@id='courseList']//div[@class='content-border']//a/@href").getall()
+        courses = response.xpath("//a[@class='search-result__card--link']/@href").getall()
 
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
+
+        next_page = response.xpath("//li[contains(@class, 'page-next')]/a/@href").getall()
+        if next_page:
+            yield response.follow(next_page, callback=self.parse)
 
     def course_parse(self, response):
         course_item = Course()
