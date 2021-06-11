@@ -107,7 +107,7 @@ class UotSpiderSpider(scrapy.Spider):
         for course in courses:
             yield response.follow(course, callback=self.course_parse)
 
-        next_page = response.xpath("//li[contains(@class, 'page-next')]/a/@href").getall()
+        next_page = response.xpath("//li[contains(@class, 'page-next')]/a/@href").get()
         if next_page:
             yield response.follow(next_page, callback=self.parse)
 
