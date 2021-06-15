@@ -34,7 +34,7 @@ class WhirlpoolSpiderSpider(scrapy.Spider):
 
             for title, url in zip(forum_title, forum_link):
                 yield response.follow(url, callback=self.pagination_parse, meta={"title": title,
-                                                                              "url": url})
+                                                                                 "url": url})
 
     def pagination_parse(self, response):
         forum_title = response.meta['title']
@@ -62,9 +62,12 @@ class WhirlpoolSpiderSpider(scrapy.Spider):
             forum['forum_title'] = response.meta['title']
             forum['forum_link'] = response.meta['url']
 
-            forum['username'] = item.xpath(".//div[contains(@class, 'reply ')]//span[@class='bu_name']/text()").get().strip()
-            forum['user_id'] = item.xpath(".//div[contains(@class, 'reply ')]//span[@class='userid']/text()").get().strip()
-            forum['user_group'] = item.xpath(".//div[contains(@class, 'reply ')]//div[@class='usergroup']/text()").get().strip()
+            forum['username'] = item.xpath(
+                ".//div[contains(@class, 'reply ')]//span[@class='bu_name']/text()").get().strip()
+            forum['user_id'] = item.xpath(
+                ".//div[contains(@class, 'reply ')]//span[@class='userid']/text()").get().strip()
+            forum['user_group'] = item.xpath(
+                ".//div[contains(@class, 'reply ')]//div[@class='usergroup']/text()").get().strip()
 
             post_date = item.xpath(".//div[contains(@class, 'reply ')]//div[@class='usergroup']/text()").getall()
             if post_date:
