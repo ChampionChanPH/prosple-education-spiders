@@ -7,6 +7,7 @@ class Forum(scrapy.Item):
     forum_title = scrapy.Field()
     forum_link = scrapy.Field()
     user_id = scrapy.Field()
+    user_group = scrapy.Field()
     username = scrapy.Field()
     post_date = scrapy.Field()
     comment = scrapy.Field()
