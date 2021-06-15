@@ -1,20 +1,6 @@
 from ..standard_libs import *
 from ..scratch_file import *
 import requests
-import csv
-
-with open('whirlpool_scraper.csv', 'w', newline='') as file:
-    fieldnames = [
-        'Forum Title',
-        'Forum URL',
-        'User ID',
-        'User Group',
-        'Username',
-        'Post Date',
-        'Comment',
-    ]
-    file = csv.writer(file)
-    file.writerow(fieldnames)
 
 
 class Forum(scrapy.Item):
@@ -30,6 +16,7 @@ class Forum(scrapy.Item):
 class WhirlpoolSpiderSpider(scrapy.Spider):
     name = 'whirlpool_spider'
     start_urls = ['https://forums.whirlpool.net.au/forum/136']
+    download_delay = 1
 
     def parse(self, response):
         for num in range(1, 11):
@@ -81,25 +68,11 @@ class WhirlpoolSpiderSpider(scrapy.Spider):
             forum['username'] = item.xpath(
                 ".//div[contains(@class, 'reply ')]//span[@class='bu_name']/text()").get().strip()
 
-            post_date = item.xpath(".//div[contains(@class, 'reply ')]//div[@class='date']/text()").getall()
-            if post_date:
-                post_date = ''.join(post_date).strip()
-                forum['post_date'] = post_date
+            forum['post_date'] = item.xpath(".//div[contains(@class, 'reply ')]//div[@class='date']/a[text("
+                                            ")='posted']/following-sibling::text()").get().strip()
 
             comment = item.xpath(".//div[contains(@class, 'reply ')]/div[@class='replytext bodytext']/*").getall()
             if comment:
                 forum['comment'] = strip_tags(''.join(comment), remove_all_tags=False, remove_hyperlinks=True)
 
-            with open('hkgc_jobs.csv', 'a', newline='') as f:
-                forum_details = [
-                    forum['forum_title'],
-                    forum['forum_link'],
-                    forum['user_id'],
-                    forum['user_group'],
-                    forum['username'],
-                    forum['post_date'],
-                    forum['comment']
-                ]
-
-                f = csv.writer(f)
-                f.writerow(forum_details)
+            yield forum
