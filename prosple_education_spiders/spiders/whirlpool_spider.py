@@ -68,7 +68,7 @@ class WhirlpoolSpiderSpider(scrapy.Spider):
             forum['user_group'] = item.xpath(
                 ".//div[contains(@class, 'reply ')]//div[@class='usergroup']/text()").get().strip()
 
-            post_date = item.xpath(".//div[contains(@class, 'reply ')]//div[@class='usergroup']/text()").getall()
+            post_date = item.xpath(".//div[contains(@class, 'reply ')]//div[@class='date']/text()").getall()
             if post_date:
                 post_date = ''.join(post_date).strip()
                 forum['post_date'] = post_date
