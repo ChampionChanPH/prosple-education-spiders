@@ -1,6 +1,20 @@
 from ..standard_libs import *
 from ..scratch_file import *
 import requests
+import csv
+
+with open('whirlpool_scraper.csv', 'w', newline='') as file:
+    fieldnames = [
+        'Forum Title',
+        'Forum URL',
+        'User ID',
+        'User Group',
+        'Username',
+        'Post Date',
+        'Comment',
+    ]
+    file = csv.writer(file)
+    file.writerow(fieldnames)
 
 
 class Forum(scrapy.Item):
@@ -18,8 +32,7 @@ class WhirlpoolSpiderSpider(scrapy.Spider):
     start_urls = ['https://forums.whirlpool.net.au/forum/136']
 
     def parse(self, response):
-        # for num in range(1, 11):
-        for num in range(1, 2):
+        for num in range(1, 11):
             url = f"https://forums.whirlpool.net.au/forum/136?&p={num}"
 
             yield response.follow(url, callback=self.sub_parse)
@@ -59,14 +72,14 @@ class WhirlpoolSpiderSpider(scrapy.Spider):
 
         for item in comments:
             forum['forum_title'] = response.meta['title']
-            forum['forum_link'] = response.meta['url']
+            forum['forum_link'] = f"https://forums.whirlpool.net.au{response.meta['url']}"
 
-            forum['username'] = item.xpath(
-                ".//div[contains(@class, 'reply ')]//span[@class='bu_name']/text()").get().strip()
             forum['user_id'] = item.xpath(
                 ".//div[contains(@class, 'reply ')]//span[@class='userid']/text()").get().strip()
             forum['user_group'] = item.xpath(
                 ".//div[contains(@class, 'reply ')]//div[@class='usergroup']/text()").get().strip()
+            forum['username'] = item.xpath(
+                ".//div[contains(@class, 'reply ')]//span[@class='bu_name']/text()").get().strip()
 
             post_date = item.xpath(".//div[contains(@class, 'reply ')]//div[@class='date']/text()").getall()
             if post_date:
@@ -77,4 +90,16 @@ class WhirlpoolSpiderSpider(scrapy.Spider):
             if comment:
                 forum['comment'] = strip_tags(''.join(comment), remove_all_tags=False, remove_hyperlinks=True)
 
-            yield forum
+            with open('hkgc_jobs.csv', 'a', newline='') as f:
+                forum_details = [
+                    forum['forum_title'],
+                    forum['forum_link'],
+                    forum['user_id'],
+                    forum['user_group'],
+                    forum['username'],
+                    forum['post_date'],
+                    forum['comment']
+                ]
+
+                f = csv.writer(f)
+                f.writerow(forum_details)
