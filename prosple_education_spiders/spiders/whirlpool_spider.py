@@ -61,15 +61,25 @@ class WhirlpoolSpiderSpider(scrapy.Spider):
             forum['forum_title'] = response.meta['title']
             forum['forum_link'] = f"https://forums.whirlpool.net.au{response.meta['url']}"
 
-            forum['user_id'] = item.xpath(
-                ".//div[contains(@class, 'reply ')]//span[@class='userid']/text()").get().strip()
-            forum['user_group'] = item.xpath(
-                ".//div[contains(@class, 'reply ')]//div[@class='usergroup']/text()").get().strip()
-            forum['username'] = item.xpath(
-                ".//div[contains(@class, 'reply ')]//span[@class='bu_name']/text()").get().strip()
+            user_id = item.xpath(
+                ".//div[contains(@class, 'reply ')]//span[@class='userid']/text()").get()
+            if user_id:
+                forum['user_id'] = user_id.strip()
 
-            forum['post_date'] = item.xpath(".//div[contains(@class, 'reply ')]//div[@class='date']/a[text("
-                                            ")='posted']/following-sibling::text()").get().strip()
+            user_group = item.xpath(
+                ".//div[contains(@class, 'reply ')]//div[@class='usergroup']/text()").get()
+            if user_group:
+                forum['user_group'] = user_group.strip()
+
+            username = item.xpath(
+                ".//div[contains(@class, 'reply ')]//span[@class='bu_name']/text()").get()
+            if username:
+                forum['username'] = username.strip()
+
+            post_date = item.xpath(".//div[contains(@class, 'reply ')]//div[@class='date']/a[text("
+                                   ")='posted']/following-sibling::text()").get()
+            if post_date:
+                forum['post_date'] = post_date.strip()
 
             comment = item.xpath(".//div[contains(@class, 'reply ')]/div[@class='replytext bodytext']/*").getall()
             if comment:
