@@ -15,8 +15,7 @@ class Forum(scrapy.Item):
 
 class WhirlpoolSpiderSpider(scrapy.Spider):
     name = 'whirlpool_spider'
-    start_urls = ['https://forums.whirlpool.net.au/forum/136?&p=1']
-    http_user = 'b4a56de85d954e9b924ec0e0b7696641'
+    start_urls = ['https://forums.whirlpool.net.au/forum/136']
 
     def parse(self, response):
         # for num in range(1, 11):
