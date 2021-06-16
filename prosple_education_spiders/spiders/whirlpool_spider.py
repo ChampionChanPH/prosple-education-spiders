@@ -15,16 +15,20 @@ class Forum(scrapy.Item):
 
 class WhirlpoolSpiderSpider(scrapy.Spider):
     name = 'whirlpool_spider'
-    start_urls = ['https://forums.whirlpool.net.au/forum/136']
+    start_urls = []
+    for num in range(1, 51):
+        url = f"https://forums.whirlpool.net.au/forum/136?&p={num}"
+        start_urls.append(url)
+
     download_delay = 1
 
+    # def parse(self, response):
+    #     for num in range(1, 51):
+    #         url = f"https://forums.whirlpool.net.au/forum/136?&p={num}"
+    #
+    #         yield response.follow(url, callback=self.sub_parse)
+
     def parse(self, response):
-        for num in range(1, 11):
-            url = f"https://forums.whirlpool.net.au/forum/136?&p={num}"
-
-            yield response.follow(url, callback=self.sub_parse)
-
-    def sub_parse(self, response):
         threads = response.xpath("//tr[contains(@class, 'thread')]")
 
         for item in threads:
