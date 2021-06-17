@@ -245,7 +245,12 @@ class WsuSpiderSpider(scrapy.Spider):
         if study_holder:
             course_item["modeOfStudy"] = "|".join(study_holder)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+        if course_item['courseName'] in ['Bachelor of Planning (Pathway to Master of Urban Management and Planning)']:
+            course_item['courseName'] = 'Bachelor of Planning'
+            course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+            course_item['courseName'] = 'Bachelor of Planning (Pathway to Master of Urban Management and Planning)'
+        else:
+            course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
         if course_item['sourceURL'] not in self.banned_urls:
             yield course_item
