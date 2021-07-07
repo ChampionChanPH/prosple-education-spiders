@@ -124,13 +124,14 @@ class SwiSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        categories = response.xpath("//a[@title='Learn more']/@href").getall()
+        categories = response.xpath(
+            "//div[contains(@class, 'card-body')]//a[contains(@class, 'card-link')]/@href").getall()
 
         for item in categories:
             yield response.follow(item, callback=self.sub_parse)
 
     def sub_parse(self, response):
-        sub = response.xpath("//ul[@class='list']//a[@class='card  ']/@href").getall()
+        sub = response.xpath("//div[@class='content']//ul[@class='list']//a[contains(@class, 'card  ')]/@href").getall()
 
         for item in sub:
             yield SplashRequest(response.urljoin(item), callback=self.link_parse,
