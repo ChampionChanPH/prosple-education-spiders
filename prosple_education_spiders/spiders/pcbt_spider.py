@@ -59,6 +59,7 @@ class PcbtSpiderSpider(scrapy.Spider):
         "certificate iii": "4",
         "certificate iv": "4",
         "advanced diploma": "5",
+        'fast track dual qualification advanced diploma': '5',
         "diploma": "5",
         "associate degree": "1",
         "non-award": "13",
@@ -138,9 +139,10 @@ class PcbtSpiderSpider(scrapy.Spider):
             course_item.set_summary(' '.join(summary))
             course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
-        cricos = response.xpath("//h4[text()='Nationally Recognised Qualification']/following-sibling::*").get()
+        cricos = response.xpath(
+            "//h4[text()='Nationally Recognised Qualification']/following-sibling::*//text()").getall()
         if cricos:
-            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", ' '.join(cricos), re.M)
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
 
