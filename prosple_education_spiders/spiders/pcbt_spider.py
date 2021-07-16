@@ -120,7 +120,7 @@ class PcbtSpiderSpider(scrapy.Spider):
         course_item['institution'] = self.institution
         course_item['domesticApplyURL'] = response.request.url
 
-        name = response.xpath("//h1[@class='title']/text()").getall()
+        name = response.xpath("//h1[@class='title']/text()").get()
         if re.findall('(.*) – [A-Z]+[0-9]+', name, re.DOTALL):
             course_name, course_code = re.findall('(.*) – ([A-Z]+[0-9]+)', name, re.DOTALL)[0]
         else:
