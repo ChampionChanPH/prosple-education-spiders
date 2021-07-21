@@ -157,9 +157,10 @@ class AutSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[@class='intro']/following-sibling::*[1]/*").getall()
         if overview:
             if summary:
-                course_item["overview"] = strip_tags(summary + ''.join(overview), remove_all_tags=False)
+                course_item["overview"] = strip_tags(summary + ''.join(overview), remove_all_tags=False,
+                                                     remove_hyperlinks=True)
             else:
-                course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False)
+                course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
         course_code = response.xpath("//div[contains(text(), 'Programme code')]/following-sibling::div/text()").get()
         if course_code:
@@ -173,7 +174,8 @@ class AutSpiderSpider(scrapy.Spider):
             else:
                 break
         if holder:
-            course_item['entryRequirements'] = strip_tags(''.join(holder), remove_all_tags=False)
+            course_item['entryRequirements'] = strip_tags(''.join(holder), remove_all_tags=False,
+                                                          remove_hyperlinks=True)
 
         career_link = response.xpath("//a[contains(*//text(), 'Career opportunities')]/@href").get()
         if career_link:
@@ -184,7 +186,7 @@ class AutSpiderSpider(scrapy.Spider):
                 career = response.xpath(career_xpath2).getall()
             else:
                 career = response.xpath(career_xpath1).getall()
-            course_item['careerPathways'] = strip_tags(''.join(career), remove_all_tags=False)
+            course_item['careerPathways'] = strip_tags(''.join(career), remove_all_tags=False, remove_hyperlinks=True)
 
         location = response.meta['location']
         if location:
