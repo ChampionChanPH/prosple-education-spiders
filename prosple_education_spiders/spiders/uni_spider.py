@@ -1,7 +1,9 @@
  # by: Johnel Bacani
 # started: October 5, 2020
+# updated: July 21, 2021 by Christian Anasco
 
 from ..standard_libs import *
+from ..scratch_file import strip_tags
 
 class UniSpiderSpider(scrapy.Spider):
     name = 'uni_spider'
@@ -104,11 +106,13 @@ class UniSpiderSpider(scrapy.Spider):
 
         overview = response.css("div.overview-content").get()
         if overview:
-            course_item["overview"] = overview.replace("<div>", "").replace("</div>", "")
+            overview = overview.replace("<div>", "").replace("</div>", "")
+            course_item["overview"] = strip_tags(overview, remove_all_tags=False, remove_hyperlinks=True)
 
         careers = response.xpath("//ul[preceding-sibling::h3/text()='Career Options']/li/text()").getall()
         if careers:
-            course_item["careerPathways"] = "\n".join(["- "+x for x in careers])
+            careers = "\n".join(["- "+x for x in careers])
+            course_item["careerPathways"] = strip_tags(careers, remove_all_tags=False, remove_hyperlinks=True)
 
         fees = response.xpath("//div[preceding-sibling::h3/text()='Annual Tuition Fees']/span").getall()
         if fees:
@@ -128,7 +132,8 @@ class UniSpiderSpider(scrapy.Spider):
 
         admission = response.css("section#admission div").get()
         if admission:
-            course_item["entryRequirements"] = admission.replace("<div>", "").replace("</div>", "")
+            admission = admission.replace("<div>", "").replace("</div>", "")
+            course_item["entryRequirements"] = strip_tags(admission, remove_all_tags=False, remove_hyperlinks=True)
 
         # if "flag" in course_item:
         yield course_item
