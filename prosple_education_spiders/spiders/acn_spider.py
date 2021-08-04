@@ -31,13 +31,13 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) *\
+                course_item[field_to_update] = float(course_item[field_to_use]) * \
                                                float(course_item["durationMinFull"]) / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) *\
+                course_item[field_to_update] = float(course_item[field_to_use]) * \
                                                float(course_item["durationMinFull"]) / 52
 
 
@@ -97,23 +97,25 @@ class AcnSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        yield SplashRequest(response.request.url, callback=self.postgrad_catalog, args={'wait': 10})
-
-    def postgrad_catalog(self, response):
-        courses = response.xpath("//div[contains(@class, 'standard-arrow')]//li/a/@href").getall()
-        for course in courses:
-            if course not in self.blacklist_urls and course not in self.scraped_urls:
-                if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
-                    self.scraped_urls.append(course)
-                    yield SplashRequest(course, callback=self.course_parse, args={'wait': 10}, meta={"url":course})
+        #     yield SplashRequest(response.request.url, callback=self.postgrad_catalog, args={'wait': 10})
+        #
+        # def postgrad_catalog(self, response):
+        #     courses = response.xpath("//div[contains(@class, 'standard-arrow')]//li/a/@href").getall()
+        courses = response.xpath("//h1[text()='Our Graduate Certificates']/following-sibling::*//li/a")
+        # for course in courses:
+        #     if course not in self.blacklist_urls and course not in self.scraped_urls:
+        #         if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
+        #             self.scraped_urls.append(course)
+        #             yield SplashRequest(course, callback=self.course_parse, args={'wait': 10}, meta={"url":course})
+        yield from response.follow_all(courses, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
-        course_item["sourceURL"] = response.meta["url"]
+        course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
-        course_item["domesticApplyURL"] = response.meta["url"]
+        course_item["domesticApplyURL"] = response.request.url
 
         course_item.set_course_name(response.css("div.uvc-sub-heading::text").get(), self.uidPrefix)
         course_item.set_sf_dt()
@@ -202,10 +204,15 @@ class AcnSpiderSpider(scrapy.Spider):
                                                        remove_hyperlinks=True)
 
         whatLearn = response.css("#outcomes .standard-arrow").get()
+        if not whatLearn:
+            whatLearn = response.xpath(
+                "//h1[text()='Learning outcomes']/following-sibling::*[contains(@class , 'standard-arrow')]").get()
         if whatLearn:
             course_item["whatLearn"] = strip_tags(whatLearn, remove_all_tags=False, remove_hyperlinks=True)
 
         entryRequirements = response.css("#requirements .standard-arrow").get()
+        if not entryRequirements:
+            entryRequirements = response.css("#requirements .wpb_wrapper").get()
         if entryRequirements:
             course_item["entryRequirements"] = strip_tags(entryRequirements, remove_all_tags=False,
                                                           remove_hyperlinks=True)
