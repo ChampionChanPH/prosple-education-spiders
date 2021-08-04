@@ -133,7 +133,7 @@ class AcnSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
-                course_item['internationalApplyURL'] = response.meta["url"]
+                course_item['internationalApplyURL'] = response.request.url
 
         duration = response.xpath("//*[text()='Duration']/following-sibling::*").getall()
         if duration:
