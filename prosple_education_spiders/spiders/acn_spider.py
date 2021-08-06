@@ -47,7 +47,7 @@ class AcnSpiderSpider(scrapy.Spider):
     start_urls = ['https://www.acn.edu.au/education/postgraduate-courses']
 
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
-    blacklist_urls = []
+    blacklist_urls = ["https://www.acn.edu.au/education/postgraduate-course/bridging-re-entry"]
     scraped_urls = []
     superlist_urls = []
 
@@ -107,7 +107,9 @@ class AcnSpiderSpider(scrapy.Spider):
         #         if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
         #             self.scraped_urls.append(course)
         #             yield SplashRequest(course, callback=self.course_parse, args={'wait': 10}, meta={"url":course})
-        yield from response.follow_all(courses, callback=self.course_parse)
+        for item in courses:
+            if item not in self.blacklist_urls:
+                yield response.follow(courses, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -217,8 +219,10 @@ class AcnSpiderSpider(scrapy.Spider):
             course_item["entryRequirements"] = strip_tags(entryRequirements, remove_all_tags=False,
                                                           remove_hyperlinks=True)
 
-        courseStructure = response.xpath("//div[preceding-sibling::h2/text()='Units of study'][2]").get()
+        courseStructure = response.xpath(
+            "//div[@id='structure-fees']//*[text()='Units of study']/preceding-sibling::*/*/*").getall()
         if courseStructure:
+            courseStructure.append("<p>For more details please visit the course website.</p>")
             course_item["courseStructure"] = strip_tags(courseStructure, remove_all_tags=False, remove_hyperlinks=True)
 
         yield course_item
