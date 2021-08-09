@@ -42,17 +42,18 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class WsuSpiderSpider(scrapy.Spider):
     name = 'wsu_spider'
-    start_urls = ['https://www.westernsydney.edu.au/future/study/courses.html']
+    start_urls = ['https://www.westernsydney.edu.au/future/study/courses']
     institution = "Western Sydney University"
     uidPrefix = "AU-WSU-"
     banned_urls = [
-        'https://www.westernsydney.edu.au/future/study/courses/research.html',
-        'https://www.westernsydney.edu.au/future/study/courses/undergraduate.html',
-        'https://www.westernsydney.edu.au/future/study/courses/postgraduate.html',
-        'https://www.westernsydney.edu.au/future/study/application-pathways/the-college/courses.html',
+        'https://www.westernsydney.edu.au/future/study/courses/research',
+        'https://www.westernsydney.edu.au/future/study/courses/undergraduate',
+        'https://www.westernsydney.edu.au/future/study/courses/postgraduate',
+        'https://www.westernsydney.edu.au/future/study/courses/the-college',
+        'https://www.westernsydney.edu.au/future/study/application-pathways/the-college/courses',
         'https://www.westernsydney.edu.au/future/study/application-pathways/the-college/study-with-us/how-to-apply'
-        '-international.html',
-        'https://www.westernsydney.edu.au/future/study/courses/tesol-and-interpreting-and-translation-courses.html',
+        '-international',
+        'https://www.westernsydney.edu.au/future/study/courses/tesol-and-interpreting-and-translation-courses',
     ]
 
     degrees = {
@@ -127,7 +128,8 @@ class WsuSpiderSpider(scrapy.Spider):
                                  "'tile__1x1')]/a/@href").getall()
 
         for item in set(courses):
-            yield response.follow(item, callback=self.course_parse)
+            if item not in self.banned_urls:
+                yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
