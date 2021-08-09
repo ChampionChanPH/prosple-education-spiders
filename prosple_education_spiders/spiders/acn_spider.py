@@ -190,14 +190,15 @@ class AcnSpiderSpider(scrapy.Spider):
         #         course_item["domesticFeeAnnual"] = max(dom_fee)
         #         get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-        intake = response.xpath("//div[preceding-sibling::h4/text()='Intakes']/div/p/text()").get()
-        if intake:
-            holder = []
-            for item in self.months:
-                if re.search(item, intake, re.I | re.M):
-                    holder.append(self.months[item])
-            if holder:
-                course_item['startMonths'] = '|'.join(holder)
+        # intake = response.xpath("//div[preceding-sibling::h4/text()='Intakes']/div/p/text()").get()
+        # if intake:
+        #     holder = []
+        #     for item in self.months:
+        #         if re.search(item, intake, re.I | re.M):
+        #             holder.append(self.months[item])
+        #     if holder:
+        #         course_item['startMonths'] = '|'.join(holder)
+        course_item['startMonths'] = "01|07"
 
         careerPathways = response.xpath(
             "//div[preceding-sibling::h2/text()='Career outcomes'][2]/div/p/text()").getall()
