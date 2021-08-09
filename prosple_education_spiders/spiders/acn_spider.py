@@ -224,6 +224,7 @@ class AcnSpiderSpider(scrapy.Spider):
             "//div[@id='structure-fees']//*[text()='Units of study']/preceding-sibling::*/*/*").getall()
         if courseStructure:
             courseStructure.append("<p>For more details please visit the course website.</p>")
-            course_item["courseStructure"] = strip_tags(courseStructure, remove_all_tags=False, remove_hyperlinks=True)
+            course_item["courseStructure"] = strip_tags(
+                "".join(courseStructure), remove_all_tags=False, remove_hyperlinks=True)
 
         yield course_item
