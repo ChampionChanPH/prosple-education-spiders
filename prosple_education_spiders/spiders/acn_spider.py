@@ -109,7 +109,7 @@ class AcnSpiderSpider(scrapy.Spider):
         #             yield SplashRequest(course, callback=self.course_parse, args={'wait': 10}, meta={"url":course})
         for item in courses:
             if item not in self.blacklist_urls:
-                yield response.follow(courses, callback=self.course_parse)
+                yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
