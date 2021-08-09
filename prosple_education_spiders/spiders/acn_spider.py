@@ -101,7 +101,7 @@ class AcnSpiderSpider(scrapy.Spider):
         #
         # def postgrad_catalog(self, response):
         #     courses = response.xpath("//div[contains(@class, 'standard-arrow')]//li/a/@href").getall()
-        courses = response.xpath("//h1[text()='Our Graduate Certificates']/following-sibling::*//li/a")
+        courses = response.xpath("//h1[text()='Our Graduate Certificates']/following-sibling::*//li/a/@href").getall()
         # for course in courses:
         #     if course not in self.blacklist_urls and course not in self.scraped_urls:
         #         if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
