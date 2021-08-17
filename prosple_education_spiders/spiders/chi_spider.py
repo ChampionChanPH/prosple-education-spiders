@@ -170,11 +170,10 @@ class ChiSpiderSpider(scrapy.Spider):
                 course_item["domesticFeeTotal"] = max(dom_fee)
                 # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-        location = response.xpath("//dt[text()='On campus']/following-sibling::*").get()
+        location = response.xpath("//dt[text()='Delivery location']/following-sibling::*").get()
         campus_holder = set()
         study_holder = set()
         if location:
-            location = '|'.join(location)
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
                     campus_holder.add(self.campuses[campus])
