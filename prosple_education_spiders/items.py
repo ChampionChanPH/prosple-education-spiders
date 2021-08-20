@@ -14,6 +14,7 @@ class Opportunity(scrapy.Item):
     group = scrapy.Field()
     source_url = scrapy.Field()
     uid = scrapy.Field()
+    last_update = scrapy.Field()
 
     opportunity_name = scrapy.Field()
     canonical_group = scrapy.Field()
