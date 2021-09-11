@@ -58,8 +58,8 @@ class ApsiSpiderSpider(scrapy.Spider):
         "https://www.apsi.edu.au/courses/hospitality-courses/advanced-diploma-of-hospitality/",
         "https://www.apsi.edu.au/courses/business-management/advanced-diploma-leadership-and-management/"
     ]
-    institution = "The Gordon"
-    uidPrefix = "AU-GIT-"
+    institution = "Australian Professional Skills Institute (APSI)"
+    uidPrefix = "AU-APSI-"
 
     degrees = {
         "graduate certificate": "7",
