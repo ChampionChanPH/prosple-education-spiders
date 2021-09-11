@@ -212,7 +212,7 @@ class ApsiSpiderSpider(scrapy.Spider):
         study_holder = set()
         if delivery:
             delivery = "|".join(delivery)
-        if re.search('(face|delivery|workplace)', delivery, re.I):
+        if re.search('(face|delivery|workplace|class)', delivery, re.I):
             study_holder.add('In Person')
         if re.search('online', delivery, re.I):
             study_holder.add('Online')
@@ -222,7 +222,7 @@ class ApsiSpiderSpider(scrapy.Spider):
         course_item["campusNID"] = "30898"
 
         entry = response.xpath("//*[@class='et_pb_toggle_title'][text()='Admission Requirements' or text()='Entry "
-                               "Requirements']/following-sibling::*").getall()
+                               "Requirements' or text()='Admissions Requirements']/following-sibling::*").getall()
         if entry:
             course_item['entryRequirements'] = strip_tags(' '.join(entry), remove_all_tags=False,
                                                           remove_hyperlinks=True)
@@ -235,16 +235,24 @@ class ApsiSpiderSpider(scrapy.Spider):
         cricos = response.xpath("//*[contains(text(), 'CRICOS Course Code')]").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+        if not cricos:
+            cricos = response.xpath("//*[contains(text(), 'CRICOS Course Code')]/following-sibling::text()").get()
             if cricos:
-                course_item['cricosCode'] = ', '.join(cricos)
-                course_item['internationalApps'] = 1
-                course_item['internationalApplyURL'] = response.request.url
+                cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+        if cricos:
+            course_item['cricosCode'] = ', '.join(cricos)
+            course_item['internationalApps'] = 1
+            course_item['internationalApplyURL'] = response.request.url
 
         course_code = response.xpath("//*[contains(text(), 'VET National Code')]/text()").get()
         if course_code:
             course_code = re.findall("[A-Z]+[0-9]+", course_code, re.M)
+        if not course_code:
+            course_code = response.xpath("//*[contains(text(), 'VET National Code')]/following-sibling::text()").get()
             if course_code:
-                course_item['courseCode'] = ', '.join(course_code)
+                course_code = re.findall("[A-Z]+[0-9]+", course_code, re.M)
+        if course_code:
+            course_item['courseCode'] = ', '.join(course_code)
 
         course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
 
