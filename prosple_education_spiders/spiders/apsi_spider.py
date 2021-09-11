@@ -199,6 +199,7 @@ class ApsiSpiderSpider(scrapy.Spider):
 
         intake = response.xpath("//*[@class='et_pb_toggle_title'][text()='Intake Dates']/following-sibling::*").getall()
         if intake:
+            intake = "|".join(intake)
             start_holder = []
             for item in self.months:
                 if re.search(item, intake, re.M):
