@@ -209,6 +209,8 @@ class ApsiSpiderSpider(scrapy.Spider):
         delivery = response.xpath(
             "//*[@class='et_pb_toggle_title'][text()='Mode of Delivery']/following-sibling::*").getall()
         study_holder = set()
+        if delivery:
+            delivery = "|".join(delivery)
         if re.search('(face|delivery|workplace)', delivery, re.I):
             study_holder.add('In Person')
         if re.search('online', delivery, re.I):
