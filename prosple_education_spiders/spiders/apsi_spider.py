@@ -161,6 +161,7 @@ class ApsiSpiderSpider(scrapy.Spider):
         duration = response.xpath(
             "//*[@class='et_pb_toggle_title'][text()='Course Duration']/following-sibling::*").getall()
         if duration:
+            duration = '|'.join(duration)
             duration_full = re.findall("full.time.(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
                                        duration, re.I | re.M | re.DOTALL)
             duration_part = re.findall("part.time.(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
