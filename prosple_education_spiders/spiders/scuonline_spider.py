@@ -126,6 +126,7 @@ class ScuonlineSpiderSpider(scrapy.Spider):
         course_item['sourceURL'] = response.request.url
         course_item['published'] = 1
         course_item['institution'] = self.institution
+        course_item['domesticApplyURL'] = response.request.url
 
         course_name = response.xpath("//span[@id='system-breadcrumb']/following-sibling::*/*[last()]/text()").get()
         if course_name:
