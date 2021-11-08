@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
+import re
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
@@ -43,8 +44,8 @@ def get_total(field_to_use, field_to_update, course_item):
 class SeroSpiderSpider(scrapy.Spider):
     name = 'sero_spider'
     start_urls = ['https://seroinstitute.com.au/']
-    institution = "Navitas English"
-    uidPrefix = "AU-NAVE-"
+    institution = "SERO Institute"
+    uidPrefix = "AU-SERO-"
 
     degrees = {
         "graduate certificate": "7",
@@ -116,8 +117,11 @@ class SeroSpiderSpider(scrapy.Spider):
         yield from response.follow_all(sub, callback=self.sub_parse)
 
     def sub_parse(self, response):
-        courses = response.xpath("//a[span/span/text()='Course Info']")
-        yield from response.follow_all(courses, callback=self.course_parse)
+        courses = response.xpath("//a[span/span/text()='Course Info']/@href").getall()
+
+        for item in courses:
+            if not re.search("seroinstitute.com.au/contact/", item):
+                yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -128,18 +132,30 @@ class SeroSpiderSpider(scrapy.Spider):
         course_item['institution'] = self.institution
         course_item["domesticApplyURL"] = response.request.url
 
-        name = response.xpath("//h1[contains(@class, 'elementor-heading-title')]/text()").get()
+        name = response.xpath("//*[self::h1 or self::h2][contains(@class, 'elementor-heading-title')]/text()").get()
         if name:
             if re.search("[A-Z]+[0-9]+ ", name):
                 course_code, course_name = re.split("\\s", name, maxsplit=1)
                 course_item.set_course_name(course_name.strip(), self.uidPrefix)
-                course_item["courseCode"] = course_code[0]
+                course_item["courseCode"] = course_code
             else:
                 course_item.set_course_name(name.strip(), self.uidPrefix)
+        if "courseCode" not in course_item:
+            course_code = response.xpath("//h6[contains(@class, 'elementor-heading-title')]/text()").get()
+            if re.search("[A-Z]+[0-9]+", course_code):
+                course_item["courseCode"] = course_code
 
         overview = response.xpath(
             "//*[@data-element_type='widget' and */h1[contains(@class, 'elementor-heading-title')]]"
             "/following-sibling::*//*[self::p or self::ol or self::ul]").getall()
+        if not overview:
+            overview = response.xpath(
+                "//*[@data-element_type='widget' and */*/text()='Course overview']"
+                "/following-sibling::*//*[self::p or self::ol or self::ul]").getall()
+        if not overview:
+            xpath_value = "//*[@data-element_type='widget' and */*/text()='" + name + \
+                          "']/following-sibling::*[1]//*[self::p or self::ol or self::ul]"
+            overview = response.xpath(xpath_value).getall()
         if overview:
             summary = [strip_tags(x) for x in overview]
             course_item.set_summary(' '.join(summary))
@@ -148,14 +164,34 @@ class SeroSpiderSpider(scrapy.Spider):
         entry = response.xpath(
             "//*[@data-element_type='widget' and */h2/text()='Entry Requirements']"
             "/following-sibling::*//*[self::p or self::ol or self::ul]").getall()
+        if not entry:
+            entry = response.xpath(
+                "//*[contains(@id, 'elementor-tab-title') and */text()='Entry Requirements']"
+                "/following-sibling::*/*").getall()
         if entry:
             course_item["entryRequirements"] = strip_tags(''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
+
+        career = response.xpath(
+            "//*[contains(@id, 'elementor-tab-title') and */text()='Career Opportunities']"
+            "/following-sibling::*/*").getall()
+        if career:
+            course_item["careerPathways"] = strip_tags(''.join(career), remove_all_tags=False, remove_hyperlinks=True)
+
+        study = response.xpath(
+            "//*[@data-element_type='widget' and */*/text()='Delivery methods']"
+            "/following-sibling::*//*[self::p or self::ol or self::ul]").getall()
+        study_holder = set()
+        if study:
+            if re.search('online', ''.join(study), re.I):
+                study_holder.add("Online")
+            study_holder.add("In Person")
 
         duration = response.xpath(
             "//*[@data-element_type='widget' and (contains(*/h2/text(), 'Course duration') or "
             "contains(*/h2/text(), 'Course Duration'))]/following-sibling::*//*[self::p or self::ol or "
             "self::ul]").getall()
         if duration:
+            duration = "".join(duration)
             duration_full = re.findall(
                 "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
                 duration, re.I | re.M | re.DOTALL)
@@ -186,5 +222,12 @@ class SeroSpiderSpider(scrapy.Spider):
                     #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
                     #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                     #     self.get_period(duration_full[1][1].lower(), course_item)
+            if not study:
+                if re.search('online', duration, re.I):
+                    study_holder.add("Online")
+                study_holder.add("In Person")
+
+        if study_holder:
+            course_item["modeOfStudy"] = "|".join(study_holder)
 
         yield course_item
