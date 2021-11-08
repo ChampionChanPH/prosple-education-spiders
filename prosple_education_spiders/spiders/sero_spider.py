@@ -136,6 +136,7 @@ class SeroSpiderSpider(scrapy.Spider):
         if name:
             if re.search("[A-Z]+[0-9]+ ", name):
                 course_code, course_name = re.split("\\s", name, maxsplit=1)
+                course_name = course_name.replace("\n", " ")
                 course_item.set_course_name(course_name.strip(), self.uidPrefix)
                 course_item["courseCode"] = course_code
             else:
