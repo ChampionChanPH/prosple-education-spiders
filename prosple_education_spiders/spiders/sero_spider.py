@@ -117,7 +117,7 @@ class SeroSpiderSpider(scrapy.Spider):
 
     def sub_parse(self, response):
         courses = response.xpath("//a[span/span/text()='Course Info']")
-        yield from response.follow_all(courses, callback=self.sub_parse)
+        yield from response.follow_all(courses, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
