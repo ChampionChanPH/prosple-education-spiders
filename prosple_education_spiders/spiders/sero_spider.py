@@ -123,7 +123,7 @@ class SeroSpiderSpider(scrapy.Spider):
 
         name = response.xpath("//*[self::h1 or self::h2][contains(@class, 'elementor-heading-title')]/text()").get()
         if name:
-            if re.search("[A-Z]+[0-9]+ ", name):
+            if re.search("[A-Z0-9]+[A-Z0-9]+ ", name):
                 course_code, course_name = re.split("\\s", name, maxsplit=1)
                 course_name = course_name.replace("\n", " ")
                 course_item.set_course_name(course_name.strip(), self.uidPrefix)
@@ -132,7 +132,7 @@ class SeroSpiderSpider(scrapy.Spider):
                 course_item.set_course_name(name.strip(), self.uidPrefix)
         if "courseCode" not in course_item:
             course_code = response.xpath("//h6[contains(@class, 'elementor-heading-title')]/text()").get()
-            if course_code and re.search("[A-Z]+[0-9]+", course_code):
+            if course_code and re.search("[A-Z0-9]+[A-Z0-9]+", course_code):
                 course_item["courseCode"] = course_code
 
         overview = response.xpath(
@@ -227,8 +227,9 @@ class SeroSpiderSpider(scrapy.Spider):
 
         course_item["campusNID"] = "83031|83032|83033"
 
-        cricos = response.xpath("//*[contains(text(), 'CRICOS Code')]").get()
+        cricos = response.xpath("//*[contains(text(), 'CRICOS Code') or contains(text(), 'CRICOS:')]").getall()
         if cricos:
+            cricos = "".join(cricos)
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
