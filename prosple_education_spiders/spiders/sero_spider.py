@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
+import re
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
@@ -234,5 +235,13 @@ class SeroSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
+
+        if "sourceURL" in course_item and "uid" in course_item:
+            if re.search("-wa-", course_item["sourceURL"]):
+                course_item["uid"] = course_item["uid"] + "-WA"
+            if re.search("-qld-", course_item["sourceURL"]):
+                course_item["uid"] = course_item["uid"] + "-QLD"
+            if re.search("-international", course_item["sourceURL"]):
+                course_item["uid"] = course_item["uid"] + "-INT"
 
         yield course_item
