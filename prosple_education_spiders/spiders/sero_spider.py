@@ -146,6 +146,11 @@ class SeroSpiderSpider(scrapy.Spider):
             xpath_value = "//*[@data-element_type='widget' and */*/text()='" + name.strip() + \
                           "']/following-sibling::*[1]//*[self::p or self::ol or self::ul]"
             overview = response.xpath(xpath_value).getall()
+        if not overview:
+            overview = response.xpath(
+                "//*[@data-element_type='widget' and */h3[contains(@class, 'elementor-heading-title')] and "
+                "*/*/text()='Reason for studying & Skills learned: ']"
+                "/following-sibling::*//*[self::p or self::ol or self::ul]").getall()
         if overview:
             summary = [strip_tags(x) for x in overview]
             course_item.set_summary(' '.join(summary))
@@ -222,9 +227,8 @@ class SeroSpiderSpider(scrapy.Spider):
 
         course_item["campusNID"] = "83031|83032|83033"
 
-        cricos = response.xpath("//*[contains(text(), 'CRICOS Code')]").getall()
+        cricos = response.xpath("//*[contains(text(), 'CRICOS Code')]").get()
         if cricos:
-            cricos = ''.join(cricos)
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
