@@ -240,8 +240,10 @@ class SeroSpiderSpider(scrapy.Spider):
                 course_item["uid"] = course_item["uid"] + "-WA"
                 if re.search("-hospitality", course_item["sourceURL"]):
                     course_item["uid"] = course_item["uid"] + "-Hospitality"
+                course_item["campusNID"] = "83033"
             if re.search("-qld-", course_item["sourceURL"]):
                 course_item["uid"] = course_item["uid"] + "-QLD"
+                course_item["campusNID"] = "83031|83032"
             if re.search("-international", course_item["sourceURL"]):
                 course_item["uid"] = course_item["uid"] + "-INT"
 
