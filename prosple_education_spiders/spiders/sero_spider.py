@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
-import re
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
@@ -245,5 +244,7 @@ class SeroSpiderSpider(scrapy.Spider):
                 course_item["uid"] = course_item["uid"] + "-QLD"
             if re.search("-international", course_item["sourceURL"]):
                 course_item["uid"] = course_item["uid"] + "-INT"
+
+        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
         yield course_item
