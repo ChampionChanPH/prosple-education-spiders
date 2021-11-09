@@ -132,7 +132,7 @@ class SeroSpiderSpider(scrapy.Spider):
                 course_item.set_course_name(name.strip(), self.uidPrefix)
         if "courseCode" not in course_item:
             course_code = response.xpath("//h6[contains(@class, 'elementor-heading-title')]/text()").get()
-            if re.search("[A-Z]+[0-9]+", course_code):
+            if course_code and re.search("[A-Z]+[0-9]+", course_code):
                 course_item["courseCode"] = course_code
 
         overview = response.xpath(
@@ -143,7 +143,7 @@ class SeroSpiderSpider(scrapy.Spider):
                 "//*[@data-element_type='widget' and */*/text()='Course overview']"
                 "/following-sibling::*//*[self::p or self::ol or self::ul]").getall()
         if not overview:
-            xpath_value = "//*[@data-element_type='widget' and */*/text()='" + name + \
+            xpath_value = "//*[@data-element_type='widget' and */*/text()='" + name.strip() + \
                           "']/following-sibling::*[1]//*[self::p or self::ol or self::ul]"
             overview = response.xpath(xpath_value).getall()
         if overview:
