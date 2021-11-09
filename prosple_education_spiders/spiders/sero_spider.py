@@ -81,12 +81,9 @@ class SeroSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "North Metropolitan TAFE Perth": "30917",
-        "Sydney Hyde Park": "30919",
-        "Perth": "30918",
-        "Manly Beach": "30916",
-        "Darwin": "30915",
-        "Brisbane": "30914",
+        "Perth Campus": "83033",
+        "Gold Coast Campus": "83032",
+        "Brisbane Campus": "83031"
     }
 
     teaching_periods = {
@@ -223,5 +220,15 @@ class SeroSpiderSpider(scrapy.Spider):
 
         if study_holder:
             course_item["modeOfStudy"] = "|".join(study_holder)
+
+        course_item["campusNID"] = "83031|83032|83033"
+
+        cricos = response.xpath("//*[contains(text(), 'CRICOS Code')]").getall()
+        if cricos:
+            cricos = ''.join(cricos)
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if cricos:
+                course_item["cricosCode"] = ", ".join(cricos)
+                course_item["internationalApps"] = 1
 
         yield course_item
