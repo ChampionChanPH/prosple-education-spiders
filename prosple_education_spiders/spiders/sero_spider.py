@@ -239,6 +239,8 @@ class SeroSpiderSpider(scrapy.Spider):
         if "sourceURL" in course_item and "uid" in course_item:
             if re.search("-wa-", course_item["sourceURL"]):
                 course_item["uid"] = course_item["uid"] + "-WA"
+                if re.search("-hospitality", course_item["sourceURL"]):
+                    course_item["uid"] = course_item["uid"] + "-Hospitality"
             if re.search("-qld-", course_item["sourceURL"]):
                 course_item["uid"] = course_item["uid"] + "-QLD"
             if re.search("-international", course_item["sourceURL"]):
