@@ -136,11 +136,11 @@ class SeroSpiderSpider(scrapy.Spider):
                 course_item["courseCode"] = course_code
 
         overview = response.xpath(
-            "//*[@data-element_type='widget' and */h1[contains(@class, 'elementor-heading-title')]]"
+            "//*[@data-element_type='widget' and */*/text()='Course overview']"
             "/following-sibling::*//*[self::p or self::ol or self::ul]").getall()
         if not overview:
             overview = response.xpath(
-                "//*[@data-element_type='widget' and */*/text()='Course overview']"
+                "//*[@data-element_type='widget' and */h1[contains(@class, 'elementor-heading-title')]]"
                 "/following-sibling::*//*[self::p or self::ol or self::ul]").getall()
         if not overview:
             xpath_value = "//*[@data-element_type='widget' and */*/text()='" + name.strip() + \
