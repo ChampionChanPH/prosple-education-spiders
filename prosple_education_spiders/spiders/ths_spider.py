@@ -164,8 +164,9 @@ class ThsSpiderSpider(scrapy.Spider):
                     #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                     #     self.get_period(duration_full[1][1].lower(), course_item)
 
-        intake = response.xpath("//*[@class='ico-calendar']/following-sibling::node()").get()
+        intake = response.xpath("//*[@class='ico-calendar']/following-sibling::node()").getall()
         if intake:
+            intake = "".join(intake)
             start_holder = []
             for item in self.months:
                 if re.search(item, intake, re.M):
