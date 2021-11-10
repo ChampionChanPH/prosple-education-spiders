@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
+import re
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
@@ -144,7 +145,104 @@ class IibtSpiderSpider(scrapy.Spider):
                 holder.append(item)
         if holder:
             course_item["courseStructure"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
-        
+
+        entry_tab = response.xpath("//li[@role='presentation']/a[*/text()='Entry Requirements']/@aria-controls").get()
+        if entry_tab:
+            entry_xpath = "//*[@id='" + entry_tab + "']/*"
+            entry = response.xpath(entry_xpath).getall()
+            if entry:
+                course_item["entryRequirements"] = strip_tags("".join(entry), remove_all_tags=False,
+                                                              remove_hyperlinks=True)
+
+        career_tab = response.xpath("//li[@role='presentation']/a[*/text()='Job Roles']/@aria-controls").get()
+        if career_tab:
+            career_xpath = "//*[@id='" + career_tab + "']/*"
+            career = response.xpath(career_xpath).getall()
+            if career:
+                course_item["careerPathways"] = strip_tags("".join(career), remove_all_tags=False,
+                                                           remove_hyperlinks=True)
+
+        intake_tab = response.xpath("//li[@role='presentation']/a[*/text()='Intake Dates']/@aria-controls").get()
+        intake = None
+        if intake_tab:
+            intake_xpath = "//*[@id='" + intake_tab + "']/*"
+            intake = response.xpath(intake_xpath).getall()
+        if not intake:
+            intake = response.xpath("//strong[contains(text(), 'Intake Dates')]/following-sibling::node()").getall()
+            holder = []
+            for item in intake:
+                if re.search("^<strong", item):
+                    break
+                elif not re.search("^<br", item):
+                    holder.append(item)
+            if holder:
+                intake = holder[:]
+        if intake:
+            intake = "".join(intake)
+            start_holder = []
+            for item in self.months:
+                if re.search(item, intake, re.M):
+                    start_holder.append(self.months[item])
+            if start_holder:
+                course_item["startMonths"] = "|".join(start_holder)
+
+        study = response.xpath("//strong[contains(text(), 'Mode of Delivery')]/following-sibling::node()").getall()
+        holder = []
+        for item in study:
+            if re.search("^<strong", item):
+                break
+            elif not re.search("^<br", item):
+                holder.append(item)
+        if holder:
+            study = "".join(holder)
+            study_holder = set()
+            if re.search("face", study, re.I | re.M):
+                study_holder.add("In Person")
+            if re.search("online", study, re.I | re.M):
+                study_holder.add("Online")
+            if study_holder:
+                course_item['modeOfStudy'] = '|'.join(study_holder)
+
+        duration = response.xpath("//strong[contains(text(), 'Duration')]/following-sibling::node()").getall()
+        holder = []
+        for item in duration:
+            if re.search("^<strong", item):
+                break
+            elif not re.search("^<br", item):
+                holder.append(item)
+        if holder:
+            duration = "".join(holder)
+            duration_full = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
+                duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
+                duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                                                     / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 1:
+                    #     course_item["durationMinFull"] = float(duration_full[0][0])
+                    #     self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 2:
+                    #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     self.get_period(duration_full[1][1].lower(), course_item)
+
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
         yield course_item
