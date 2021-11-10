@@ -80,10 +80,10 @@ class ThsSpiderSpider(scrapy.Spider):
     }
 
     campuses = {
-        "Sydney": "83029",
-        "Melbourne": "83028",
-        "Brisbane": "83027",
-        "Hayman Island": "83027"
+        "Sydney": "83269",
+        "Melbourne": "83272",
+        "Brisbane": "83273",
+        "Hayman Island": "83274"
     }
 
     teaching_periods = {
