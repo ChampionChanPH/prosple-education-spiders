@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
-import re
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
