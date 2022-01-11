@@ -123,6 +123,7 @@ class AilfeSpiderSpider(scrapy.Spider):
         if course_name:
             course_name = "".join(course_name)
             course_name = course_name.replace("&nbsp;", " ")
+            course_name = course_name.replace("\\xa0", " ")
             if re.search("[A-Z0-9]+[A-Z0-9]+ ", course_name):
                 course_code, course_name = re.split("\\s", strip_tags(course_name), maxsplit=1)
                 course_item.set_course_name(strip_tags(course_name), self.uidPrefix)
