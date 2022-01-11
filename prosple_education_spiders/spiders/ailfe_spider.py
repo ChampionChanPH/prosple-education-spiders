@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
+import re
 
 from ..standard_libs import *
 from ..scratch_file import strip_tags
@@ -101,7 +102,11 @@ class AilfeSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        pass
+        courses = response.xpath("//div[@data-testid='mesh-container-content']/div//li//a/@href").getall()
+
+        for item in courses:
+            if re.search("ailfe.wa.edu.au", item):
+                yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
@@ -111,6 +116,15 @@ class AilfeSpiderSpider(scrapy.Spider):
         course_item['published'] = 1
         course_item['institution'] = self.institution
         course_item["domesticApplyURL"] = response.request.url
+
+        course_name = response.xpath("//h2[@class='font_2']//a[@target='_self']/text()").get()
+        if course_name:
+            if re.search("[A-Z0-9]+[A-Z0-9]+ ", course_name):
+                course_code, course_name = re.split("\\s", course_name, maxsplit=1)
+                course_item.set_course_name(strip_tags(course_name), self.uidPrefix)
+                course_item["courseCode"] = strip_tags(course_code)
+            else:
+                course_item.set_course_name(strip_tags(course_name), self.uidPrefix)
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
