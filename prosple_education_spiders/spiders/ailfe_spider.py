@@ -117,7 +117,9 @@ class AilfeSpiderSpider(scrapy.Spider):
         course_item['institution'] = self.institution
         course_item["domesticApplyURL"] = response.request.url
 
-        course_name = response.xpath("//h2[@class='font_2']//a[@target='_self']/text()").get()
+        course_name = response.xpath("//div[contains(@id, 'comp-')][2]//h2[@class='font_2']//a/text()").get()
+        if not course_name:
+            course_name = response.xpath("//div[contains(@id, 'comp-')][2]//h2[@class='font_2']//span/text()").get()
         if course_name:
             if re.search("[A-Z0-9]+[A-Z0-9]+ ", course_name):
                 course_code, course_name = re.split("\\s", course_name, maxsplit=1)
