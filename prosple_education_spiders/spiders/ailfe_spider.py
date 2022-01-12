@@ -132,7 +132,7 @@ class AilfeSpiderSpider(scrapy.Spider):
             else:
                 course_item.set_course_name(strip_tags(course_name), self.uidPrefix)
 
-        overview = response.xpath("//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][3]/*").getall()
+        overview = response.xpath("//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/*").getall()
         holder = []
         if overview:
             for item in overview:
@@ -146,7 +146,7 @@ class AilfeSpiderSpider(scrapy.Spider):
             course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         cricos = response.xpath(
-            "//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][3]/*[contains(*//text(), 'CRICOS')]").get()
+            "//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/*[contains(*//text(), 'CRICOS')]").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
@@ -154,7 +154,7 @@ class AilfeSpiderSpider(scrapy.Spider):
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
-        duration = response.xpath("//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][3]/*[contains(*//text(), 'Course Duration')]/following-sibling::*").getall()
+        duration = response.xpath("//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/*[contains(*//text(), 'Course Duration')]/following-sibling::*").getall()
         holder = []
         for item in duration:
             if not strip_tags(item):
@@ -202,7 +202,7 @@ class AilfeSpiderSpider(scrapy.Spider):
                 course_item["modeOfStudy"] = "|".join(study_holder)
 
         entry = response.xpath(
-            "//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][3]/*[contains(*//text(), 'Entry Requirements')]/following-sibling::*").getall()
+            "//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/*[contains(*//text(), 'Entry Requirements')]/following-sibling::*").getall()
         holder = []
         for item in entry:
             if not strip_tags(item):
@@ -214,7 +214,7 @@ class AilfeSpiderSpider(scrapy.Spider):
                                                           remove_hyperlinks=True)
 
         career = response.xpath(
-            "//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][3]/*[contains(*//text(), 'Career Opportunities')]/following-sibling::*").getall()
+            "//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/*[contains(*//text(), 'Career Opportunities')]/following-sibling::*").getall()
         holder = []
         for item in career:
             if not strip_tags(item):
@@ -226,7 +226,7 @@ class AilfeSpiderSpider(scrapy.Spider):
                                                           remove_hyperlinks=True)
 
         structure = response.xpath(
-            "//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][3]/*[contains(*//text(), 'Competencies')]/following-sibling::*").getall()
+            "//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/*[contains(*//text(), 'Competencies')]/following-sibling::*").getall()
         holder = []
         for item in career:
             if not strip_tags(item):
