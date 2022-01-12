@@ -129,6 +129,7 @@ class AilfeSpiderSpider(scrapy.Spider):
                 course_code, course_name = re.split("\\s", strip_tags(course_name), maxsplit=1)
                 course_item.set_course_name(strip_tags(course_name), self.uidPrefix)
                 course_item["courseCode"] = strip_tags(course_code)
+                course_item["uid"] = course_item["uid"] + "-" + course_item["courseCode"]
             else:
                 course_item.set_course_name(strip_tags(course_name), self.uidPrefix)
 
@@ -235,6 +236,8 @@ class AilfeSpiderSpider(scrapy.Spider):
         if holder:
             course_item["courseStructure"] = strip_tags(''.join(holder), remove_all_tags=False,
                                                        remove_hyperlinks=True)
+
+        course_item["campusNID"] = "86644"
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
