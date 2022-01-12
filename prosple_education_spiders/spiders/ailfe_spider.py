@@ -202,7 +202,7 @@ class AilfeSpiderSpider(scrapy.Spider):
                 course_item["modeOfStudy"] = "|".join(study_holder)
 
         entry = response.xpath(
-            "//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/*[contains(*//text(), 'Entry Requirements')]/following-sibling::*").getall()
+            "//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/*[contains(*//text(), 'Entry Requirement')]/following-sibling::*").getall()
         holder = []
         for item in entry:
             if not strip_tags(item):
