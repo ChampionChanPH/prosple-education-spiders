@@ -43,8 +43,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class AilfeSpiderSpider(scrapy.Spider):
     name = 'ailfe_spider'
-    # start_urls = ['https://www.ailfe.wa.edu.au/courses']
-    start_urls = ["https://www.ailfe.wa.edu.au/diploma-marketing"]
+    start_urls = ['https://www.ailfe.wa.edu.au/courses']
     banned_urls = ["https://www.ailfe.wa.edu.au/general-english"]
     institution = "Australian Institute of Language and Further Education (AILFE)"
     uidPrefix = "AU-AILFE-"
@@ -103,14 +102,14 @@ class AilfeSpiderSpider(scrapy.Spider):
             if re.search(item, string_to_use):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
-    # def parse(self, response):
-    #     courses = response.xpath("//div[@data-testid='mesh-container-content']/div//li//a/@href").getall()
-    #
-    #     for item in courses:
-    #         if re.search("ailfe.wa.edu.au", item) and item not in self.banned_urls:
-    #             yield response.follow(item, callback=self.course_parse)
-
     def parse(self, response):
+        courses = response.xpath("//div[@data-testid='mesh-container-content']/div//li//a/@href").getall()
+
+        for item in courses:
+            if re.search("ailfe.wa.edu.au", item) and item not in self.banned_urls:
+                yield response.follow(item, callback=self.course_parse)
+
+    def course_parse(self, response):
         course_item = Course()
 
         course_item['lastUpdate'] = date.today().strftime("%m/%d/%y")
