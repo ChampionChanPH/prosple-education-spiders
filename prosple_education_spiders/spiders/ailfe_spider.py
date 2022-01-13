@@ -136,7 +136,7 @@ class AilfeSpiderSpider(scrapy.Spider):
         overview = response.xpath("//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/*").getall()
         holder = []
         for item in overview:
-            if not strip_tags(item):
+            if re.search("CRICOS", item) or re.search("Course Duration", item):
                 break
             else:
                 holder.append(item)
@@ -228,7 +228,7 @@ class AilfeSpiderSpider(scrapy.Spider):
         structure = response.xpath(
             "//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/*[contains(*//text(), 'Competencies')]/following-sibling::*").getall()
         holder = []
-        for item in career:
+        for item in structure:
             if not strip_tags(item):
                 break
             else:
