@@ -133,7 +133,7 @@ class AilfeSpiderSpider(scrapy.Spider):
             else:
                 course_item.set_course_name(strip_tags(course_name), self.uidPrefix)
 
-        overview = response.xpath("//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/*").getall()
+        overview = response.xpath("//div[contains(@id, 'comp-') and not(contains(@id, 'comp-ik'))][last()]/p").getall()
         holder = []
         for item in overview:
             if re.search("CRICOS", item) or re.search("Course Duration", item):
