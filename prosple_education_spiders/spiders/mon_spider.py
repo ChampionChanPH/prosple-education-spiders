@@ -42,6 +42,7 @@ class MonSpiderSpider(scrapy.Spider):
     institution = "Monash University"
     uidPrefix = "AU-MON-"
 
+    # some campuses were removed in CMS
     campuses = {
         "The Alfred": "677",
         "Peninsula": "660",
