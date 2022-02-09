@@ -133,8 +133,7 @@ class RmionlineSpiderSpider(scrapy.Spider):
             course_item["overview"] = strip_tags(''.join(overview_holder),
                                                  remove_all_tags=False, remove_hyperlinks=True)
 
-        course_count = response.xpath(
-            "//div[@class='qf-right'][contains(text(), 'Courses')]/preceding-sibling::*/text()").get()
+        course_count = response.xpath("//div[@class='quick-facts']/div[contains(@class, 'qf-left')]/text()").get()
         if course_count:
             try:
                 course_count = int(course_count)
@@ -146,7 +145,9 @@ class RmionlineSpiderSpider(scrapy.Spider):
             dom_fee = re.findall("\$(\d*),?(\d+)", dom_fee, re.M)
             dom_fee = [float(''.join(x)) for x in dom_fee]
             if dom_fee and course_count:
+                course_item["domesticFeeAnnual"] = max(dom_fee) * 6
                 course_item["domesticFeeTotal"] = max(dom_fee) * course_count
+                course_item["internationalFeeAnnual"] = max(dom_fee) * 6
                 course_item["internationalFeeTotal"] = max(dom_fee) * course_count
 
         duration = response.xpath("//div[@id='qf-desc1']").get()
