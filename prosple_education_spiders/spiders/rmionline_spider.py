@@ -121,10 +121,17 @@ class RmionlineSpiderSpider(scrapy.Spider):
         if summary:
             course_item.set_summary(strip_tags(summary))
 
+        overview_holder = []
+        header = response.xpath("//section[contains(@class, 'program-overview')]/header/text()").get()
+        if header:
+            overview_holder.append(f"<strong>{header.strip()}</strong>")
         overview = response.xpath("//section[contains(@class, 'program-overview')]/header/following-sibling::div["
                                   "@class='content']/*[self::p or self::ul or self::ol]").getall()
         if overview:
-            course_item["overview"] = strip_tags(''.join(overview), False)
+            overview_holder.extend(overview)
+        if overview_holder:
+            course_item["overview"] = strip_tags(''.join(overview_holder),
+                                                 remove_all_tags=False, remove_hyperlinks=True)
 
         course_count = response.xpath(
             "//div[@class='qf-right'][contains(text(), 'Courses')]/preceding-sibling::*/text()").get()
@@ -140,6 +147,7 @@ class RmionlineSpiderSpider(scrapy.Spider):
             dom_fee = [float(''.join(x)) for x in dom_fee]
             if dom_fee and course_count:
                 course_item["domesticFeeTotal"] = max(dom_fee) * course_count
+                course_item["internationalFeeTotal"] = max(dom_fee) * course_count
 
         duration = response.xpath("//div[@id='qf-desc1']").get()
         if duration:
@@ -189,7 +197,7 @@ class RmionlineSpiderSpider(scrapy.Spider):
         learn = response.xpath("//section[contains(@class, 'why-rmit-header')]/following-sibling::*/*/*").getall()
         if learn:
             learn = [x for x in learn if not re.search('<img', x)]
-            course_item["whatLearn"] = strip_tags(''.join(learn), False)
+            course_item["whatLearn"] = strip_tags(''.join(learn), remove_all_tags=False, remove_hyperlinks=True)
 
         study = response.xpath("//section[contains(@class, 'program-study')]/header/following-sibling::div["
                                "@class='content']/*[self::p or self::ul or self::ol][1]").get()
@@ -199,7 +207,7 @@ class RmionlineSpiderSpider(scrapy.Spider):
         entry = response.xpath("//section[contains(@class, 'entry-req')]/header/following-sibling::div["
                                "@class='content']/*[self::p or self::ul or self::ol][1]").get()
         if entry:
-            course_item["entryRequirements"] = strip_tags(entry, False)
+            course_item["entryRequirements"] = strip_tags(entry, remove_all_tags=False, remove_hyperlinks=True)
 
         # course_item['campusNID'] = self.campuses['Online']
         course_item['modeOfStudy'] = 'Online'
