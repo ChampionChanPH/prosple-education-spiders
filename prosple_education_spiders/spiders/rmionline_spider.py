@@ -112,6 +112,8 @@ class RmionlineSpiderSpider(scrapy.Spider):
         course_item['sourceURL'] = response.request.url
         course_item['published'] = 1
         course_item['institution'] = self.institution
+        course_item['domesticApplyURL'] = response.request.url
+        course_item['internationalApplyURL'] = response.request.url
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
