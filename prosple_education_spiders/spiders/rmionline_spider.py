@@ -147,10 +147,14 @@ class RmionlineSpiderSpider(scrapy.Spider):
             dom_fee = re.findall("\$(\d*),?(\d+)", dom_fee, re.M)
             dom_fee = [float(''.join(x)) for x in dom_fee]
             if dom_fee and course_count:
-                course_item["domesticFeeAnnual"] = max(dom_fee) * 6
                 course_item["domesticFeeTotal"] = max(dom_fee) * course_count
-                course_item["internationalFeeAnnual"] = max(dom_fee) * 6
                 course_item["internationalFeeTotal"] = max(dom_fee) * course_count
+                if max(dom_fee) * course_count < max(dom_fee) * 6:
+                    course_item["domesticFeeAnnual"] = max(dom_fee) * course_count
+                    course_item["internationalFeeAnnual"] = max(dom_fee) * course_count
+                else:
+                    course_item["domesticFeeAnnual"] = max(dom_fee) * 6
+                    course_item["internationalFeeAnnual"] = max(dom_fee) * 6
 
         duration = response.xpath("//div[@id='qf-desc1']").get()
         if duration:
