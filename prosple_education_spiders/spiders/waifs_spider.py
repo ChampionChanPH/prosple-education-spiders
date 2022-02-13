@@ -131,6 +131,7 @@ class WaifsSpiderSpider(scrapy.Spider):
 
         course_name = response.xpath("//h1[@class='course__title']/text()").get()
         course_name = re.sub(course_item['courseCode'], '', course_name)
+        course_name = re.sub("^- ", '', course_name)
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
