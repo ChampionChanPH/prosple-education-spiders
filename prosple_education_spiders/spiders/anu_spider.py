@@ -63,9 +63,14 @@ class AnuSpiderSpider(scrapy.Spider):
     function main(splash, args)
       assert(splash:go(args.url))
       assert(splash:wait(3))
-      local element = splash:select('a[data-template="program-template"]')
-      assert(element:mouse_click())
-      assert(splash:wait(3))
+      a = 1
+      while(a < 5)
+      do
+        a = a + 1
+        local element = splash:select('a[data-template="program-template"]')
+        assert(element:mouse_click())
+        assert(splash:wait(5))
+      end
       return {
         html = splash:html(),
         png = splash:png(),
@@ -73,6 +78,7 @@ class AnuSpiderSpider(scrapy.Spider):
       }
     end
     """
+    
     def parse(self, response):
         yield SplashRequest(
             response.request.url,
