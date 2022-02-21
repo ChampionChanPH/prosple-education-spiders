@@ -66,7 +66,7 @@ class AnuSpiderSpider(scrapy.Spider):
       a = 1
       while(a < 5)
       do
-        a = a + 1
+        a = a+1
         local element = splash:select('a[data-template="program-template"]')
         assert(element:mouse_click())
         assert(splash:wait(5))
