@@ -51,7 +51,9 @@ class MurSpiderSpider(scrapy.Spider):
         "Rockingham": "683",
         "Perth": "680",
         "External": "681",
-        "Mandurah": "682"
+        "Mandurah": "682",
+        "Singapore": "102280",
+        "Dubai": "102282",
     }
 
     degrees = {
@@ -171,6 +173,18 @@ class MurSpiderSpider(scrapy.Spider):
                 duration = [float(x) for x in duration]
                 course_item["durationMinFull"] = max(duration)
                 course_item['teachingPeriod'] = 1
+
+        location = response.xpath("//table[@class='offeringTable']").get()
+        campus_holder = set()
+        if location:
+            for campus in self.campuses:
+                if campus == 'Perth':
+                    if re.search('Murdoch', location, re.I):
+                        campus_holder.add(self.campuses[campus])
+                elif re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
 
         course_item.set_sf_dt(self.degrees, degree_delims=['and', '/', '\+', ';'], type_delims=['of', 'in', 'by'])
 
