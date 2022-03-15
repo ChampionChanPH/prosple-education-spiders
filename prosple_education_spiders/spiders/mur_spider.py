@@ -25,19 +25,20 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
         if course_item["teachingPeriod"] == 12:
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 12
+                    / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 52
+                    / 52
 
 
 class MurSpiderSpider(scrapy.Spider):
@@ -81,13 +82,19 @@ class MurSpiderSpider(scrapy.Spider):
         "day": 365
     }
 
+    term = {
+        'Semester 1': '02',
+        'Semester 2': '07',
+    }
+
     def get_period(self, string_to_use, course_item):
         for item in self.teaching_periods:
             if re.search(item, string_to_use):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//li[contains(@class, 'search-result-default')]//a/@href").getall()
+        courses = response.xpath(
+            "//li[contains(@class, 'search-result-default')]//a/@href").getall()
 
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
@@ -114,7 +121,8 @@ class MurSpiderSpider(scrapy.Spider):
             summary = [strip_tags(x) for x in summary if strip_tags(x) != '']
             course_item.set_summary(' '.join(summary))
 
-        overview = response.xpath("//h2[@class='tab-title'][text()='Overview']/following-sibling::*[1]/*").getall()
+        overview = response.xpath(
+            "//h2[@class='tab-title'][text()='Overview']/following-sibling::*[1]/*").getall()
         holder = []
         for item in overview:
             if re.search('<strong', item, flags=re.M):
@@ -122,7 +130,8 @@ class MurSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
+            course_item["overview"] = strip_tags(
+                "".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         learn = response.xpath("//*[contains(*/text(), 'What you') and contains(*/text(), "
                                "'ll learn')]/following-sibling::*").getall()
@@ -133,7 +142,8 @@ class MurSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item["whatLearn"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
+            course_item["whatLearn"] = strip_tags(
+                "".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath("//*[contains(*/text(), 'Your career') or contains(*/text(), 'Your future "
                                 "career')]/following-sibling::*").getall()
@@ -144,13 +154,16 @@ class MurSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item["careerPathways"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
+            course_item["careerPathways"] = strip_tags(
+                "".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        course_code = response.xpath("//h4[text()='Murdoch code']/following-sibling::*/text()").get()
+        course_code = response.xpath(
+            "//h4[text()='Murdoch code']/following-sibling::*/text()").get()
         if course_code:
             course_item["courseCode"] = course_code
 
-        cricos = response.xpath("//h4[text()='CRICOS code']/following-sibling::*").get()
+        cricos = response.xpath(
+            "//h4[text()='CRICOS code']/following-sibling::*").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
@@ -158,14 +171,27 @@ class MurSpiderSpider(scrapy.Spider):
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
-        atar = response.xpath("//h4[text()='Selection rank']/following-sibling::*").get()
+        atar = response.xpath(
+            "//h4[text()='Selection rank']/following-sibling::*").get()
         if atar:
             atar = re.findall("\d+", atar, re.M)
             if atar:
                 atar = [float(x) for x in atar]
                 course_item["guaranteedEntryScore"] = max(atar)
 
-        duration = response.xpath("//h4[text()='Duration (years)']/following-sibling::*/text()").get()
+        start = response.xpath(
+            "//td[contains(@class, 'domestic-international') and contains(@class, 'active')]").getall()
+        if start:
+            start = ''.join(start)
+            holder = []
+            for item in self.term:
+                if re.search(item, start, re.I | re.M):
+                    holder.append(self.term[item])
+            if holder:
+                course_item['startMonths'] = '|'.join(holder)
+
+        duration = response.xpath(
+            "//h4[text()='Duration (years)']/following-sibling::*/text()").get()
         if duration:
             duration = re.findall("\d+", duration, re.M)
             if duration:
@@ -185,6 +211,7 @@ class MurSpiderSpider(scrapy.Spider):
         if campus_holder:
             course_item['campusNID'] = '|'.join(campus_holder)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/', '\+', ';'], type_delims=['of', 'in', 'by'])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              'and', '/', '\+', ';'], type_delims=['of', 'in', 'by'])
 
         yield course_item
