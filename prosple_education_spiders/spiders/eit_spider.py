@@ -102,6 +102,8 @@ class EitSpiderSpider(scrapy.Spider):
         course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1").get()
+        if strip_tags(course_name) == "":
+            course_name = response.xpath("//div[@class='banner__content']").get()
         if course_name:
             new_name = re.sub("Online - ", "", course_name)
             course_item.set_course_name(strip_tags(new_name), self.uidPrefix)
@@ -187,7 +189,9 @@ class EitSpiderSpider(scrapy.Spider):
         holder = []
         if structure:
             for item in structure:
-                if re.search("^(p|u|o)", item):
+                if re.search("^(p|u|o)", item) and re.search("Note:", item):
+                    break
+                elif re.search("^(p|u|o)", item):
                     holder.append(item)
                 else:
                     break
