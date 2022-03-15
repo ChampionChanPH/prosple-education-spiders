@@ -101,10 +101,11 @@ class EitSpiderSpider(scrapy.Spider):
         course_item["institution"] = self.institution
         course_item["domesticApplyURL"] = response.request.url
 
-        course_name = response.xpath("//h1/text()").get()
+        course_name = response.xpath("//h1").get()
         if course_name:
             new_name = re.sub("Online - ", "", course_name)
-            course_item.set_course_name(new_name.strip(), self.uidPrefix)
+            course_item.set_course_name(strip_tags(new_name), self.uidPrefix)
+            course_item["courseName"] = strip_tags(course_name)
 
         overview = response.xpath(
             "//div[@id='eit_course_code']/following-sibling::*").getall()
