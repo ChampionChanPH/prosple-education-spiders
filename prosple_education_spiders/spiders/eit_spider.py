@@ -106,9 +106,9 @@ class EitSpiderSpider(scrapy.Spider):
             course_name = response.xpath(
                 "//div[@class='banner__content']").get()
         if course_name:
-            new_name = re.sub("Online - ", "", course_name)
-            course_item.set_course_name(strip_tags(new_name), self.uidPrefix)
-            course_item["courseName"] = strip_tags(course_name)
+            course_name = re.sub("Online - ", "", course_name)
+            course_item.set_course_name(
+                strip_tags(course_name), self.uidPrefix)
 
         overview = response.xpath(
             "//div[@id='eit_course_code']/following-sibling::*").getall()
