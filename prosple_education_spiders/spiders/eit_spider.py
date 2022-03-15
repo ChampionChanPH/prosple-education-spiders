@@ -62,6 +62,21 @@ class EitSpiderSpider(scrapy.Spider):
         "doctor": "6",
     }
 
+    months = {
+        "January": "01",
+        "February": "02",
+        "March": "03",
+        "April": "04",
+        "May": "05",
+        "June": "06",
+        "July": "07",
+        "August": "08",
+        "September": "09",
+        "October": "10",
+        "November": "11",
+        "December": "12"
+    }
+
     teaching_periods = {
         "year": 1,
         "semester": 2,
@@ -160,9 +175,9 @@ class EitSpiderSpider(scrapy.Spider):
             "//div[@class='glance__title' and text()='Intakes']/following-sibling::*").get()
         if start:
             holder = []
-            for item in self.term:
+            for item in self.months:
                 if re.search(item, start, re.I | re.M):
-                    holder.append(self.term[item])
+                    holder.append(self.months[item])
             if holder:
                 course_item['startMonths'] = '|'.join(holder)
 
