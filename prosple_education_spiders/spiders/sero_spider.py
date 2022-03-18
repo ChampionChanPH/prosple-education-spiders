@@ -25,19 +25,20 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
         if course_item["teachingPeriod"] == 12:
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 12
+                    / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 52
+                    / 52
 
 
 class SeroSpiderSpider(scrapy.Spider):
@@ -106,7 +107,8 @@ class SeroSpiderSpider(scrapy.Spider):
         yield from response.follow_all(sub, callback=self.sub_parse)
 
     def sub_parse(self, response):
-        courses = response.xpath("//a[span/span/text()='Course Info']/@href").getall()
+        courses = response.xpath(
+            "//a[span/span/text()='Course Info']/@href").getall()
 
         for item in courses:
             if not re.search("seroinstitute.com.au/contact/", item):
@@ -121,17 +123,20 @@ class SeroSpiderSpider(scrapy.Spider):
         course_item['institution'] = self.institution
         course_item["domesticApplyURL"] = response.request.url
 
-        name = response.xpath("//*[self::h1 or self::h2][contains(@class, 'elementor-heading-title')]/text()").get()
+        name = response.xpath(
+            "//*[self::h1 or self::h2][contains(@class, 'elementor-heading-title')]/text()").get()
         if name:
             if re.search("[A-Z0-9]+[A-Z0-9]+ ", name):
                 course_code, course_name = re.split("\\s", name, maxsplit=1)
                 course_name = course_name.replace("\n", " ")
-                course_item.set_course_name(course_name.strip(), self.uidPrefix)
+                course_item.set_course_name(
+                    course_name.strip(), self.uidPrefix)
                 course_item["courseCode"] = course_code
             else:
                 course_item.set_course_name(name.strip(), self.uidPrefix)
         if "courseCode" not in course_item:
-            course_code = response.xpath("//h6[contains(@class, 'elementor-heading-title')]/text()").get()
+            course_code = response.xpath(
+                "//h6[contains(@class, 'elementor-heading-title')]/text()").get()
             if course_code and re.search("[A-Z0-9]+[A-Z0-9]+", course_code):
                 course_item["courseCode"] = course_code
 
@@ -154,7 +159,8 @@ class SeroSpiderSpider(scrapy.Spider):
         if overview:
             summary = [strip_tags(x) for x in overview]
             course_item.set_summary(' '.join(summary))
-            course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
+            course_item["overview"] = strip_tags(
+                ''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
         entry = response.xpath(
             "//*[@data-element_type='widget' and */h2/text()='Entry Requirements']"
@@ -164,13 +170,15 @@ class SeroSpiderSpider(scrapy.Spider):
                 "//*[contains(@id, 'elementor-tab-title') and */text()='Entry Requirements']"
                 "/following-sibling::*/*").getall()
         if entry:
-            course_item["entryRequirements"] = strip_tags(''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
+            course_item["entryRequirements"] = strip_tags(
+                ''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath(
             "//*[contains(@id, 'elementor-tab-title') and */text()='Career Opportunities']"
             "/following-sibling::*/*").getall()
         if career:
-            course_item["careerPathways"] = strip_tags(''.join(career), remove_all_tags=False, remove_hyperlinks=True)
+            course_item["careerPathways"] = strip_tags(
+                ''.join(career), remove_all_tags=False, remove_hyperlinks=True)
 
         study = response.xpath(
             "//*[@data-element_type='widget' and */*/text()='Delivery methods']"
@@ -203,7 +211,7 @@ class SeroSpiderSpider(scrapy.Spider):
                     course_item["durationMinPart"] = float(duration_part[0][0])
                 else:
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
-                                                     / self.teaching_periods[duration_part[0][1].lower()]
+                        / self.teaching_periods[duration_part[0][1].lower()]
             if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
                 duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
                                            duration, re.I | re.M | re.DOTALL)
@@ -227,7 +235,8 @@ class SeroSpiderSpider(scrapy.Spider):
 
         course_item["campusNID"] = "83031|83032|83033"
 
-        cricos = response.xpath("//*[contains(text(), 'CRICOS Code') or contains(text(), 'CRICOS:')]").getall()
+        cricos = response.xpath(
+            "//*[contains(text(), 'CRICOS Code') or contains(text(), 'CRICOS:')]").getall()
         if cricos:
             cricos = "".join(cricos)
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
@@ -247,6 +256,7 @@ class SeroSpiderSpider(scrapy.Spider):
             if re.search("-international", course_item["sourceURL"]):
                 course_item["uid"] = course_item["uid"] + "-INT"
 
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              'and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
         yield course_item
