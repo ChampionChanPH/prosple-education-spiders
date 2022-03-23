@@ -185,7 +185,7 @@ class ShcSpiderSpider(scrapy.Spider):
                 ''.join(learn[1:]), remove_all_tags=False, remove_hyperlinks=True)
 
         duration = response.xpath(
-            "//div[@id='course-learning-outcomes']/*/*").getall()
+            "//div[@id='course-duration']/*/*").getall()
         if duration:
             duration = "".join(duration)
             for num in self.numbers:
