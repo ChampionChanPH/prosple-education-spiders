@@ -124,7 +124,7 @@ class ShcSpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         courses = response.xpath(
-            "//div[@class='qx-element-blurb__title']/a").getall()
+            "//div[@class='qx-element-blurb__title']/a")
         yield from response.follow_all(courses, callback=self.course_parse)
 
     def course_parse(self, response):
