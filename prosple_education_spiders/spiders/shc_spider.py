@@ -100,7 +100,7 @@ class ShcSpiderSpider(scrapy.Spider):
     }
 
     numbers = {
-        "One academic term": '1',
+        "One academic term": '6 months',
         "One": '1',
         "Two": '2',
         "Three": '3',
