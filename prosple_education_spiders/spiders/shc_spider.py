@@ -191,10 +191,10 @@ class ShcSpiderSpider(scrapy.Spider):
             for num in self.numbers:
                 duration = re.sub(num, self.numbers[num], duration)
             duration_full = re.findall(
-                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?full)",
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
                 duration, re.I | re.M | re.DOTALL)
             duration_part = re.findall(
-                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?part)",
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
                 duration, re.I | re.M | re.DOTALL)
             if not duration_full and duration_part:
                 self.get_period(duration_part[0][1].lower(), course_item)
