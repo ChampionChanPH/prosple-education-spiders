@@ -100,16 +100,16 @@ class ShcSpiderSpider(scrapy.Spider):
     }
 
     numbers = {
-        "One academic term": 1,
-        "One": 1,
-        "Two": 2,
-        "Three": 3,
-        "Four": 4,
-        "Five": 5,
-        "Six": 6,
-        "Seven": 7,
-        "Eight": 8,
-        "Nine": 9,
+        "One academic term": '1',
+        "One": '1',
+        "Two": '2',
+        "Three": '3',
+        "Four": '4',
+        "Five": '5',
+        "Six": '6',
+        "Seven": '7',
+        "Eight": '8',
+        "Nine": '9',
     }
 
     term = {
@@ -147,6 +147,8 @@ class ShcSpiderSpider(scrapy.Spider):
             course_item["internationalApplyURL"] = international_url
 
         course_name = response.xpath("//h1/span/text()").get()
+        if not course_name:
+            course_name = response.xpath("//h2/span/text()").get()
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
