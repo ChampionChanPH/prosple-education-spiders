@@ -124,7 +124,7 @@ class PiceSpiderSpider(scrapy.Spider):
                     holder.append(item)
             if holder:
                 course_item.set_summary(strip_tags(holder[0]))
-                course_item["overview"] = strip_tags("".join(holder), False)
+                course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         if course_item['courseName'] == 'Cambridge Suite':
             course_item['startMonths'] = '01|03|09'
