@@ -119,12 +119,8 @@ class ScSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.css(".coursebtn.btn-hover a::attr(href)").extract()
-
-        for course in courses:
-            yield response.follow(course, callback=self.course_parse)
-            # yield SplashRequest(response.follow(course, callback=self.course_parse))
-            # yield SplashRequest(response.urljoin(course), callback=self.course_parse)
+        courses = response.css("a.coursebtn.btn-hover")
+        yield from response.follow_all(courses, callback=self.course_parse)
 
     def course_parse(self, response):
         institution = "Stanley College"
