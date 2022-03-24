@@ -58,6 +58,8 @@ class SncSpiderSpider(scrapy.Spider):
         "https://stanleycollege.edu.au/vocational-courses/translation-interpreting/"
     ]
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
+    institution = "Stanley College"
+    uidPrefix = "AU-SNC-"
 
     content_map = {
         'Course Duration': 'durationMinFull',
@@ -89,6 +91,16 @@ class SncSpiderSpider(scrapy.Spider):
         "Oct": "10",
         "Nov": "11",
         "Dec": "12"
+    }
+
+    teaching_periods = {
+        "year": 1,
+        "semester": 2,
+        "trimester": 3,
+        "quarter": 4,
+        "month": 12,
+        "week": 52,
+        "day": 365
     }
 
     degrees = {
@@ -124,16 +136,13 @@ class SncSpiderSpider(scrapy.Spider):
             yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
-        institution = "Stanley College"
-        uidPrefix = "AU-SNC-"
-
-        # print("Hey")
-
         course_item = Course()
+
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
-        course_item["institution"] = institution
+        course_item["institution"] = self.institution
+        course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
@@ -148,15 +157,6 @@ class SncSpiderSpider(scrapy.Spider):
             else:
                 course_item.set_course_name(
                     course_name.strip(), self.uidPrefix)
-
-        course_item.set_sf_dt(self.degrees, degree_delims=[
-                              'and', '/'], type_delims=['of', 'in', 'by', 'for'])
-        # Override assigned canonical group and group number
-        course_item["canonicalGroup"] = "StudyPerth"
-        course_item["group"] = 23
-
-        course_item["uid"] = uidPrefix + course_item["courseName"]
-        course_item["domesticApplyURL"] = response.request.url
 
         cricos = response.css("div.listdiv.cricos p").get()
         if cricos:
@@ -268,5 +268,11 @@ class SncSpiderSpider(scrapy.Spider):
                 ''.join(credit), remove_all_tags=False, remove_hyperlinks=True)
 
         course_item["campusNID"] = "36610|36611|36365"
+
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              'and', '/'], type_delims=['of', 'in', 'by', 'for'])
+
+        course_item['group'] = 23
+        course_item['canonicalGroup'] = 'StudyPerth'
 
         yield course_item
