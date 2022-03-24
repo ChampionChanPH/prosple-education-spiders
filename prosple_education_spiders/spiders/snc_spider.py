@@ -119,8 +119,9 @@ class ScSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.css("a.coursebtn.btn-hover")
-        yield from response.follow_all(courses, callback=self.course_parse)
+        courses = response.css("a.coursebtn.btn-hover::attr(href)").getall()
+        for item in courses:
+            yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         institution = "Stanley College"
@@ -134,14 +135,19 @@ class ScSpider(scrapy.Spider):
         course_item["published"] = 1
         course_item["institution"] = institution
 
-        raw_course_name = response.xpath("//h1/text()").get()
-
-        if len(re.findall("\d", strip_tags(raw_course_name).split(" ")[0])) > 0:
-            course_item["courseName"] = re.sub(raw_course_name.split(" ")[
-                                               0]+" ", "", raw_course_name)
-            course_item["courseCode"] = raw_course_name.split(" ")[0]
-        else:
-            course_item["courseName"] = raw_course_name
+        course_name = response.xpath("//h1/text()").get()
+        if course_name:
+            course_name = course_name.strip()
+            if re.search("[A-Z0-9]+[A-Z0-9]+ ", course_name):
+                course_code, course_name = re.split(
+                    "\\s", course_name, maxsplit=1)
+                course_name = course_name.replace("\n", " ")
+                course_item.set_course_name(
+                    course_name.strip(), self.uidPrefix)
+                course_item["courseCode"] = course_code
+            else:
+                course_item.set_course_name(
+                    course_name.strip(), self.uidPrefix)
 
         course_item.set_sf_dt(self.degrees, degree_delims=[
                               'and', '/'], type_delims=['of', 'in', 'by', 'for'])
