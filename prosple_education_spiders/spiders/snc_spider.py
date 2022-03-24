@@ -131,9 +131,12 @@ class SncSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.82 Safari/537.36'}
+
         courses = response.css("a.coursebtn.btn-hover::attr(href)").getall()
         for item in courses:
-            yield response.follow(item, callback=self.course_parse)
+            yield response.follow(item, callback=self.course_parse, headers=headers)
 
     def course_parse(self, response):
         course_item = Course()
