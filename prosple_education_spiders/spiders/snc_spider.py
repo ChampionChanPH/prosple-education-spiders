@@ -178,8 +178,6 @@ class ScSpider(scrapy.Spider):
 
         duration = response.css("div.listdiv.duration p").get()
         if duration:
-            for num in self.numbers:
-                duration = re.sub(num, self.numbers[num], duration)
             duration_full = re.findall(
                 "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
                 duration, re.I | re.M | re.DOTALL)
