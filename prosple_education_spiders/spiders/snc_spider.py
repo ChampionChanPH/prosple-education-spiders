@@ -42,7 +42,7 @@ def get_total(field_to_use, field_to_update, course_item):
                     / 52
 
 
-class ScSpider(scrapy.Spider):
+class SncSpiderSpider(scrapy.Spider):
     name = 'snc_spider'
     start_urls = [
         "https://stanleycollege.edu.au/vocational-courses/english-courses/",
