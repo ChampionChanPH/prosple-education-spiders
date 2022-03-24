@@ -88,8 +88,11 @@ class CacSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//a[@class='raven-post-button']")
-        yield from response.follow_all(courses, callback=self.course_parse)
+        courses = response.xpath(
+            "//a[@class='raven-post-button']/@href").getall()
+        for item in courses:
+            if not re.search("/online-programs/", item):
+                yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
         course_item = Course()
