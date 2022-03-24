@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
 
-from re import L
 from ..standard_libs import *
 from ..scratch_file import strip_tags
 
@@ -32,8 +31,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class CacSpiderSpider(scrapy.Spider):
     name = 'cac_spider'
-    start_urls = ['http://www.canningcollege.wa.edu.au/Courses.htm']
-    banned_urls = ['/Courses-Links_to_WA_Universities.htm']
+    start_urls = ['https://www.canningcollege.wa.edu.au/programs/']
     institution = "Canning College"
     uidPrefix = "AU-CAC-"
 
