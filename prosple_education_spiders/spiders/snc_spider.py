@@ -127,8 +127,6 @@ class ScSpider(scrapy.Spider):
             # yield SplashRequest(response.urljoin(course), callback=self.course_parse)
 
     def course_parse(self, response):
-        canonical_group = "StudyPerth"
-        group_number = 23
         institution = "Stanley College"
         uidPrefix = "AU-SNC-"
 
@@ -152,8 +150,8 @@ class ScSpider(scrapy.Spider):
         course_item.set_sf_dt(self.degrees, degree_delims=[
                               'and', '/'], type_delims=['of', 'in', 'by', 'for'])
         # Override assigned canonical group and group number
-        course_item["canonicalGroup"] = canonical_group
-        course_item["group"] = group_number
+        course_item["canonicalGroup"] = "StudyPerth"
+        course_item["group"] = 23
 
         course_item["uid"] = uidPrefix + course_item["courseName"]
         course_item["domesticApplyURL"] = response.request.url
