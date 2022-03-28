@@ -25,19 +25,20 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
         if course_item["teachingPeriod"] == 12:
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 12
+                    / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 52
+                    / 52
 
 
 class NaveSpiderSpider(scrapy.Spider):
@@ -135,13 +136,17 @@ class NaveSpiderSpider(scrapy.Spider):
                 holder.append(item)
         if holder:
             course_item.set_summary(strip_tags(holder[0]))
-            course_item['overview'] = strip_tags(''.join(holder), False)
+            course_item['overview'] = strip_tags(
+                ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        entry = response.xpath("//strong[contains(text(), 'Entry level')]/following-sibling::p").getall()
+        entry = response.xpath(
+            "//strong[contains(text(), 'Entry level')]/following-sibling::p").getall()
         if entry:
-            course_item['entryRequirements'] = strip_tags(''.join(entry), False)
+            course_item['entryRequirements'] = strip_tags(
+                ''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
 
-        duration = response.xpath("//strong[contains(text(), 'Course duration')]/following-sibling::span").get()
+        duration = response.xpath(
+            "//strong[contains(text(), 'Course duration')]/following-sibling::span").get()
         if duration:
             duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s\(?full.time)",
                                        duration, re.I | re.M | re.DOTALL)
@@ -154,28 +159,36 @@ class NaveSpiderSpider(scrapy.Spider):
                     course_item["durationMinFull"] = float(duration_full[0][0])
                     self.get_period(duration_full[0][1].lower(), course_item)
                 if len(duration_full[0]) == 3:
-                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[0][1]))
-                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[0][1]))
+                    course_item["durationMinFull"] = min(
+                        float(duration_full[0][0]), float(duration_full[0][1]))
+                    course_item["durationMaxFull"] = max(
+                        float(duration_full[0][0]), float(duration_full[0][1]))
                     self.get_period(duration_full[0][2].lower(), course_item)
             if duration_part:
                 if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
                     course_item["durationMinPart"] = float(duration_part[0][0])
                 else:
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
-                                                     / self.teaching_periods[duration_part[0][1].lower()]
+                        / self.teaching_periods[duration_part[0][1].lower()]
             if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
                 duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))", duration,
                                            re.I | re.M | re.DOTALL)
                 if duration_full:
                     if len(duration_full) == 1:
-                        course_item["durationMinFull"] = float(duration_full[0][0])
-                        self.get_period(duration_full[0][1].lower(), course_item)
+                        course_item["durationMinFull"] = float(
+                            duration_full[0][0])
+                        self.get_period(
+                            duration_full[0][1].lower(), course_item)
                     if len(duration_full) == 2:
-                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
-                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
-                        self.get_period(duration_full[1][1].lower(), course_item)
+                        course_item["durationMinFull"] = min(
+                            float(duration_full[0][0]), float(duration_full[1][0]))
+                        course_item["durationMaxFull"] = max(
+                            float(duration_full[0][0]), float(duration_full[1][0]))
+                        self.get_period(
+                            duration_full[1][1].lower(), course_item)
 
-        study = response.xpath("//p[contains(strong/text(), 'Mode of study')]/following-sibling::p").get()
+        study = response.xpath(
+            "//p[contains(strong/text(), 'Mode of study')]/following-sibling::p").get()
         if study:
             study_holder = set()
             if re.search('myStudy', study, re.I | re.M):
@@ -185,7 +198,8 @@ class NaveSpiderSpider(scrapy.Spider):
             if study_holder:
                 course_item['modeOfStudy'] = '|'.join(study_holder)
 
-        location = response.xpath("//div[contains(strong/text(), 'Next course dates')]").get()
+        location = response.xpath(
+            "//div[contains(strong/text(), 'Next course dates')]").get()
         if location:
             campus_holder = set()
             for campus in self.campuses:
@@ -194,17 +208,21 @@ class NaveSpiderSpider(scrapy.Spider):
             if campus_holder:
                 course_item['campusNID'] = '|'.join(campus_holder)
 
-        cricos = response.xpath("//p[contains(text(), 'CRICOS COURSE CODE')]").get()
+        cricos = response.xpath(
+            "//p[contains(text(), 'CRICOS COURSE CODE')]").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
                 course_item['cricosCode'] = ', '.join(cricos)
                 course_item['internationalApps'] = 1
 
-        learn = response.xpath("//*[contains(text(), 'Your learning outcomes')]/following-sibling::*").getall()
+        learn = response.xpath(
+            "//*[contains(text(), 'Your learning outcomes')]/following-sibling::*").getall()
         if learn:
-            course_item['whatLearn'] = strip_tags(''.join(learn), False)
+            course_item['whatLearn'] = strip_tags(
+                ''.join(learn), remove_all_tags=False, remove_hyperlinks=True)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              'and', '/'], type_delims=['of', 'in', 'by'])
 
         yield course_item
