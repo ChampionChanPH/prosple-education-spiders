@@ -25,19 +25,20 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
         if course_item["teachingPeriod"] == 12:
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 12
+                    / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 52
+                    / 52
 
 
 class KcbtSpiderSpider(scrapy.Spider):
@@ -135,27 +136,34 @@ class KcbtSpiderSpider(scrapy.Spider):
         overview = response.xpath(
             "//div[contains(@class, 'c-block')][1]//div[@class='tve_shortcode_rendered']/p[1]").getall()
         if not overview:
-            overview = response.xpath("//div[contains(@class, 'c-block')][1]/*").getall()
+            overview = response.xpath(
+                "//div[contains(@class, 'c-block')][1]/*").getall()
         holder = []
         for item in overview:
             if re.search("^<p", item):
                 holder.append(item)
         if holder:
             course_item.set_summary(strip_tags(holder[0]))
-            course_item["overview"] = strip_tags(''.join(holder), False)
+            course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False,
+                                                 remove_hyperlinks=True)
 
-        entry = response.xpath("//*[contains(text(), 'Entry Requirements')]/following-sibling::*").getall()
+        entry = response.xpath(
+            "//*[contains(text(), 'Entry Requirements')]/following-sibling::*").getall()
         if entry:
-            course_item["entryRequirements"] = strip_tags(''.join(entry), False)
+            course_item["entryRequirements"] = strip_tags(''.join(entry), remove_all_tags=False,
+                                                          remove_hyperlinks=True)
 
-        credit = response.xpath("//*[contains(text(), 'Recognition of Prior Learning')]/following-sibling::*").getall()
+        credit = response.xpath(
+            "//*[contains(text(), 'Recognition of Prior Learning')]/following-sibling::*").getall()
         if credit:
-            course_item["creditTransfer"] = strip_tags(''.join(credit), False)
+            course_item["creditTransfer"] = strip_tags(''.join(credit), remove_all_tags=False,
+                                                       remove_hyperlinks=True)
 
         career = response.xpath(
             "//*[contains(text(), 'Study Pathway and Career Opportunities')]/following-sibling::*").getall()
         if career:
-            course_item["careerPathways"] = strip_tags(''.join(career), False)
+            course_item["careerPathways"] = strip_tags(''.join(career), remove_all_tags=False,
+                                                       remove_hyperlinks=True)
 
         cricos = response.xpath("//h5/text()").get()
         if cricos:
@@ -163,12 +171,11 @@ class KcbtSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              'and', '/'], type_delims=['of', 'in', 'by'])
 
         course_item['campusNID'] = '30910|30911'
         course_item['group'] = 23
         course_item['canonicalGroup'] = 'StudyPerth'
 
         yield course_item
-
-
