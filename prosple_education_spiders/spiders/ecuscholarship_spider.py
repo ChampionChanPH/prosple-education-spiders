@@ -60,14 +60,17 @@ class EcuscholarshipSpiderSpider(scrapy.Spider):
                 scholarship_item['group'] = 4
                 scholarship_item['degree_types'] = "Bachelor (Honours)|Doctorate (PhD)|Graduate Certificate|Graduate Diploma|Juris Doctor|Masters (Coursework)|Masters (Research)"
 
-        # TODO: 07/10/17 00:00
         open = response.css("div.dates span.labelHighlight--greenAlt").getall()
         if open:
-            pass
+            application_open = re.findall("(\d{2})-(\d{2})-20(\d{2})", open)
+            scholarship_item["opens"] = '/'.join(
+                application_open[0]) + " 00:00"
 
         close = response.css("div.dates span.labelHighlight--redAlt").getall()
         if close:
-            pass
+            application_close = re.findall("(\d{2})-(\d{2})-20(\d{2})", close)
+            scholarship_item["closes"] = '/'.join(
+                application_close[0]) + " 00:00"
 
         scholarship_item["apply_url"] = response.request.url
 
