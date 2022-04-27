@@ -61,9 +61,11 @@ class LtuonlineSpiderSpider(scrapy.Spider):
     degrees = {
         "graduate certificate": "7",
         "postgraduate certificate": "7",
+        "online graduate certificate": "7",
         "graduate diploma": "8",
         "postgraduate diploma": "8",
         "master": research_coursework,
+        "mba": research_coursework,
         "online master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
