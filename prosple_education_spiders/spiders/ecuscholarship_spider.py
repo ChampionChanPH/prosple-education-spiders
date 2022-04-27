@@ -7,16 +7,20 @@ from ..scratch_file import *
 
 class EcuscholarshipSpiderSpider(scrapy.Spider):
     name = 'ecuscholarship_spider'
+    handle_httpstatus_list = [410]
     start_urls = ['https://www.ecu.edu.au/scholarships/offers']
     institution = "Edith Cowan University (ECU)"
     uidPrefix = 'AU-ECU-'
 
     def parse(self, response):
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36'}
+
         scholarships = response.xpath(
             "//div[@class='span7']//h3/a/@href").getall()
 
         for scholarship in scholarships:
-            yield response.follow(scholarship, callback=self.scholarship_parse)
+            yield response.follow(scholarship, callback=self.scholarship_parse, headers=headers, meta={"handle_httpstatus_list": [410]})
 
     def scholarship_parse(self, response):
         scholarship_item = Scholarship()
@@ -60,15 +64,16 @@ class EcuscholarshipSpiderSpider(scrapy.Spider):
                 scholarship_item['group'] = 4
                 scholarship_item['degree_types'] = "Bachelor (Honours)|Doctorate (PhD)|Graduate Certificate|Graduate Diploma|Juris Doctor|Masters (Coursework)|Masters (Research)"
 
-        open = response.css("div.dates span.labelHighlight--greenAlt").getall()
+        open = response.css("div.dates span.labelHighlight--greenAlt").get()
         if open:
-            application_open = re.findall("(\d{2})-(\d{2})-20(\d{2})", open)
+            application_open = re.findall("(\d{1,2})-(\d{2})-20(\d{2})", open)
             scholarship_item["opens"] = '/'.join(
                 application_open[0]) + " 00:00"
 
-        close = response.css("div.dates span.labelHighlight--redAlt").getall()
+        close = response.css("div.dates span.labelHighlight--redAlt").get()
         if close:
-            application_close = re.findall("(\d{2})-(\d{2})-20(\d{2})", close)
+            application_close = re.findall(
+                "(\d{1,2})-(\d{2})-20(\d{2})", close)
             scholarship_item["closes"] = '/'.join(
                 application_close[0]) + " 00:00"
 

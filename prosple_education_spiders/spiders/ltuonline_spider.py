@@ -108,7 +108,7 @@ class LtuonlineSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//a[@class='tux-c-program-card__link']")
+        courses = response.xpath("//a[@class='tux-c-card__link']")
         yield from response.follow_all(courses, callback=self.course_parse)
 
     def course_parse(self, response):
