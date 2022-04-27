@@ -150,7 +150,8 @@ class CuuSpider(scrapy.Spider):
         overview = response.xpath("//div[contains(@class, 'outline__content')]/*").getall()
         holder = []
         for index, item in enumerate(overview):
-            if not re.search("^p", item) and not re.search("^ul", item) and index != 0:
+            if not re.search("^<p", item) and not re.search("^<ul", item) and not re.search("^<ol", item) \
+                    and index != 0:
                 break
             else:
                 holder.append(item)
