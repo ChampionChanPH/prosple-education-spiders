@@ -1,8 +1,8 @@
-import scrapy
-import re
-from ..items import Course
+# -*- coding: utf-8 -*-
+# by Christian Anasco
+
+from ..standard_libs import *
 from ..scratch_file import strip_tags
-from datetime import date
 
 
 def research_coursework(course_item):
@@ -19,34 +19,54 @@ def bachelor_honours(course_item):
         return "2"
 
 
+def get_total(field_to_use, field_to_update, course_item):
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
+        if course_item["teachingPeriod"] == 1:
+            if float(course_item["durationMinFull"]) < 1:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                                               / 52
+
+
 class UocSpiderSpider(scrapy.Spider):
     name = 'uoc_spider'
-    allowed_domains = ['search.canberra.edu.au', 'www.canberra.edu.au', 'canberra.edu.au']
-    start_urls = ['https://search.canberra.edu.au/s/search.html?collection=courses&form=course-search&profile'
-                  '=_default&query=!padre&course-search-widget__submit=&meta_C_and=COURSE&sort=metaH&f.Type|B'
-                  '=undergraduate&f.Course+Status%7CD=Open',
-                  'https://search.canberra.edu.au/s/search.html?collection=courses&form=course-search&profile'
-                  '=_default&query=!padre&course-search-widget__submit=&meta_C_and=COURSE&sort=metaH&f.Course+Status'
-                  '%7CD=Open&f.Type|B=postgraduate',
-                  'https://search.canberra.edu.au/s/search.html?collection=courses&form=course-search&profile'
-                  '=_default&query=!padre&course-search-widget__submit=&meta_C_and=COURSE&sort=metaH&f.Course+Status'
-                  '%7CD=Open&f.Type|B=research']
-    courses = []
+    start_urls = ["https://www.canberra.edu.au/future-students/study-at-uc/find-a-course/view-all-courses"]
+    institution = "University of Canberra"
+    uidPrefix = "AU-UOC-"
+    http_user = 'b4a56de85d954e9b924ec0e0b7696641'
 
-    degrees = {"graduate certificate": "7",
-               "graduate diploma": "8",
-               "master": research_coursework,
-               "bachelor": bachelor_honours,  # One course "Honours in Information Sciences" not captured, manually
-               # updated
-               "doctor": "6",
-               "certificate": "4",
-               "diploma": "5",
-               "associate degree": "1",
-               "university foundation studies": "13",
-               "non-award": "13",  # "University of Canberra International Foundation Studies" not captured, manually
-               # updated
-               "no match": "15"
-               }
+    degrees = {
+        "graduate certificate": "7",
+        "graduate diploma": "8",
+        "master": research_coursework,
+        "bachelor": bachelor_honours,  # One course "Honours in Information Sciences" not captured, manually
+        # updated
+        "doctor": "6",
+        "certificate": "4",
+        "certificate i": "4",
+        "certificate ii": "4",
+        "certificate iii": "4",
+        "certificate iv": "4",
+        "advanced diploma": "5",
+        "diploma": "5",
+        "associate degree": "1",
+        "university foundation studies": "13",
+        "non-award": "13",  # "University of Canberra International Foundation Studies" not captured, manually
+        # updated
+        "no match": "15"
+    }
 
     campuses = {
         "Singapore": "738",
@@ -55,33 +75,31 @@ class UocSpiderSpider(scrapy.Spider):
     }
 
     def parse(self, response):
-        self.courses.extend(response.xpath("//table[@class='table course_results']//tr/@data-fb-result").getall())
+        yield SplashRequest(response.request.url, callback=self.splash_parse, args={'wait': 20})
 
-        next_page = response.xpath("//ul[@class='pagination pagination-lg']/li/a[@rel='next']/@href").get()
+    def splash_parse(self, response):
+        courses = response.xpath("//td/a/@href").getall()
 
-        if next_page is not None:
-            yield response.follow(next_page, callback=self.parse)
-
-        for course in self.courses:
-            yield response.follow(course, callback=self.course_parse)
+        for item in courses:
+            yield response.follow(item, callback=self.course_parse)
 
     def course_parse(self, response):
-        institution = "University of Canberra"
-        uidPrefix = "AU-UOC-"
-
         course_item = Course()
 
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
-        course_item["institution"] = institution
-        course_item["internationalApplyURL"] = response.request.url
+        course_item["institution"] = self.institution
+
         course_item["domesticApplyURL"] = response.request.url
 
+        course_name = response.xpath("//h1[@id='page-title']/text()").getall()
+        if course_name:
+            pass
         course_name, course_code = re.split(r" - ", response.xpath("//h1[@class='course_title']/text()").get())
         course_item["courseName"] = course_name
         course_item["courseCode"] = course_code
-        course_item["uid"] = uidPrefix + re.sub(" ", "-", course_item["courseName"])
+        course_item["uid"] = self.uidPrefix + re.sub(" ", "-", course_item["courseName"])
 
         cricos = response.xpath("//table[@class='course-details-table']//tr/th[contains(text(), "
                                 "'CRICOS')]/following-sibling::td").get()
@@ -90,6 +108,7 @@ class UocSpiderSpider(scrapy.Spider):
             if len(cricos) > 0:
                 course_item["cricosCode"] = cricos[0]
                 course_item["internationalApps"] = 1
+                course_item["internationalApplyURL"] = response.request.url
 
         campus_holder = []
         location = response.xpath("//table[@class='course-details-table']//tr/th[contains(text(), "
@@ -121,7 +140,7 @@ class UocSpiderSpider(scrapy.Spider):
 
         learn = response.xpath("//div[@id='introduction']//h2[contains(text(), 'Study "
                                "a')]/following-sibling::ul").get()
-        if learn is not None:
+        if learn:
             course_item["whatLearn"] = learn
 
         for header, content in zip(response.xpath("//div[@id='fees']//table//tr/th/text()").getall(),
@@ -136,7 +155,7 @@ class UocSpiderSpider(scrapy.Spider):
                     course_item["internationalFeeAnnual"] = "".join(int_fee[0])
 
         entry = response.xpath("//div[@id='admission']/h2[contains(text(), 'Admission')]/following-sibling::p[1]").get()
-        if entry is not None:
+        if entry:
             course_item["entryRequirements"] = entry
 
         yield course_item
