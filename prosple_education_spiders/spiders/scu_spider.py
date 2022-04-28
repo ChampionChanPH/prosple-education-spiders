@@ -117,7 +117,7 @@ class ScuSpiderSpider(scrapy.Spider):
         courses = response.xpath("//div[@class='row results']//a[contains(@class, 'text-primary')]/@href").getall()
 
         for item in courses:
-            item = re.sub('202[0-3]/$', '', item.strip())
+            item = re.sub('202[2-3]/$', '', item.strip())
             yield response.follow(item, callback=self.course_parse)
 
         next_page = response.xpath("//a[@class='page-link'][contains(*/@class, 'angle-right')]/@href").get()
