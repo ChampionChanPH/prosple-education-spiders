@@ -132,8 +132,7 @@ class ScuSpiderSpider(scrapy.Spider):
         course_item['sourceURL'] = response.request.url
         course_item['published'] = 1
         course_item['institution'] = self.institution
-        # course_item["internationalApplyURL"] = response.request.url
-        # course_item["domesticApplyURL"] = response.request.url
+        course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1[@class='pageTitleFixSource']/text()").get()
         if course_name:
@@ -237,6 +236,7 @@ class ScuSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
+                course_item["internationalApplyURL"] = response.request.url
 
         atar = response.xpath("//td[contains(text(), 'ATAR')]/following-sibling::*/text()").get()
         if atar:
