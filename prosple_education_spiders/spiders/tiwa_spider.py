@@ -107,11 +107,11 @@ class TiwaSpiderSpider(scrapy.Spider):
 
             else:
                 if len(re.findall("\d",raw_course_name.split(" ")[0])) > 0:
-                    course_item.set_course_name(re.sub(raw_course_name.split(" ")[0]+" ","",raw_course_name), self.uidPrefix)
+                    course_item.set_course_name(re.sub(raw_course_name.split(" ")[0]+" ","",raw_course_name).strip(), self.uidPrefix)
                     # course_item["courseCode"] = raw_course_name.split(" ")[0]
 
                 else:
-                    course_item.set_course_name(raw_course_name, self.uidPrefix)
+                    course_item.set_course_name(raw_course_name.strip(), self.uidPrefix)
                 course_item.set_sf_dt(self.degrees)
         else:
             return
