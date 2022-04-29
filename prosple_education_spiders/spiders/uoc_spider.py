@@ -25,24 +25,26 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
         if course_item["teachingPeriod"] == 12:
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 12
+                    / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 52
+                    / 52
 
 
 class UocSpiderSpider(scrapy.Spider):
     name = 'uoc_spider'
-    start_urls = ["https://www.canberra.edu.au/future-students/study-at-uc/find-a-course/view-all-courses"]
+    start_urls = [
+        "https://www.canberra.edu.au/future-students/study-at-uc/find-a-course/view-all-courses"]
     institution = "University of Canberra"
     uidPrefix = "AU-UOC-"
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
@@ -51,7 +53,8 @@ class UocSpiderSpider(scrapy.Spider):
         "graduate certificate": "7",
         "graduate diploma": "8",
         "master": research_coursework,
-        "bachelor": bachelor_honours,  # One course "Honours in Information Sciences" not captured, manually
+        # One course "Honours in Information Sciences" not captured, manually
+        "bachelor": bachelor_honours,
         # updated
         "doctor": "6",
         "certificate": "4",
@@ -63,7 +66,8 @@ class UocSpiderSpider(scrapy.Spider):
         "diploma": "5",
         "associate degree": "1",
         "university foundation studies": "13",
-        "non-award": "13",  # "University of Canberra International Foundation Studies" not captured, manually
+        # "University of Canberra International Foundation Studies" not captured, manually
+        "non-award": "13",
         # updated
         "no match": "15"
     }
@@ -95,7 +99,8 @@ class UocSpiderSpider(scrapy.Spider):
 
         course_name = response.xpath("//h1[@id='page-title']/text()").get()
         if re.search("\(", course_name):
-            course_name, course_code = re.findall("(.*) \((.*)\)$", course_name, re.I | re.M)[0]
+            course_name, course_code = re.findall(
+                "(.*) \((.*)\)$", course_name.strip(), re.I | re.M)[0]
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
             course_item["courseCode"] = course_code
         else:
@@ -127,7 +132,8 @@ class UocSpiderSpider(scrapy.Spider):
         if career is not None:
             course_item["careerPathways"] = career
 
-        overview = response.xpath("//div[@id='introduction']//h2[contains(text(), 'Study a')]/preceding::p").getall()
+        overview = response.xpath(
+            "//div[@id='introduction']//h2[contains(text(), 'Study a')]/preceding::p").getall()
         if len(overview) == 0:
             overview = response.xpath("//div[@id='introduction']/h2[contains(text(), "
                                       "'Introduction')]/following-sibling::p").getall()
@@ -154,7 +160,8 @@ class UocSpiderSpider(scrapy.Spider):
                 if len(int_fee) > 0:
                     course_item["internationalFeeAnnual"] = "".join(int_fee[0])
 
-        entry = response.xpath("//div[@id='admission']/h2[contains(text(), 'Admission')]/following-sibling::p[1]").get()
+        entry = response.xpath(
+            "//div[@id='admission']/h2[contains(text(), 'Admission')]/following-sibling::p[1]").get()
         if entry:
             course_item["entryRequirements"] = entry
 
