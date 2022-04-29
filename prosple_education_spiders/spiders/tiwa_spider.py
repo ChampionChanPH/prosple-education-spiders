@@ -118,6 +118,9 @@ class TiwaSpiderSpider(scrapy.Spider):
         if course_item["courseName"] == "Diploma of Maritime Operations [Master less than 500 GT]":
             course_item["rawStudyfield"] = "maritime operations [master less than 500 gt]"
 
+        if course_item["courseName"] == "Diploma of Engineering - Technical":
+            course_item["rawStudyfield"] = 'engineering - technical'
+
         course_item["uid"] = self.uidPrefix + course_item["courseName"]
 
         # StudyPerth override
