@@ -171,7 +171,7 @@ class LtuonlineSpiderSpider(scrapy.Spider):
             "//h2[@class='h3'][contains(text(), 'Entry requirements')]/following-sibling::*").getall()
         holder = []
         for item in entry:
-            if re.search('^<(p|o|u)', item):
+            if re.search('^<(p|o|u|f)', item):
                 holder.append(item)
         if holder:
             course_item['entryRequirements'] = strip_tags(''.join(holder), remove_all_tags=False,
