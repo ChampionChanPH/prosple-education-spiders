@@ -134,28 +134,27 @@ class ScuSpiderSpider(scrapy.Spider):
         course_item['institution'] = self.institution
         course_item["domesticApplyURL"] = response.request.url
 
-        course_name = response.xpath("//h1[@class='pageTitleFixSource']/text()").get()
+        course_name = response.xpath("//h1[@class='mb-2 pageTitleFixSource']/text()").get()
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        course_code = response.xpath(
-            "//h1[@class='pageTitleFixSource']/following-sibling::*[contains(text(), 'Course Code')]").get()
+        course_code = response.xpath("//dt[span/text()='Course code']/following-sibling::dd/text()").get()
         if course_code:
-            course_code = re.findall("(?<=Course Code: )\w+", course_code, re.I)
-            if course_code:
-                course_item["courseCode"] = course_code[0]
-                if 'uid' in course_item:
-                    course_item['uid'] = course_item['uid'] + '-' + course_item['courseCode']
+            course_item["courseCode"] = strip_tags(course_code)
+            if 'uid' in course_item:
+                course_item['uid'] = course_item['uid'] + '-' + course_item['courseCode']
 
-        overview = response.xpath("//*[text()='Course summary']/following-sibling::*/*").getall()
+        overview = response.xpath("//div[@id='course-overview']//div[@class='show-domestic']/*").getall()
+        if not overview:
+            overview = response.xpath("//div[@id='course-overview']//div[@class='show-international']/*").getall()
         if overview:
             summary = [strip_tags(x) for x in overview]
             course_item.set_summary(' '.join(summary))
             course_item["overview"] = strip_tags(''.join(overview), remove_all_tags=False)
 
-        duration = response.xpath("//div[@id='domestic']//td[text()='Duration']/following-sibling::*").get()
+        duration = response.xpath("//dt[span/text()='Duration']/following-sibling::dd[@class='show-domestic']/text()").get()
         if not duration:
-            duration = response.xpath("//div[@id='international']//td[text()='Duration']/following-sibling::*").get()
+            duration = response.xpath("//dt[span/text()='Duration']/following-sibling::dd[@class='show-international']/text()").get()
         if duration:
             duration_full = re.findall(
                 "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
@@ -238,11 +237,24 @@ class ScuSpiderSpider(scrapy.Spider):
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
-        atar = response.xpath("//td[contains(text(), 'ATAR')]/following-sibling::*/text()").get()
+        atar = response.xpath("//dt[span/text()='ATAR']/following-sibling::dd/text()").get()
         if atar:
-            atar = re.findall('\d+?(?= /)', atar, re.M)
+            atar = re.findall('\d+', atar, re.M)
             if atar:
                 course_item['guaranteedEntryScore'] = float(atar[0])
+
+        start = response.xpath(
+            "//dt[span/text()='Start date']/following-sibling::dd[@class='show-domestic']/text()").get()
+        if not start:
+            start = response.xpath(
+                "//dt[span/text()='Start date']/following-sibling::dd[@class='show-international']/text()").get()
+        if start:
+            start_holder = []
+            for month in self.months:
+                if re.search(month, start, re.M):
+                    start_holder.append(self.months[month])
+            if start_holder:
+                course_item["startMonths"] = "|".join(start_holder)
 
         career = response.xpath("//div[@id='collapseCrsCO']/div[@class='card-body']/*").getall()
         if career:

@@ -93,13 +93,13 @@ class UocSpiderSpider(scrapy.Spider):
 
         course_item["domesticApplyURL"] = response.request.url
 
-        course_name = response.xpath("//h1[@id='page-title']/text()").getall()
-        if course_name:
-            pass
-        course_name, course_code = re.split(r" - ", response.xpath("//h1[@class='course_title']/text()").get())
-        course_item["courseName"] = course_name
-        course_item["courseCode"] = course_code
-        course_item["uid"] = self.uidPrefix + re.sub(" ", "-", course_item["courseName"])
+        course_name = response.xpath("//h1[@id='page-title']/text()").get()
+        if re.search("\(", course_name):
+            course_name, course_code = re.findall("(.*) \((.*)\)$", course_name, re.I | re.M)[0]
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
+            course_item["courseCode"] = course_code
+        else:
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         cricos = response.xpath("//table[@class='course-details-table']//tr/th[contains(text(), "
                                 "'CRICOS')]/following-sibling::td").get()
