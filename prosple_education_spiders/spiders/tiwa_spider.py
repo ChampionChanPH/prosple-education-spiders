@@ -104,7 +104,6 @@ class TiwaSpiderSpider(scrapy.Spider):
                 course_item.set_course_name("Advanced Diploma of Maritime Operations", self.uidPrefix)
                 course_item.set_sf_dt(self.degrees)
                 course_item.set_course_name("Advanced Diploma of Maritime Operations - Master Unlimited", self.uidPrefix)
-
             else:
                 if len(re.findall("\d",raw_course_name.split(" ")[0])) > 0:
                     course_item.set_course_name(re.sub(raw_course_name.split(" ")[0]+" ","",raw_course_name).strip(), self.uidPrefix)
@@ -115,6 +114,9 @@ class TiwaSpiderSpider(scrapy.Spider):
                 course_item.set_sf_dt(self.degrees)
         else:
             return
+
+        if course_item["courseName"] == "Diploma of Maritime Operations [Master less than 500 GT]":
+            course_item["rawStudyfield"] = "maritime operations [master less than 500 gt]"
 
         course_item["uid"] = self.uidPrefix + course_item["courseName"]
 
