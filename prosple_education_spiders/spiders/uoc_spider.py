@@ -138,7 +138,13 @@ class UocSpiderSpider(scrapy.Spider):
         else:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//div[@class='introduction']/*").getall()
+        overview = response.xpath(
+            "//div[@class='introduction']/div/*").getall()
+        if not overview:
+            overview = response.xpath(
+                "//div[@class='introduction']/*").getall()
+        if not overview:
+            overview = response.xpath("//div[@class='introduction']").getall()
         holder = []
         for index, item in enumerate(overview):
             if not re.search("^<(p|o|u|d)", item) and index != 0:
@@ -152,19 +158,7 @@ class UocSpiderSpider(scrapy.Spider):
                 ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         learn = response.xpath(
-            "//div[@class='introduction']/*[contains(text(), 'Study a')]/following-sibling::*").getall()
-        holder = []
-        for index, item in enumerate(learn):
-            if not re.search("^<(p|o|u|d)", item) and index != 0:
-                break
-            else:
-                holder.append(item)
-        if holder:
-            course_item["whatLearn"] = strip_tags(
-                ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
-
-        learn = response.xpath(
-            "//div[@class='introduction']/*[contains(text(), 'Study a')]/following-sibling::*").getall()
+            "//div[@class='introduction']//h4[contains(text(), 'and you will:')]/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(learn):
             if not re.search("^<(p|o|u|d)", item) and index != 0:
@@ -176,7 +170,7 @@ class UocSpiderSpider(scrapy.Spider):
                 ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath(
-            "//div[@class='introduction']/*[text()='Career opportunities']/following-sibling::*").getall()
+            "//div[@class='introduction']//h4[text()='Career opportunities']/following-sibling::*").getall()
         holder = []
         for index, item in enumerate(career):
             if not re.search("^<(p|o|u|d)", item) and index != 0:
