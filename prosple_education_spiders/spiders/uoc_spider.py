@@ -188,7 +188,7 @@ class UocSpiderSpider(scrapy.Spider):
                 ''.join(credit), remove_all_tags=False, remove_hyperlinks=True)
 
         table_headers = response.xpath(
-            "//div[@class='course-details section']//table[@id='custom-table-css']/thead//th").getall()
+            "//div[@class='course-details section']//table[@id='custom-table-css']/thead//th/text()").getall()
         table_contents = response.xpath(
             "//div[@class='course-details section']//table[@id='custom-table-css']/tbody//td").getall()
 
@@ -252,6 +252,27 @@ class UocSpiderSpider(scrapy.Spider):
                         #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
                         #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                         #     self.get_period(duration_full[1][1].lower(), course_item)
+
+        dom_fee = response.xpath(
+            "//div[contains(@id, 'item-0-content')]//div[@class='course-details section']//table[@id='custom-table-css']/tbody//td").getall()
+        if dom_fee:
+            dom_fee = dom_fee[-1]
+            dom_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
+            dom_fee = [float(''.join(x)) for x in dom_fee]
+            if dom_fee:
+                course_item["domesticFeeAnnual"] = max(dom_fee)
+                get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+        int_fee = response.xpath(
+            "//div[contains(@id, 'item-0-content')]//div[@class='course-details section']//table[@id='custom-table-css']/tbody//td").getall()
+        if int_fee:
+            int_fee = int_fee[-1]
+            int_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
+            int_fee = [float(''.join(x)) for x in int_fee]
+            if int_fee:
+                course_item["internationalFeeAnnual"] = max(int_fee)
+                get_total("internationalFeeAnnual",
+                          "internationalFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=[
                               "and", "/", ","], type_delims=["of", "in", "by"])
