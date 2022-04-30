@@ -182,6 +182,11 @@ class UocSpiderSpider(scrapy.Spider):
             course_item["careerPathways"] = strip_tags(
                 ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
+        credit = response.xpath("//div[@id='credit_arrangements']/*").getall()
+        if credit:
+            course_item["creditTransfer"] = strip_tags(
+                ''.join(credit), remove_all_tags=False, remove_hyperlinks=True)
+
         table_headers = response.xpath(
             "//div[@class='course-details section']//table[@id='custom-table-css']/thead//th").getall()
         table_contents = response.xpath(
