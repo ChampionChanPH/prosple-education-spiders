@@ -57,7 +57,9 @@ class UocSpiderSpider(scrapy.Spider):
         "bachelor": bachelor_honours,
         # updated
         "doctor": "6",
+        "professional doctorate": "6",
         "certificate": "4",
+        "undergraduate certificate": "4",
         "certificate i": "4",
         "certificate ii": "4",
         "certificate iii": "4",
@@ -72,11 +74,41 @@ class UocSpiderSpider(scrapy.Spider):
         "no match": "15"
     }
 
+    months = {
+        "January": "01",
+        "February": "02",
+        "March": "03",
+        "April": "04",
+        "May": "05",
+        "June": "06",
+        "July": "07",
+        "August": "08",
+        "September": "09",
+        "October": "10",
+        "November": "11",
+        "December": "12"
+    }
+
     campuses = {
         "Singapore": "738",
         "Canberra": "735",
         "Sydney": "737"
     }
+
+    teaching_periods = {
+        "year": 1,
+        "semester": 2,
+        "trimester": 3,
+        "quarter": 4,
+        "month": 12,
+        "week": 52,
+        "day": 365
+    }
+
+    def get_period(self, string_to_use, course_item):
+        for item in self.teaching_periods:
+            if re.search(item, string_to_use):
+                course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
         yield SplashRequest(response.request.url, callback=self.splash_parse, args={'wait': 20})
@@ -106,63 +138,119 @@ class UocSpiderSpider(scrapy.Spider):
         else:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        cricos = response.xpath("//table[@class='course-details-table']//tr/th[contains(text(), "
-                                "'CRICOS')]/following-sibling::td").get()
-        if cricos is not None:
-            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos)
-            if len(cricos) > 0:
-                course_item["cricosCode"] = cricos[0]
-                course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.request.url
+        overview = response.xpath("//div[@class='introduction']/*").getall()
+        holder = []
+        for index, item in enumerate(overview):
+            if not re.search("^<(p|o|u|d)", item) and index != 0:
+                break
+            else:
+                holder.append(item)
+        if holder:
+            summary = [strip_tags(x) for x in holder]
+            course_item.set_summary(' '.join(summary))
+            course_item["overview"] = strip_tags(
+                ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        campus_holder = []
-        location = response.xpath("//table[@class='course-details-table']//tr/th[contains(text(), "
-                                  "'Location')]/following-sibling::td").get()
-        if location is not None:
+        learn = response.xpath(
+            "//div[@class='introduction']/*[contains(text(), 'Study a')]/following-sibling::*").getall()
+        holder = []
+        for index, item in enumerate(learn):
+            if not re.search("^<(p|o|u|d)", item) and index != 0:
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item["whatLearn"] = strip_tags(
+                ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        learn = response.xpath(
+            "//div[@class='introduction']/*[contains(text(), 'Study a')]/following-sibling::*").getall()
+        holder = []
+        for index, item in enumerate(learn):
+            if not re.search("^<(p|o|u|d)", item) and index != 0:
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item["whatLearn"] = strip_tags(
+                ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        career = response.xpath(
+            "//div[@class='introduction']/*[text()='Career opportunities']/following-sibling::*").getall()
+        holder = []
+        for index, item in enumerate(career):
+            if not re.search("^<(p|o|u|d)", item) and index != 0:
+                break
+            else:
+                holder.append(item)
+        if holder:
+            course_item["careerPathways"] = strip_tags(
+                ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        table_headers = response.xpath(
+            "//div[@class='course-details section']//table[@id='custom-table-css']/thead//th").getall()
+        table_contents = response.xpath(
+            "//div[@class='course-details section']//table[@id='custom-table-css']/tbody//td").getall()
+
+        if 'CRICOS code' in table_headers:
+            cricos = table_contents[table_headers.index('CRICOS code')]
+        if cricos:
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if cricos:
+                course_item["cricosCode"] = ", ".join(cricos)
+
+        if 'Location' in table_headers:
+            location = table_contents[table_headers.index('Location')]
+        campus_holder = set()
+        if location:
             for campus in self.campuses:
                 if re.search(campus, location, re.I):
-                    campus_holder.append(self.campuses[campus])
-        if len(campus_holder) > 0:
-            course_item["campusNID"] = "|".join(set(campus_holder))
+                    campus_holder.add(self.campuses[campus])
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
 
-        course_item.set_sf_dt(self.degrees)
+        if 'Selection rank ' in table_headers:
+            atar = table_contents[table_headers.index('Selection rank ')]
+        if atar:
+            atar = re.findall("\d{2,3}", atar, re.M)
+            if atar:
+                course_item["cricosCode"] = float(atar[0])
 
-        career = response.xpath("//div[@id='introduction']/h2[contains(text(), 'Career "
-                                "opportunities')]/following-sibling::ul").get()
-        if career is not None:
-            course_item["careerPathways"] = career
+        if 'Duration' in table_headers:
+            duration = table_contents[table_headers.index('Duration')]
+        if duration:
+            duration_full = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
+                duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
+                duration, re.I | re.M | re.DOTALL)
+            if not duration_full and duration_part:
+                self.get_period(duration_part[0][1].lower(), course_item)
+            if duration_full:
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
+            if duration_part:
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
+                else:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                        / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
+                    course_item["durationMinFull"] = float(duration_full[0][0])
+                    self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 1:
+                    #     course_item["durationMinFull"] = float(duration_full[0][0])
+                    #     self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 2:
+                    #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     self.get_period(duration_full[1][1].lower(), course_item)
 
-        overview = response.xpath(
-            "//div[@id='introduction']//h2[contains(text(), 'Study a')]/preceding::p").getall()
-        if len(overview) == 0:
-            overview = response.xpath("//div[@id='introduction']/h2[contains(text(), "
-                                      "'Introduction')]/following-sibling::p").getall()
-            if len(overview) > 0:
-                overview = "".join(overview)
-                course_item["overview"] = strip_tags(overview, False)
-        else:
-            overview = "".join(overview)
-            course_item["overview"] = strip_tags(overview, False)
-
-        learn = response.xpath("//div[@id='introduction']//h2[contains(text(), 'Study "
-                               "a')]/following-sibling::ul").get()
-        if learn:
-            course_item["whatLearn"] = learn
-
-        for header, content in zip(response.xpath("//div[@id='fees']//table//tr/th/text()").getall(),
-                                   response.xpath("//div[@id='fees']//table//tr/td/text()").getall()):
-            if re.search("domestic", header, re.I):
-                dom_fee = re.findall("\$(\d+),?(\d{3})", content)
-                if len(dom_fee) > 0:
-                    course_item["domesticFeeAnnual"] = "".join(dom_fee[0])
-            if re.search("international", header, re.I):
-                int_fee = re.findall("\$(\d+),?(\d{3})", content)
-                if len(int_fee) > 0:
-                    course_item["internationalFeeAnnual"] = "".join(int_fee[0])
-
-        entry = response.xpath(
-            "//div[@id='admission']/h2[contains(text(), 'Admission')]/following-sibling::p[1]").get()
-        if entry:
-            course_item["entryRequirements"] = entry
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              "and", "/", ","], type_delims=["of", "in", "by"])
 
         yield course_item
