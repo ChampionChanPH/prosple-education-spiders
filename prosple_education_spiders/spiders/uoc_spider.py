@@ -194,61 +194,64 @@ class UocSpiderSpider(scrapy.Spider):
 
         if 'CRICOS code' in table_headers:
             cricos = table_contents[table_headers.index('CRICOS code')]
-        if cricos:
-            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
-                course_item["cricosCode"] = ", ".join(cricos)
+                cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+                if cricos:
+                    course_item["cricosCode"] = ", ".join(cricos)
 
         if 'Location' in table_headers:
             location = table_contents[table_headers.index('Location')]
-        campus_holder = set()
-        if location:
-            for campus in self.campuses:
-                if re.search(campus, location, re.I):
-                    campus_holder.add(self.campuses[campus])
-        if campus_holder:
-            course_item['campusNID'] = '|'.join(campus_holder)
+            campus_holder = set()
+            if location:
+                for campus in self.campuses:
+                    if re.search(campus, location, re.I):
+                        campus_holder.add(self.campuses[campus])
+            if campus_holder:
+                course_item['campusNID'] = '|'.join(campus_holder)
 
         if 'Selection rank ' in table_headers:
             atar = table_contents[table_headers.index('Selection rank ')]
-        if atar:
-            atar = re.findall("\d{2,3}", atar, re.M)
             if atar:
-                course_item["cricosCode"] = float(atar[0])
+                atar = re.findall("\d{2,3}", atar, re.M)
+                if atar:
+                    course_item["cricosCode"] = float(atar[0])
 
         if 'Duration' in table_headers:
             duration = table_contents[table_headers.index('Duration')]
-        if duration:
-            duration_full = re.findall(
-                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
-                duration, re.I | re.M | re.DOTALL)
-            duration_part = re.findall(
-                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
-                duration, re.I | re.M | re.DOTALL)
-            if not duration_full and duration_part:
-                self.get_period(duration_part[0][1].lower(), course_item)
-            if duration_full:
-                course_item["durationMinFull"] = float(duration_full[0][0])
-                self.get_period(duration_full[0][1].lower(), course_item)
-            if duration_part:
-                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
-                    course_item["durationMinPart"] = float(duration_part[0][0])
-                else:
-                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
-                        / self.teaching_periods[duration_part[0][1].lower()]
-            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
-                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
-                                           duration, re.I | re.M | re.DOTALL)
+            if duration:
+                duration_full = re.findall(
+                    "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
+                    duration, re.I | re.M | re.DOTALL)
+                duration_part = re.findall(
+                    "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
+                    duration, re.I | re.M | re.DOTALL)
+                if not duration_full and duration_part:
+                    self.get_period(duration_part[0][1].lower(), course_item)
                 if duration_full:
                     course_item["durationMinFull"] = float(duration_full[0][0])
                     self.get_period(duration_full[0][1].lower(), course_item)
-                    # if len(duration_full) == 1:
-                    #     course_item["durationMinFull"] = float(duration_full[0][0])
-                    #     self.get_period(duration_full[0][1].lower(), course_item)
-                    # if len(duration_full) == 2:
-                    #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
-                    #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
-                    #     self.get_period(duration_full[1][1].lower(), course_item)
+                if duration_part:
+                    if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                        course_item["durationMinPart"] = float(
+                            duration_part[0][0])
+                    else:
+                        course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                            / self.teaching_periods[duration_part[0][1].lower()]
+                if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                    duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                               duration, re.I | re.M | re.DOTALL)
+                    if duration_full:
+                        course_item["durationMinFull"] = float(
+                            duration_full[0][0])
+                        self.get_period(
+                            duration_full[0][1].lower(), course_item)
+                        # if len(duration_full) == 1:
+                        #     course_item["durationMinFull"] = float(duration_full[0][0])
+                        #     self.get_period(duration_full[0][1].lower(), course_item)
+                        # if len(duration_full) == 2:
+                        #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                        #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                        #     self.get_period(duration_full[1][1].lower(), course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=[
                               "and", "/", ","], type_delims=["of", "in", "by"])
