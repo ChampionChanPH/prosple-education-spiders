@@ -142,7 +142,8 @@ class UocSpiderSpider(scrapy.Spider):
             "//div[@class='introduction']/div/*").getall()
         if not overview:
             overview = response.xpath(
-                "//div[@class='introduction']/*").getall()
+                "//div[@class='introduction']/node()").getall()
+            overview = [x for x in overview if strip_tags(x) != ""]
         if not overview:
             overview = response.xpath("//div[@class='introduction']").getall()
         holder = []
