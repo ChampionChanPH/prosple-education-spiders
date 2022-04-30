@@ -264,7 +264,7 @@ class UocSpiderSpider(scrapy.Spider):
                 get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
         int_fee = response.xpath(
-            "//div[contains(@id, 'item-0-content')]//div[@class='course-details section']//table[@id='custom-table-css']/tbody//td").getall()
+            "//div[contains(@id, 'item-1-content')]//div[@class='course-details section']//table[@id='custom-table-css']/tbody//td").getall()
         if int_fee:
             int_fee = int_fee[-1]
             int_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
