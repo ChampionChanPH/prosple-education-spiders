@@ -2,12 +2,14 @@
 
 from ..standard_libs import *
 
+
 def bachelor(course_item):
     if "honour" in course_item["courseName"].lower() or "hons" in course_item["courseName"].lower():
         return "3"
 
     else:
         return "2"
+
 
 class TiwaSpiderSpider(scrapy.Spider):
     name = 'tiwa_spider'
@@ -49,7 +51,7 @@ class TiwaSpiderSpider(scrapy.Spider):
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     blacklist_urls = []
     scraped_urls = []
-    superlist_urls = [] #["https://www.tafeinternational.wa.edu.au/your-study-options/study-at-tafe/course-catalogue/course-outline?courseId=364fc5b7-74d4-e511-bf2c-00505681920a"]
+    superlist_urls = []  # ["https://www.tafeinternational.wa.edu.au/your-study-options/study-at-tafe/course-catalogue/course-outline?courseId=364fc5b7-74d4-e511-bf2c-00505681920a"]
 
     institution = "TAFE International Western Australia"
     uidPrefix = "AU-TIWA-"
@@ -65,7 +67,8 @@ class TiwaSpiderSpider(scrapy.Spider):
     }
 
     def parse(self, response):
-        categories = response.css("div#MSOZoneCell_WebPartWPQ4 a::attr(href)").extract()
+        categories = response.css(
+            "div#MSOZoneCell_WebPartWPQ4 a::attr(href)").extract()
         # print(len(courses))
         for category in categories:
             # print(category)
@@ -86,7 +89,6 @@ class TiwaSpiderSpider(scrapy.Spider):
         canonical_group = "StudyPerth"
         group_number = 23
 
-
         course_item = Course()
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
         course_item["sourceURL"] = response.meta['url']
@@ -101,25 +103,25 @@ class TiwaSpiderSpider(scrapy.Spider):
         # print(raw_course_name)
         if raw_course_name:
             if "master unlimited" in raw_course_name.lower():
-                course_item.set_course_name("Advanced Diploma of Maritime Operations", self.uidPrefix)
+                course_item.set_course_name(
+                    "Advanced Diploma of Maritime Operations", self.uidPrefix)
                 course_item.set_sf_dt(self.degrees)
-                course_item.set_course_name("Advanced Diploma of Maritime Operations - Master Unlimited", self.uidPrefix)
+                course_item.set_course_name(
+                    "Advanced Diploma of Maritime Operations - Master Unlimited", self.uidPrefix)
             else:
-                if len(re.findall("\d",raw_course_name.split(" ")[0])) > 0:
-                    course_item.set_course_name(re.sub(raw_course_name.split(" ")[0]+" ","",raw_course_name).strip(), self.uidPrefix)
+                if len(re.findall("\d", raw_course_name.split(" ")[0])) > 0:
+                    course_item.set_course_name(re.sub(raw_course_name.split(
+                        " ")[0]+" ", "", raw_course_name).strip(), self.uidPrefix)
                     # course_item["courseCode"] = raw_course_name.split(" ")[0]
 
                 else:
-                    course_item.set_course_name(raw_course_name.strip(), self.uidPrefix)
-                course_item.set_sf_dt(self.degrees)
+                    course_item.set_course_name(
+                        raw_course_name.strip(), self.uidPrefix)
         else:
             return
 
         if course_item["courseName"] == "Diploma of Maritime Operations [Master less than 500 GT]":
             course_item["rawStudyfield"] = "maritime operations [master less than 500 gt]"
-
-        if course_item["courseName"] == "Diploma of Engineering - Technical":
-            course_item["rawStudyfield"] = 'engineering - technical'
 
         course_item["uid"] = self.uidPrefix + course_item["courseName"]
 
@@ -131,11 +133,16 @@ class TiwaSpiderSpider(scrapy.Spider):
         # print(codes)
         if codes:
             try:
-                course_item["courseCode"] = re.findall("National code: (.*?)\s",codes)[0]
-                course_item["cricosCode"] = re.findall("CRICOS code: ([\w\d]*)",codes)[0]
+                course_item["courseCode"] = re.findall(
+                    "National code: (.*?)\s", codes)[0]
+                course_item["cricosCode"] = re.findall(
+                    "CRICOS code: ([\w\d]*)", codes)[0]
 
             except IndexError:
                 print("Missing code")
+
+        if "cricosCode" in course_item and course_item["cricosCode"] == "079078C":
+            course_item["rawStudyfield"] = 'engineering - technical'
 
         overview = response.css("article.first p::text").extract()
         if overview:
@@ -146,15 +153,16 @@ class TiwaSpiderSpider(scrapy.Spider):
         if entry:
             course_item["entryRequirements"] = entry
 
-        pathways = response.css('div#ctl00_PlaceHolderMain_ctl00_CourseOutline_CourseCareerOpportunities_CareerOpportunities ul').extract_first()
+        pathways = response.css(
+            'div#ctl00_PlaceHolderMain_ctl00_CourseOutline_CourseCareerOpportunities_CareerOpportunities ul').extract_first()
         if pathways:
             course_item["careerPathways"] = pathways
 
-        campuses = unique_list(response.css('span[data-bind*="text: Campus.Location()"]::text').extract())
+        campuses = unique_list(response.css(
+            'span[data-bind*="text: Campus.Location()"]::text').extract())
         if campuses:
             campuses = map_convert(self.campus_map, campuses)
             course_item["campusNID"] = "|".join(campuses["converted"])
-
 
         course_data = response.css("table.course-data tr")
         course_item["feesRaw"] = []
@@ -163,27 +171,33 @@ class TiwaSpiderSpider(scrapy.Spider):
             row_span = row.css("th span::text").extract_first()
             if row_td and row_span:
                 if row_span == "Duration:":
-                    duration_raw = re.findall("-->(.*?)<!",row_td)[0].split(" ")
+                    duration_raw = re.findall(
+                        "-->(.*?)<!", row_td)[0].split(" ")
                     course_item["durationMinFull"] = float(duration_raw[0])
                     course_item["teachingPeriod"] = get_period(duration_raw[1])
 
-                    intakes = cleanspace(row.css("#SelectedIntakes::text").extract_first())
+                    intakes = cleanspace(
+                        row.css("#SelectedIntakes::text").extract_first())
                     intakes = intakes.strip("()").split(" ")
                     intakes = convert_months(intakes)
                     course_item["startMonths"] = "|".join(intakes)
 
                 elif "tuition fee" in row_span.lower():
-                    value = re.sub(",","",re.findall("\$([\d,]+)",row_td)[0])
-                    period = re.findall("per\s(\w+)",row_td)
-                    multiplier = re.findall("\((\d+)\s\w+\)",row_td)
+                    value = re.sub(",", "", re.findall(
+                        "\$([\d,]+)", row_td)[0])
+                    period = re.findall("per\s(\w+)", row_td)
+                    multiplier = re.findall("\((\d+)\s\w+\)", row_td)
 
                     if period:
                         multiplier = int(multiplier[0])
                         if period[0] == "semester" and multiplier > 1:
-                            course_item["internationalFeeAnnual"] = int(value) * 2
-                        course_item["internationalFeeTotal"] = int(value) * multiplier
+                            course_item["internationalFeeAnnual"] = int(
+                                value) * 2
+                        course_item["internationalFeeTotal"] = int(
+                            value) * multiplier
 
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              "and", "/", ","], type_delims=["of", "in", "by"])
 
         # if "flag" in course_item:
         yield course_item
-
