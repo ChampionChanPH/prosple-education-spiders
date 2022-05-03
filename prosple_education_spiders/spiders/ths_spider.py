@@ -25,25 +25,26 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
         if course_item["teachingPeriod"] == 12:
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 12
+                    / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 52
+                    / 52
 
 
 class ThsSpiderSpider(scrapy.Spider):
     name = 'ths_spider'
     start_urls = ['https://hotelschool.scu.edu.au/courses/']
-    institution = "The Hotel School"
+    institution = "The Hotel School Australia"
     uidPrefix = "AU-THS-"
 
     degrees = {
@@ -117,7 +118,8 @@ class ThsSpiderSpider(scrapy.Spider):
         course_name = response.xpath("//title/text()").get()
         if course_name:
             course_name = re.split(" \| ", course_name, re.DOTALL)[0]
-            course_item.set_course_name(strip_tags(course_name), self.uidPrefix)
+            course_item.set_course_name(
+                strip_tags(course_name), self.uidPrefix)
 
         overview = response.xpath("//*[@class='intro-wrapper']/*").getall()
         holder = []
@@ -129,9 +131,11 @@ class ThsSpiderSpider(scrapy.Spider):
         if holder:
             summary = [strip_tags(x) for x in holder]
             course_item.set_summary(' '.join(summary))
-            course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+            course_item["overview"] = strip_tags(
+                ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        duration = response.xpath("//*[@class='ico-time']/following-sibling::node()").get()
+        duration = response.xpath(
+            "//*[@class='ico-time']/following-sibling::node()").get()
         if duration:
             duration_full = re.findall(
                 "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
@@ -149,7 +153,7 @@ class ThsSpiderSpider(scrapy.Spider):
                     course_item["durationMinPart"] = float(duration_part[0][0])
                 else:
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
-                                                     / self.teaching_periods[duration_part[0][1].lower()]
+                        / self.teaching_periods[duration_part[0][1].lower()]
             if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
                 duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
                                            duration, re.I | re.M | re.DOTALL)
@@ -164,7 +168,8 @@ class ThsSpiderSpider(scrapy.Spider):
                     #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                     #     self.get_period(duration_full[1][1].lower(), course_item)
 
-        intake = response.xpath("//*[@class='ico-calendar']/following-sibling::node()").getall()
+        intake = response.xpath(
+            "//*[@class='ico-calendar']/following-sibling::node()").getall()
         if intake:
             intake = "".join(intake)
             start_holder = []
@@ -174,8 +179,10 @@ class ThsSpiderSpider(scrapy.Spider):
             if start_holder:
                 course_item["startMonths"] = "|".join(start_holder)
 
-        location = response.xpath("//*[@class='ico-campus']/following-sibling::node()").getall()
-        online = response.xpath("//*[@class='ico-course-online']/following-sibling::node()").get()
+        location = response.xpath(
+            "//*[@class='ico-campus']/following-sibling::node()").getall()
+        online = response.xpath(
+            "//*[@class='ico-course-online']/following-sibling::node()").get()
         campus_holder = set()
         study_holder = set()
         if location:
@@ -191,7 +198,8 @@ class ThsSpiderSpider(scrapy.Spider):
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
 
-        cricos = response.xpath("//*[@class='ico-cricos']/following-sibling::node()").get()
+        cricos = response.xpath(
+            "//*[@class='ico-cricos']/following-sibling::node()").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
@@ -207,10 +215,12 @@ class ThsSpiderSpider(scrapy.Spider):
         holder = []
         if apply_domestic:
             holder.append("<p><strong>Domestic Students</strong></p>")
-            holder.append(strip_tags(apply_domestic, remove_all_tags=False, remove_hyperlinks=True))
+            holder.append(strip_tags(apply_domestic,
+                          remove_all_tags=False, remove_hyperlinks=True))
         if apply_international:
             holder.append("<p><strong>International Students</strong></p>")
-            holder.append(strip_tags(apply_international, remove_all_tags=False, remove_hyperlinks=True))
+            holder.append(strip_tags(apply_international,
+                          remove_all_tags=False, remove_hyperlinks=True))
         if holder:
             course_item["howToApply"] = "".join(holder)
 
@@ -223,10 +233,12 @@ class ThsSpiderSpider(scrapy.Spider):
         holder = []
         if entry_domestic:
             holder.append("<p><strong>Domestic Students</strong></p>")
-            holder.append(strip_tags(entry_domestic, remove_all_tags=False, remove_hyperlinks=True))
+            holder.append(strip_tags(entry_domestic,
+                          remove_all_tags=False, remove_hyperlinks=True))
         if entry_international:
             holder.append("<p><strong>International Students</strong></p>")
-            holder.append(strip_tags(entry_international, remove_all_tags=False, remove_hyperlinks=True))
+            holder.append(strip_tags(entry_international,
+                          remove_all_tags=False, remove_hyperlinks=True))
         if holder:
             course_item["entryRequirements"] = "".join(holder)
 
@@ -238,8 +250,10 @@ class ThsSpiderSpider(scrapy.Spider):
             else:
                 holder.append(item)
         if holder:
-            course_item["careerPathways"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+            course_item["careerPathways"] = strip_tags(
+                ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by', 'for'])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              'and', '/'], type_delims=['of', 'in', 'by', 'for'])
 
         yield course_item
