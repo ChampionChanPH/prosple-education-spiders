@@ -49,9 +49,7 @@ class TiwaSpiderSpider(scrapy.Spider):
     }
 
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
-    blacklist_urls = [
-        "https://www.tafeinternational.wa.edu.au/your-study-options/study-at-tafe/course-catalogue/course-outline?courseId=dbb19d06-5245-e411-a0e7-00505681920a"
-    ]
+    blacklist_urls = []
     scraped_urls = []
     superlist_urls = []  # ["https://www.tafeinternational.wa.edu.au/your-study-options/study-at-tafe/course-catalogue/course-outline?courseId=364fc5b7-74d4-e511-bf2c-00505681920a"]
 
