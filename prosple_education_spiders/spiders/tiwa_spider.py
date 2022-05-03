@@ -121,7 +121,8 @@ class TiwaSpiderSpider(scrapy.Spider):
             return
 
         if course_item["courseName"] == "Diploma of Maritime Operations [Master less than 500 GT]":
-            course_item["rawStudyfield"] = "maritime operations [master less than 500 gt]"
+            course_item["rawStudyfield"] = [
+                "maritime operations [master less than 500 gt]", ]
 
         course_item["uid"] = self.uidPrefix + course_item["courseName"]
 
@@ -142,7 +143,7 @@ class TiwaSpiderSpider(scrapy.Spider):
                 print("Missing code")
 
         if "cricosCode" in course_item and course_item["cricosCode"] == "079078C":
-            course_item["rawStudyfield"] = 'engineering - technical'
+            course_item["rawStudyfield"] = ['engineering - technical', ]
 
         overview = response.css("article.first p::text").extract()
         if overview:
