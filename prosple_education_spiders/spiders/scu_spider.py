@@ -151,10 +151,10 @@ class ScuSpiderSpider(scrapy.Spider):
                     '-' + course_item['courseCode']
 
         overview = response.xpath(
-            "//div[@id='course-overview']//div[@class='show-domestic']/*").getall()
+            "//div[@id='course-overview']/following-sibling::div/div[@class='show-domestic']/*").getall()
         if not overview:
             overview = response.xpath(
-                "//div[@id='course-overview']//div[@class='show-international']/*").getall()
+                "//div[@id='course-overview']/following-sibling::div/div[@class='show-international']/*").getall()
         if overview:
             summary = [strip_tags(x) for x in overview]
             course_item.set_summary(' '.join(summary))
@@ -242,7 +242,7 @@ class ScuSpiderSpider(scrapy.Spider):
                           "internationalFeeTotal", course_item)
 
         cricos = response.xpath(
-            "//div[@id='international']//td[text()='Availability details']/following-sibling::*").getall()
+            "//div[h2[@id='availability']]/following-sibling::*//div[contains(@class, 'show-international')]").getall()
         if cricos:
             cricos = ''.join(cricos)
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
@@ -288,7 +288,7 @@ class ScuSpiderSpider(scrapy.Spider):
         credit = response.xpath(
             "//*[@id='credit-prior-learning']/following-sibling::*[1]").getall()
         if credit:
-            course_item["courseStructure"] = strip_tags(
+            course_item["creditTransfer"] = strip_tags(
                 ''.join(credit), remove_all_tags=False, remove_hyperlinks=True)
 
         # entry = response.xpath(
