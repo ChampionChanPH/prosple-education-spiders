@@ -158,6 +158,9 @@ class CucSpiderSpider(scrapy.Spider):
         if duration:
             duration_full = re.findall("\(.{0,2}?(\d*\.?\d+)(?=[- ](year|month|semester|trimester|quarter|week|day))",
                                        duration, re.I | re.M | re.DOTALL)
+            if not duration_full:
+                duration_full = re.findall("\(.*?(\d*\.?\d+)(?=[- ](year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
             if len(duration_full) == 1:
                 course_item["durationMinFull"] = float(duration_full[0][0])
                 self.get_period(duration_full[0][1].lower(), course_item)
