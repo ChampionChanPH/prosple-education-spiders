@@ -129,7 +129,7 @@ class CucSpiderSpider(scrapy.Spider):
             if re.search("\(", course_name, re.M) and not re.search("Masters Qualifying", course_name, re.M):
                 major, course_name = re.findall(
                     "(.*) \((.*)\)", course_name)[0]
-                course_name = f"{course_name} ({major})"
+                course_name = f"{course_name.strip()} ({major.strip()})"
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath(
