@@ -43,7 +43,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class CucSpiderSpider(scrapy.Spider):
     name = 'cuc_spider'
-    start_urls = ['http://a/']
+    start_urls = ['https://www.curtincollege.edu.au/courses']
     institution = 'Curtin College'
     uidPrefix = 'AU-CUC-'
 
