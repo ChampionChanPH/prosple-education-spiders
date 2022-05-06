@@ -156,7 +156,7 @@ class CucSpiderSpider(scrapy.Spider):
         duration = response.xpath(
             "//div[@class='cmp-keyinformation__subtitle' and div//text()='Duration']/following-sibling::div[contains(@class, 'cmp-keyinformation__description')]/*").get()
         if duration:
-            duration_full = re.findall("\(.*?(\d*\.?\d+)(?=[- ](year|month|semester|trimester|quarter|week|day))",
+            duration_full = re.findall("\(.{0,2}?(\d*\.?\d+)(?=[- ](year|month|semester|trimester|quarter|week|day))",
                                        duration, re.I | re.M | re.DOTALL)
             if len(duration_full) == 1:
                 course_item["durationMinFull"] = float(duration_full[0][0])
