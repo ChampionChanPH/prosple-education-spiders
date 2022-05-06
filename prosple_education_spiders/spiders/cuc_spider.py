@@ -129,7 +129,7 @@ class CucSpiderSpider(scrapy.Spider):
             if re.search("\(", course_name, re.M) and not re.search("Masters Qualifying", course_name, re.M):
                 major, course_name = re.findall(
                     "(.*) \((.*)\)", course_name)[0]
-                course_name = f"{course_name} - {major}"
+                course_name = f"{course_name} ({major})"
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath(
@@ -203,6 +203,7 @@ class CucSpiderSpider(scrapy.Spider):
             cricos = ''.join(cricos)
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
+                cricos = set(cricos)
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
