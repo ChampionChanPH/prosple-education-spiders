@@ -44,20 +44,11 @@ def get_total(field_to_use, field_to_update, course_item):
 class CucSpiderSpider(scrapy.Spider):
     name = 'cuc_spider'
     start_urls = ['http://a/']
-    institution = 'North Metropolitan TAFE'
-    uidPrefix = 'AU-NOM-'
+    institution = 'Curtin College'
+    uidPrefix = 'AU-CUC-'
 
     campuses = {
-        "Balga": "59264",
-        "Clarkson": "59265",
-        "East Perth": "59266",
-        "Joondalup (Kendrew Crescent)": "59267",
-        "Joondalup (McLarty Avenue)": "59268",
-        "Leederville": "59269",
-        "Midland": "59270",
-        "Mount Lawley": "59271",
-        "Nedlands (Oral Health Centre)": "59272",
-        "Perth": "59273",
+        "Curtin Bentley": "30903",
     }
 
     degrees = {
@@ -140,6 +131,13 @@ class CucSpiderSpider(scrapy.Spider):
         course_item['published'] = 1
         course_item['institution'] = self.institution
         course_item['domesticApplyURL'] = response.request.url
+
+        course_name = response.xpath(
+            "//h1[@class='cmp-teaser__title']/text()").get()
+        if course_name:
+            if re.search("\(", course_name, re.M) and not re.search("Masters Qualifying", course_name, re.M):
+                course_name = re.findall("\((.*)\)", course_name)[0]
+            course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         course_item.set_sf_dt(self.degrees, degree_delims=[
                               "and", "/", ","], type_delims=["of", "in", "by"])
