@@ -43,7 +43,7 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class CucSpiderSpider(scrapy.Spider):
     name = 'cuc_spider'
-    start_urls = ['https://www.curtincollege.edu.au/courses']
+    start_urls = ['https://www.curtincollege.edu.au/']
     institution = 'Curtin College'
     uidPrefix = 'AU-CUC-'
 
@@ -63,6 +63,7 @@ class CucSpiderSpider(scrapy.Spider):
         "certificate ii": "4",
         "certificate iii": "4",
         "certificate iv": "4",
+        "undergraduate certificate": "4",
         "foundation certificate": "4",
         "advanced diploma": "5",
         "diploma": "5",
@@ -109,18 +110,8 @@ class CucSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        categories = response.css(
-            "div.cmp-spotlight__content a::attr(href)").getall()
-
-        for item in categories:
-            if re.search("masters-qualifying-program", item):
-                yield response.follow(item, callback=self.course_parse)
-            else:
-                yield response.follow(item, callback=self.category_parse)
-
-    def category_parse(self, response):
         courses = response.xpath(
-            "//a[span[@class='cmp-button__text'][text()='View more' or text()='View course']]/@href").getall()
+            "//a[@class='cmp-globalnavmegamenu__item-link' and contains(span/text(), 'Courses')]/following-sibling::div//li[not(contains(@class, 'cmp-globalnavmegamenu__item-overview') or contains(@class, 'cmp-globalnavmegamenu__item--has-child'))]/a/@href").getall()
         yield from response.follow_all(courses, callback=self.course_parse)
 
     def course_parse(self, response):
@@ -138,6 +129,91 @@ class CucSpiderSpider(scrapy.Spider):
             if re.search("\(", course_name, re.M) and not re.search("Masters Qualifying", course_name, re.M):
                 course_name = re.findall("\((.*)\)", course_name)[0]
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
+
+        overview = response.xpath(
+            "//div[contains(@class, 'cmp-sectiontextblock__title') and div//text()='Course overview']/following-sibling::div//div[@class='cmp-description']/*").getall()
+        holder = []
+        for item in overview:
+            if re.search("^<p", item):
+                holder.append(item)
+            else:
+                break
+        if holder:
+            summary = [strip_tags(x) for x in holder]
+            course_item.set_summary(' '.join(summary))
+            course_item["overview"] = strip_tags(
+                ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+
+        career = response.xpath(
+            "//div[contains(@class, 'cmp-sectiontextblock__title') and div//text()='Leading to:']/following-sibling::div//div[@class='cmp-description']/*").getall()
+        if not career:
+            career = response.xpath(
+                "//h3[contains(text(), 'Careers include')]/following-sibling::*").getall()
+        if career:
+            course_item["careerPathways"] = strip_tags(
+                ''.join(career), remove_all_tags=False, remove_hyperlinks=True)
+
+        duration = response.xpath(
+            "//div[@class='cmp-keyinformation__subtitle' and div//text()='Duration']/following-sibling::div[contains(@class, 'cmp-keyinformation__description')]/*").get()
+        if duration:
+            duration_full = re.findall("\(.*?(\d*\.?\d+)(?=[- ](year|month|semester|trimester|quarter|week|day))",
+                                       duration, re.I | re.M | re.DOTALL)
+            if len(duration_full) == 1:
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
+            if len(duration_full) == 2 and duration_full[0][1] == duration_full[1][1]:
+                course_item["durationMinFull"] = float(
+                    duration_full[0][0]) + float(duration_full[1][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
+
+        start = response.xpath(
+            "//div[@class='cmp-keyinformation__subtitle' and div//text()='Intake dates']/following-sibling::div[contains(@class, 'cmp-keyinformation__description')]/*").get()
+        if start:
+            start_holder = []
+            for month in self.months:
+                if re.search(month, start, re.M):
+                    start_holder.append(self.months[month])
+            if start_holder:
+                course_item["startMonths"] = "|".join(start_holder)
+
+        location = response.xpath(
+            "//div[@class='cmp-keyinformation__subtitle' and div//text()='Campus location']/following-sibling::div[contains(@class, 'cmp-keyinformation__description')]/*").get()
+        campus_holder = set()
+        if location:
+            for campus in self.campuses:
+                if re.search(campus, location, re.I):
+                    campus_holder.add(self.campuses[campus])
+        if campus_holder:
+            course_item['campusNID'] = '|'.join(campus_holder)
+
+        cricos = response.xpath(
+            "//*[contains(text(), 'CRICOS Code')]").getall()
+        if cricos:
+            cricos = ''.join(cricos)
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if cricos:
+                course_item["cricosCode"] = ", ".join(cricos)
+                course_item["internationalApps"] = 1
+                course_item["internationalApplyURL"] = response.request.url
+
+        dom_fee = response.xpath(
+            "//div[contains(@class, 'cmp-keyinformation__domestic-fee')]/div[div/*/text()='Fees']/following-sibling::div/div").get()
+        if dom_fee:
+            dom_fee = re.findall("= \$(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
+            dom_fee = [float(''.join(x)) for x in dom_fee]
+            if dom_fee:
+                course_item["domesticFeeTotal"] = sum(dom_fee)
+                # get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+
+        int_fee = response.xpath(
+            "//div[contains(@class, 'cmp-keyinformation__international-fee')]/div[div/*/text()='Fees']/following-sibling::div/div").get()
+        if int_fee:
+            int_fee = re.findall("= \$(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
+            int_fee = [float(''.join(x)) for x in int_fee]
+            if int_fee:
+                course_item["internationalFeeTotal"] = sum(int_fee)
+                # get_total("internationalFeeAnnual",
+                #           "internationalFeeTotal", course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=[
                               "and", "/", ","], type_delims=["of", "in", "by"])
