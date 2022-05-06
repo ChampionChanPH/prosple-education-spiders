@@ -168,6 +168,9 @@ class CucSpiderSpider(scrapy.Spider):
 
         start = response.xpath(
             "//div[@class='cmp-keyinformation__subtitle' and div//text()='Intake dates']/following-sibling::div[contains(@class, 'cmp-keyinformation__description')]/*").get()
+        if not start:
+            start = response.xpath(
+                "//div[@class='cmp-keyinformation__subtitle' and div//text()='Intake Dates']/following-sibling::div[contains(@class, 'cmp-keyinformation__description')]/*").get()
         if start:
             start_holder = []
             for month in self.months:
@@ -178,6 +181,9 @@ class CucSpiderSpider(scrapy.Spider):
 
         location = response.xpath(
             "//div[@class='cmp-keyinformation__subtitle' and div//text()='Campus location']/following-sibling::div[contains(@class, 'cmp-keyinformation__description')]/*").get()
+        if not location:
+            location = response.xpath(
+                "//div[@class='cmp-keyinformation__subtitle' and div//text()='Campus Location']/following-sibling::div[contains(@class, 'cmp-keyinformation__description')]/*").get()
         campus_holder = set()
         if location:
             for campus in self.campuses:
