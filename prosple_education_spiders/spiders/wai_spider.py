@@ -131,7 +131,13 @@ class WaiSpiderSpider(scrapy.Spider):
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
-            course_item.set_course_name(course_name.strip(), self.uidPrefix)
+            course_code = re.findall("\(([A-Z0-9]+?)\)", course_name)
+            if course_code:
+                course_item["courseCode"] = "".join(set(course_code))
+            course_name = re.sub(" \([A-Z0-9]+?\)", "", course_name)
+            course_name = re.sub("Dual Qualification - ", "", course_name)
+            course_item.set_course_name(make_proper(
+                course_name.strip()), self.uidPrefix)
 
         overview = response.xpath(
             "//*[text()='Course Description']/following-sibling::*").getall()
