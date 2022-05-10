@@ -118,20 +118,28 @@ class WaiSpiderSpider(scrapy.Spider):
         courses = response.css("div.row a::attr(href)").getall()
 
         for item in courses:
-            yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 20})
+            yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 20}, meta={'url': response.urljoin(item)})
 
     def course_parse(self, response):
         course_item = Course()
 
         course_item['lastUpdate'] = date.today().strftime("%m/%d/%y")
-        course_item['sourceURL'] = response.request.url
+        course_item['sourceURL'] = response.meta['url']
         course_item['published'] = 1
         course_item['institution'] = self.institution
-        course_item['domesticApplyURL'] = response.request.url
+        course_item['domesticApplyURL'] = response.meta['url']
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
+
+        overview = response.xpath(
+            "//*[text()='Course Description']/following-sibling::*").getall()
+        if overview:
+            summary = [strip_tags(x) for x in overview]
+            course_item.set_summary(' '.join(summary))
+            course_item["overview"] = strip_tags(
+                ''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
         start = response.xpath(
             "//div[@class='c-detail' and */text()='Course Intake']").get()
