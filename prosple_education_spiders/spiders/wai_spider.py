@@ -112,7 +112,13 @@ class WaiSpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         categories = response.css("div.row a::attr(href)").getall()
-        yield from response.follow_all(categories, callback=self.category_parse)
+
+        categories.remove("/courses/tourism/")
+        categories.append("/courses/tourism/tourism/")
+        categories = [x for x in categories if x != ""]
+
+        for item in categories:
+            yield response.follow(item, callback=self.category_parse)
 
     def category_parse(self, response):
         courses = response.css("div.row a::attr(href)").getall()
@@ -133,7 +139,7 @@ class WaiSpiderSpider(scrapy.Spider):
         if course_name:
             course_code = re.findall("\(([A-Z0-9]+?)\)", course_name)
             if course_code:
-                course_item["courseCode"] = "".join(set(course_code))
+                course_item["courseCode"] = ", ".join(set(course_code))
             course_name = re.sub(" \([A-Z0-9]+?\)", "", course_name)
             course_name = re.sub("Dual Qualification - ", "", course_name)
             course_item.set_course_name(make_proper(
