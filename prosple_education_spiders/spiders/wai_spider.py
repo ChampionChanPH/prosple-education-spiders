@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # by Christian Anasco
+# using Scrapy does not allow me to scrape all of the course details like duration, overview, etc.
+# will only use this to get the course links
 
 from ..standard_libs import *
 from ..scratch_file import *
@@ -123,47 +125,49 @@ class WaiSpiderSpider(scrapy.Spider):
     def category_parse(self, response):
         courses = response.css("div.row a::attr(href)").getall()
 
-        for item in courses:
-            yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 20}, meta={'url': response.urljoin(item)})
+        print(courses)
 
-    def course_parse(self, response):
-        course_item = Course()
+    #     for item in courses:
+    #         yield SplashRequest(response.urljoin(item), callback=self.course_parse, args={'wait': 20}, meta={'url': response.urljoin(item)})
 
-        course_item['lastUpdate'] = date.today().strftime("%m/%d/%y")
-        course_item['sourceURL'] = response.meta['url']
-        course_item['published'] = 1
-        course_item['institution'] = self.institution
-        course_item['domesticApplyURL'] = response.meta['url']
+    # def course_parse(self, response):
+    #     course_item = Course()
 
-        course_name = response.xpath("//h1/text()").get()
-        if course_name:
-            course_code = re.findall("\(([A-Z0-9]+?)\)", course_name)
-            if course_code:
-                course_item["courseCode"] = ", ".join(set(course_code))
-            course_name = re.sub(" \([A-Z0-9]+?\)", "", course_name)
-            course_name = re.sub("Dual Qualification - ", "", course_name)
-            course_item.set_course_name(make_proper(
-                course_name.strip()), self.uidPrefix)
+    #     course_item['lastUpdate'] = date.today().strftime("%m/%d/%y")
+    #     course_item['sourceURL'] = response.meta['url']
+    #     course_item['published'] = 1
+    #     course_item['institution'] = self.institution
+    #     course_item['domesticApplyURL'] = response.meta['url']
 
-        overview = response.xpath(
-            "//*[text()='Course Description']/following-sibling::*").getall()
-        if overview:
-            summary = [strip_tags(x) for x in overview]
-            course_item.set_summary(' '.join(summary))
-            course_item["overview"] = strip_tags(
-                ''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
+    #     course_name = response.xpath("//h1/text()").get()
+    #     if course_name:
+    #         course_code = re.findall("\(([A-Z0-9]+?)\)", course_name)
+    #         if course_code:
+    #             course_item["courseCode"] = ", ".join(set(course_code))
+    #         course_name = re.sub(" \([A-Z0-9]+?\)", "", course_name)
+    #         course_name = re.sub("Dual Qualification - ", "", course_name)
+    #         course_item.set_course_name(make_proper(
+    #             course_name.strip()), self.uidPrefix)
 
-        start = response.xpath(
-            "//div[@class='c-detail' and */text()='Course Intake']").get()
-        if start:
-            start_holder = []
-            for month in self.months:
-                if re.search(month, start, re.M):
-                    start_holder.append(self.months[month])
-            if start_holder:
-                course_item["startMonths"] = "|".join(start_holder)
+    #     overview = response.xpath(
+    #         "//*[text()='Course Description']/following-sibling::*").getall()
+    #     if overview:
+    #         summary = [strip_tags(x) for x in overview]
+    #         course_item.set_summary(' '.join(summary))
+    #         course_item["overview"] = strip_tags(
+    #             ''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=[
-                              "and", "/", ","], type_delims=["of", "in", "by"])
+    #     start = response.xpath(
+    #         "//div[@class='c-detail' and */text()='Course Intake']").get()
+    #     if start:
+    #         start_holder = []
+    #         for month in self.months:
+    #             if re.search(month, start, re.M):
+    #                 start_holder.append(self.months[month])
+    #         if start_holder:
+    #             course_item["startMonths"] = "|".join(start_holder)
 
-        yield course_item
+    #     course_item.set_sf_dt(self.degrees, degree_delims=[
+    #                           "and", "/", ","], type_delims=["of", "in", "by"])
+
+    #     yield course_item
