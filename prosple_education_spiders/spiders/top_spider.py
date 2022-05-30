@@ -63,6 +63,7 @@ class TopSpiderSpider(scrapy.Spider):
         "bachelor": bachelor_honours,
         "doctor": "6",
         "certificate": "4",
+        "undergraduate certificate": "4",
         "diploma": "5",
         "associate degree": "1",
         "non-award": "13",
@@ -115,6 +116,9 @@ class TopSpiderSpider(scrapy.Spider):
 
         cricos = response.xpath(
             "//small[contains(text(), 'CRICOS')]/text()").get()
+        if not cricos:
+            cricos = response.xpath(
+                "//td[*/text()='CRICOS']/following-sibling::*/*").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
@@ -124,7 +128,11 @@ class TopSpiderSpider(scrapy.Spider):
 
         overview = response.xpath(
             "//div[h4/text()='PROGRAM OVERVIEW']/following-sibling::*[1]/*").getall()
+        if not overview:
+            overview = response.xpath(
+                "//td[*/text()='Program Overview']/following-sibling::*/node()").getall()
         if overview:
+            overview = [x for x in overview if strip_tags(x) != ""]
             summary = [strip_tags(x) for x in overview]
             course_item.set_summary(' '.join(summary))
             course_item["overview"] = strip_tags(
@@ -132,6 +140,9 @@ class TopSpiderSpider(scrapy.Spider):
 
         duration = response.xpath(
             "//div[h4/text()='DURATION']/following-sibling::*/*").getall()
+        if not duration:
+            duration = response.xpath(
+                "//td[*/text()='Duration']/following-sibling::*").getall()
         if duration:
             duration = ''.join(duration)
             duration = duration.replace("term", "semester")
@@ -171,27 +182,43 @@ class TopSpiderSpider(scrapy.Spider):
 
         career = response.xpath(
             "//div[h4/text()='PATHWAY TO EMPLOYMENT / FURTHER STUDY']/following-sibling::*/*").getall()
+        if not career:
+            career = response.xpath(
+                "//td[*/text()='Pathway to employment/further study']/following-sibling::*/node()").getall()
         if career:
+            career = [x for x in career if strip_tags(x) != ""]
             course_item["careerPathways"] = strip_tags(
                 "".join(career), remove_all_tags=False, remove_hyperlinks=True)
 
         credit = response.xpath(
             "//div[h4/text()='CREDIT ARRANGEMENT']/following-sibling::*/*").getall()
+        if not credit:
+            credit = response.xpath(
+                "//td[*/text()='Credit arrangement']/following-sibling::*/node()").getall()
         if credit:
+            credit = [x for x in credit if strip_tags(x) != ""]
             course_item["creditTransfer"] = strip_tags(
                 "".join(credit), remove_all_tags=False, remove_hyperlinks=True)
 
         entry = response.xpath(
             "//div[h4/text()='ENTRY REQUIREMENTS']/following-sibling::*/*").getall()
+        if not entry:
+            entry = response.xpath(
+                "//td[*/text()='Entry Requirements']/following-sibling::*/node()").getall()
         if entry:
+            entry = [x for x in entry if strip_tags(x) != ""]
             course_item["entryRequirements"] = strip_tags(
                 "".join(entry), remove_all_tags=False, remove_hyperlinks=True)
 
         study = response.xpath(
             "//div[h4/text()='DELIVERY SITE']/following-sibling::*/*").getall()
+        if not study:
+            study = response.xpath(
+                "//td[*/text()='Delivery Site']/following-sibling::*/node()").getall()
         campus_holder = []
         study_holder = []
         if study:
+            study = [x for x in study if strip_tags(x) != ""]
             study = "".join(study)
             if re.search('on campus', study, re.M | re.I):
                 study_holder.append("In Person")
@@ -213,10 +240,15 @@ class TopSpiderSpider(scrapy.Spider):
 
         structure = response.xpath(
             "//div[h4/text()='COURSE STRUCTURE']/following-sibling::*/*").getall()
+        if not structure:
+            structure = response.xpath(
+                "//td[*/text()='Course Structure']/following-sibling::*/node()").getall()
         if structure:
+            structure = [x for x in structure if strip_tags(x) != ""]
             course_item["courseStructure"] = strip_tags(
                 "".join(structure), remove_all_tags=False, remove_hyperlinks=True)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              "and", "/", ","], type_delims=["of", "in", "by"])
 
         yield course_item
