@@ -184,6 +184,9 @@ class TopSpiderSpider(scrapy.Spider):
             "//div[h4/text()='PATHWAY TO EMPLOYMENT / FURTHER STUDY']/following-sibling::*/*").getall()
         if not career:
             career = response.xpath(
+                "//div[h4/text()='PATHWAY TO EMPLOYMENT / FURTHER LEARNING']/following-sibling::*/*").getall()
+        if not career:
+            career = response.xpath(
                 "//td[*/text()='Pathway to employment/further study']/following-sibling::*/node()").getall()
         if career:
             career = [x for x in career if strip_tags(x) != ""]
@@ -232,11 +235,15 @@ class TopSpiderSpider(scrapy.Spider):
         if study_holder:
             course_item["modeOfStudy"] = "|".join(study_holder)
 
-        # learn = response.xpath(
-        #     "//td[contains(strong/text(), 'Learning Outcomes')]/following-sibling::*").get()
-        # if learn:
-        #     course_item["whatLearn"] = strip_tags(
-        #         learn, remove_all_tags=False, remove_hyperlinks=True)
+        learn = response.xpath(
+            "//div[h4/text()='LEARNING OUTCOMES']/following-sibling::*/*").getall()
+        if not learn:
+            learn = response.xpath(
+                "//td[*/text()='Learning Outcomes']/following-sibling::*/node()").getall()
+        if learn:
+            learn = [x for x in learn if strip_tags(x) != ""]
+            course_item["whatLearn"] = strip_tags(
+                "".join(learn), remove_all_tags=False, remove_hyperlinks=True)
 
         structure = response.xpath(
             "//div[h4/text()='COURSE STRUCTURE']/following-sibling::*/*").getall()
