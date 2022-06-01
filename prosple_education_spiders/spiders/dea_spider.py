@@ -175,7 +175,7 @@ class DeaSpiderSpider(scrapy.Spider):
                                "information']]/following-sibling::*[contains(@class, "
                                "'module__content-panel--text')]/*").getall()
         if entry:
-            course_item['entryRequirements'] = strip_tags(' '.join(entry), remove_all_tags=False,
+            course_item['entryRequirements'] = strip_tags(''.join(entry), remove_all_tags=False,
                                                           remove_hyperlinks=True)
 
         credit = response.xpath("//div[contains(@class, 'module__content-panel--title') and */text()='Recognition of prior "
@@ -195,6 +195,7 @@ class DeaSpiderSpider(scrapy.Spider):
         location = response.xpath(
             "//div[contains(h3/text(), 'Campuses') and @class='module__summary--icon-wrapper']/following-sibling::div").getall()
         if location:
+            location = "".join(location)
             campus_holder = []
             for campus in self.campuses:
                 if re.search(campus, location, re.I | re.M):
@@ -217,6 +218,7 @@ class DeaSpiderSpider(scrapy.Spider):
         atar = response.xpath(
             "//div[contains(h3/text(), 'ATAR') and @class='module__summary--icon-wrapper']/following-sibling::div").getall()
         if atar:
+            atar = "".join(atar)
             atar = re.findall("\d{1,2}\.\d{1,2}", atar)
             if atar:
                 atar = [float(x) for x in atar]
@@ -225,6 +227,7 @@ class DeaSpiderSpider(scrapy.Spider):
         duration = response.xpath(
             "//div[contains(h3/text(), 'Duration') and @class='module__summary--icon-wrapper']/following-sibling::div").getall()
         if duration:
+            duration = "".join(duration)
             duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\sfull.time)",
                                        duration, re.I | re.M | re.DOTALL)
             duration_part = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\spart.time)",
