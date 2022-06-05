@@ -67,6 +67,7 @@ class LtuonlineSpiderSpider(scrapy.Spider):
         "postgraduate diploma": "8",
         "master": research_coursework,
         "mba": research_coursework,
+        "online mba": research_coursework,
         "online master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
@@ -263,6 +264,12 @@ class LtuonlineSpiderSpider(scrapy.Spider):
             course_item["degreeType"] = "7"
             course_item["rawStudyfield"] = ["business analytics", ]
             course_item["specificStudyField"] = "Business Analytics"
+            course_item["canonicalGroup"] = "PostgradAustralia"
+            course_item["courseLevel"] = "Postgraduate"
+
+        if re.search("Online postgraduate cybersecurity short courses", course_name, re.I):
+            course_item["canonicalGroup"] = "PostgradAustralia"
+            course_item["courseLevel"] = "Postgraduate"
 
         course_item['modeOfStudy'] = 'Online'
 
