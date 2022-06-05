@@ -266,10 +266,12 @@ class LtuonlineSpiderSpider(scrapy.Spider):
             course_item["specificStudyField"] = "Business Analytics"
             course_item["canonicalGroup"] = "PostgradAustralia"
             course_item["courseLevel"] = "Postgraduate"
+            course_item["group"] = "4"
 
         if re.search("Online postgraduate cybersecurity short courses", course_name, re.I):
             course_item["canonicalGroup"] = "PostgradAustralia"
             course_item["courseLevel"] = "Postgraduate"
+            course_item["group"] = "4"
 
         course_item['modeOfStudy'] = 'Online'
 
