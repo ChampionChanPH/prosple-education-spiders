@@ -25,19 +25,20 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
         if course_item["teachingPeriod"] == 12:
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 12
+                    / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 52
+                    / 52
 
 
 class LtuonlineSpiderSpider(scrapy.Spider):
@@ -122,7 +123,8 @@ class LtuonlineSpiderSpider(scrapy.Spider):
         course_item['institution'] = self.institution
         course_item['domesticApplyURL'] = response.request.url
 
-        course_name = response.xpath("//*[contains(@class, 'tux-c-page-header__heading')]/text()").get()
+        course_name = response.xpath(
+            "//*[contains(@class, 'tux-c-page-header__heading')]/text()").get()
         if course_name:
             if re.search('online mba', course_name, re.I):
                 name = 'Online Master of Business Administration'
@@ -131,22 +133,27 @@ class LtuonlineSpiderSpider(scrapy.Spider):
             course_item.set_course_name(name.strip(), self.uidPrefix)
 
         holder = []
-        summary1 = response.xpath("//h2[contains(@class, 'tux-c-hero__heading')]/text()").get()
+        summary1 = response.xpath(
+            "//h2[contains(@class, 'tux-c-hero__heading')]/text()").get()
         if summary1:
             if not re.search('\.$', summary1):
                 holder.append(summary1.strip() + '.')
             else:
                 holder.append(summary1.strip())
-        summary2 = response.xpath("//h2[contains(@class, 'tux-c-hero__heading')]/following-sibling::*").getall()
+        summary2 = response.xpath(
+            "//h2[contains(@class, 'tux-c-hero__heading')]/following-sibling::*").getall()
         if summary2:
-            summary2 = [strip_tags(re.sub('<sup>.*?</sup>', '', x, re.DOTALL)) for x in summary2]
+            summary2 = [strip_tags(
+                re.sub('<sup>.*?</sup>', '', x, re.DOTALL)) for x in summary2]
             holder.extend(summary2)
         if holder:
             course_item.set_summary(' '.join(holder))
 
-        overview = response.xpath("//div[@data-label='One Column'][*/*[@class='h3']]/*/*").getall()
+        overview = response.xpath(
+            "//div[@data-label='One Column'][*/*[@class='h3']]/*/*").getall()
         if overview:
-            course_item['overview'] = strip_tags(''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
+            course_item['overview'] = strip_tags(
+                ''.join(overview), remove_all_tags=False, remove_hyperlinks=True)
 
         learn = response.xpath("//div[@data-label='Column'][contains(*/*/text(), 'Course "
                                "outcomes')]/following-sibling::*/*/*").getall()
@@ -155,7 +162,8 @@ class LtuonlineSpiderSpider(scrapy.Spider):
             if re.search('^<(p|o|u)', item):
                 holder.append(item)
         if learn:
-            course_item['whatLearn'] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+            course_item['whatLearn'] = strip_tags(
+                ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         career = response.xpath("//div[@data-label='Column'][contains(*/*/text(), 'Career "
                                 "outlook')]/following-sibling::*/*/*").getall()
@@ -177,7 +185,8 @@ class LtuonlineSpiderSpider(scrapy.Spider):
             course_item['entryRequirements'] = strip_tags(''.join(holder), remove_all_tags=False,
                                                           remove_hyperlinks=True)
 
-        duration = response.xpath("//*[text()='Duration']/following-sibling::*").get()
+        duration = response.xpath(
+            "//*[text()='Duration']/following-sibling::*").get()
         if duration:
             duration_full = re.findall(
                 "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)\(?s?\)?\s+?full)",
@@ -195,26 +204,34 @@ class LtuonlineSpiderSpider(scrapy.Spider):
                     course_item["durationMinPart"] = float(duration_part[0][0])
                 else:
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
-                                                     / self.teaching_periods[duration_part[0][1].lower()]
+                        / self.teaching_periods[duration_part[0][1].lower()]
             if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
                 duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
                                            duration, re.I | re.M | re.DOTALL)
                 if duration_full:
                     if len(duration_full) == 1:
-                        course_item["durationMinFull"] = float(duration_full[0][0])
-                        self.get_period(duration_full[0][1].lower(), course_item)
+                        course_item["durationMinFull"] = float(
+                            duration_full[0][0])
+                        self.get_period(
+                            duration_full[0][1].lower(), course_item)
                     if len(duration_full) == 2:
-                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
-                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
-                        self.get_period(duration_full[1][1].lower(), course_item)
+                        course_item["durationMinFull"] = min(
+                            float(duration_full[0][0]), float(duration_full[1][0]))
+                        course_item["durationMaxFull"] = max(
+                            float(duration_full[0][0]), float(duration_full[1][0]))
+                        self.get_period(
+                            duration_full[1][1].lower(), course_item)
 
-        cost_per_subj = response.xpath("//*[contains(text(), 'Cost per subject')]/following-sibling::*/text()").get()
+        cost_per_subj = response.xpath(
+            "//*[contains(text(), 'Cost per subject')]/following-sibling::*/text()").get()
         if cost_per_subj:
-            cost_per_subj = re.findall("\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", cost_per_subj, re.M)
+            cost_per_subj = re.findall(
+                "\$\s?(\d*)[,\s]?(\d+)(\.\d\d)?", cost_per_subj, re.M)
             cost_per_subj = [float(''.join(x)) for x in cost_per_subj]
             if cost_per_subj:
                 cost_per_subj = max(cost_per_subj)
-        total_subj = response.xpath("//*[contains(text(), 'Total subjects')]/following-sibling::*/text()").get()
+        total_subj = response.xpath(
+            "//*[contains(text(), 'Total subjects')]/following-sibling::*/text()").get()
         if total_subj:
             total_subj = re.findall('\d+', total_subj)
             total_subj = [float(x) for x in total_subj]
@@ -233,11 +250,19 @@ class LtuonlineSpiderSpider(scrapy.Spider):
             if holder:
                 course_item['startMonths'] = '|'.join(holder)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=['and', '/'], type_delims=['of', 'in', 'by'])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              'and', '/'], type_delims=['of', 'in', 'by'])
 
         if re.search('online mba', course_name, re.I):
             name = 'Online MBA'
             course_item.set_course_name(name.strip(), self.uidPrefix)
+            course_item["rawStudyfield"] = ["business administration", ]
+            course_item["specificStudyField"] = "Business Administration"
+
+        if re.search("Online Graduate Certificate and Diploma in Business Analytics", course_name, re.I):
+            course_item["degreeType"] = "7"
+            course_item["rawStudyfield"] = ["business analytics", ]
+            course_item["specificStudyField"] = "Business Analytics"
 
         course_item['modeOfStudy'] = 'Online'
 
