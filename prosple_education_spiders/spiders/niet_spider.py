@@ -132,6 +132,9 @@ class NietSpiderSpider(scrapy.Spider):
 
         overview = response.xpath(
             "//*[contains(strong/text(), 'About this Course')]/following-sibling::*").getall()
+        if not overview:
+            overview = response.xpath(
+                "//*[contains(strong/text(), 'About')]/following-sibling::*").getall()
         if overview:
             summary = [strip_tags(x) for x in overview]
             course_item.set_summary(' '.join(summary))
