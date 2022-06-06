@@ -66,6 +66,10 @@ class NietSpiderSpider(scrapy.Spider):
         "bachelor": bachelor_honours,
         "doctor": "6",
         "doctoral program": "6",
+        "certificate iv": "4",
+        "certificate iii": "4",
+        "certificate ii": "4",
+        "certificate i": "4",
         "certificate": "4",
         "advanced diploma": "5",
         "diploma": "5",
@@ -127,7 +131,7 @@ class NietSpiderSpider(scrapy.Spider):
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath(
-            "//*[strong/text()='About this Course:']/following-sibling::*").getall()
+            "//*[contains(strong/text(), 'About this Course')]/following-sibling::*").getall()
         if overview:
             summary = [strip_tags(x) for x in overview]
             course_item.set_summary(' '.join(summary))
@@ -159,7 +163,7 @@ class NietSpiderSpider(scrapy.Spider):
             for month in self.months:
                 if re.search(month, start, re.M):
                     holder.append(self.months[month])
-            if re.search("monthly", start, re.I):
+            if re.search("monthly", start, re.I) or re.search("montly", start, re.I):
                 holder.extend(["01", "02", "03", "04", "05", "06",
                               "07", "08", "09", "10", "11", "12"])
             if holder:
