@@ -164,7 +164,7 @@ class NietSpiderSpider(scrapy.Spider):
                               "07", "08", "09", "10", "11", "12"])
             if holder:
                 holder = list(set(holder))
-                course_item["startMonths"] = "|".join(holder.sort())
+                course_item["startMonths"] = "|".join(sorted(holder))
 
         study = response.xpath(
             "//h5[text()='STUDY MODE']/following-sibling::*/text()").get()
