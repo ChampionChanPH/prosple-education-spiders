@@ -45,8 +45,11 @@ class UndSpiderSpider(scrapy.Spider):
     name = 'und_spider'
     allowed_domains = ['www.notredame.edu.au', 'notredame.edu.au']
     start_urls = ['https://www.notredame.edu.au/study/programs']
-    banned_urls = ['https://www.notredame.edu.au/programs/fremantle/school-of-arts-and-sciences/undergraduate/double'
-                   '-degrees', 'https://www.notredame.edu.au/programs/re-usable-snippets/template']
+    banned_urls = [
+        'https://www.notredame.edu.au/programs/fremantle/school-of-arts-and-sciences/undergraduate/double-degrees',
+        'https://www.notredame.edu.au/programs/re-usable-snippets/template'
+    ]
+    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36"
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     institution = 'The University of Notre Dame Australia'
     uidPrefix = "AU-UND-"
@@ -121,7 +124,7 @@ class UndSpiderSpider(scrapy.Spider):
             "//ul[@class='program-list']//a[@class='program-list__title']/@href").getall()
 
         for item in courses:
-            yield response.follow(item, callback=self.course_parse)
+            yield response.follow(item, callback=self.course_parse, headers={"User-Agent": self.user_agent})
 
     def course_parse(self, response):
         course_item = Course()
