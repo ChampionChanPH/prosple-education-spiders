@@ -67,6 +67,7 @@ class UndSpiderSpider(scrapy.Spider):
         "certificate i": "4",
         "certificate": "4",
         "diploma": "5",
+        "undergraduate diploma": "5",
         "associate degree": "1",
         "non-award": "13",
         "no match": "15"
