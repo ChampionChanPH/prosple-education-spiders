@@ -50,6 +50,7 @@ class MononlineSpiderSpider(scrapy.Spider):
         "graduate certificate": "7",
         "graduate diploma": "8",
         "master": research_coursework,
+        "mba": research_coursework,
         "executive master": research_coursework,
         "bachelor": bachelor_honours,
         "doctor": "6",
