@@ -149,7 +149,7 @@ class TatSpiderSpider(scrapy.Spider):
             course_item['courseCode'] = course_code.strip()
 
         holder = []
-        summary = response.xpath("//div[@class='pb4 center']/h3").getall()
+        summary = response.xpath("//div[@class='pb4 center']/h3").get()
         if summary:
             holder.append(summary)
             course_item.set_summary(strip_tags(summary))
