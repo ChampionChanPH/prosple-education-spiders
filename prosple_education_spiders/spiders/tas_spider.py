@@ -25,19 +25,20 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
         if course_item["teachingPeriod"] == 12:
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 12
+                    / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 52
+                    / 52
 
 
 class TasSpiderSpider(scrapy.Spider):
@@ -57,6 +58,7 @@ class TasSpiderSpider(scrapy.Spider):
         "certificate ii": "4",
         "certificate iii": "4",
         "certificate iv": "4",
+        "undergraduate certificate": "4",
         "certificate i program": "4",
         "certificate ii program": "4",
         "certificate iii program": "4",
@@ -137,13 +139,15 @@ class TasSpiderSpider(scrapy.Spider):
             yield response.follow(item, callback=self.sub_parse)
 
     def sub_parse(self, response):
-        sub = response.xpath("//div[@class='areas_of_study']//a/@href").getall()
+        sub = response.xpath(
+            "//div[@class='areas_of_study']//a/@href").getall()
 
         for item in sub:
             yield response.follow(item, callback=self.link_parse)
 
     def link_parse(self, response):
-        courses = response.xpath("//div[contains(@class, 'study_area_course_list')]//tr//a/@href").getall()
+        courses = response.xpath(
+            "//div[contains(@class, 'study_area_course_list')]//tr//a/@href").getall()
         courses = set([re.sub('(?<=aspx).*', '', x) for x in courses])
 
         for item in courses:
@@ -168,7 +172,8 @@ class TasSpiderSpider(scrapy.Spider):
             course_item.set_summary(strip_tags(overview))
             course_item["overview"] = strip_tags(overview, False)
 
-        career = response.xpath("//h3[contains(text(), 'Employment Outcomes')]/following-sibling::*").getall()
+        career = response.xpath(
+            "//h3[contains(text(), 'Employment Outcomes')]/following-sibling::*").getall()
         holder = []
         for item in career:
             if re.search('^<p', item) or re.search('^<ul', item) or re.search('^<ol', item):
@@ -178,12 +183,15 @@ class TasSpiderSpider(scrapy.Spider):
         if holder:
             course_item["careerPathways"] = strip_tags(''.join(holder), False)
 
-        course_code = response.xpath("//*[@class='course-codes']/*[@class='tafesa-code']/text()").get()
+        course_code = response.xpath(
+            "//*[@class='course-codes']/*[@class='tafesa-code']/text()").get()
         if course_code:
             course_item['courseCode'] = course_code.strip()
-            course_item['uid'] = course_item['uid'] + '-' + course_item['courseCode']
+            course_item['uid'] = course_item['uid'] + \
+                '-' + course_item['courseCode']
 
-        duration = response.xpath("//div[contains(@class, 'cp_cell') and contains(text(), 'Up to')]").get()
+        duration = response.xpath(
+            "//div[contains(@class, 'cp_cell') and contains(text(), 'Up to')]").get()
         if duration:
             duration = re.sub('\xa0', ' ', duration)
             duration_full = re.findall("full.time.(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
@@ -197,31 +205,40 @@ class TasSpiderSpider(scrapy.Spider):
                     course_item["durationMinFull"] = float(duration_full[0][0])
                     self.get_period(duration_full[0][1].lower(), course_item)
                 if len(duration_full[0]) == 3:
-                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[0][1]))
-                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[0][1]))
+                    course_item["durationMinFull"] = min(
+                        float(duration_full[0][0]), float(duration_full[0][1]))
+                    course_item["durationMaxFull"] = max(
+                        float(duration_full[0][0]), float(duration_full[0][1]))
                     self.get_period(duration_full[0][2].lower(), course_item)
             if duration_part:
                 if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
                     course_item["durationMinPart"] = float(duration_part[0][0])
                 else:
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
-                                                     / self.teaching_periods[duration_part[0][1].lower()]
+                        / self.teaching_periods[duration_part[0][1].lower()]
             if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
                 duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
                                            duration, re.I | re.M | re.DOTALL)
                 if duration_full:
                     if len(duration_full) == 1:
-                        course_item["durationMinFull"] = float(duration_full[0][0])
-                        self.get_period(duration_full[0][1].lower(), course_item)
+                        course_item["durationMinFull"] = float(
+                            duration_full[0][0])
+                        self.get_period(
+                            duration_full[0][1].lower(), course_item)
                     if len(duration_full) == 2:
-                        course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
-                        course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
-                        self.get_period(duration_full[1][1].lower(), course_item)
+                        course_item["durationMinFull"] = min(
+                            float(duration_full[0][0]), float(duration_full[1][0]))
+                        course_item["durationMaxFull"] = max(
+                            float(duration_full[0][0]), float(duration_full[1][0]))
+                        self.get_period(
+                            duration_full[1][1].lower(), course_item)
 
-        entry = response.xpath("//*[contains(text(), 'Course Admission Requirements')]/following-sibling::*").getall()
+        entry = response.xpath(
+            "//*[contains(text(), 'Course Admission Requirements')]/following-sibling::*").getall()
         if entry:
             entry = [x for x in entry if strip_tags(x).strip() != '']
-            course_item["entryRequirements"] = strip_tags(''.join(entry), False)
+            course_item["entryRequirements"] = strip_tags(
+                ''.join(entry), False)
 
         dom_fee = response.xpath("//div[contains(text(), 'Full Fee') or contains(*/text(), 'Full "
                                  "Fee')]/following-sibling::*[last()]").get()
@@ -239,9 +256,11 @@ class TasSpiderSpider(scrapy.Spider):
             if csp_fee:
                 csp_fee = [float(''.join(x)) for x in csp_fee]
                 course_item["domesticSubFeeAnnual"] = max(csp_fee)
-                get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
+                get_total("domesticSubFeeAnnual",
+                          "domesticSubFeeTotal", course_item)
 
-        location = response.xpath("//a[contains(@title, 'campus information')]/text()").getall()
+        location = response.xpath(
+            "//a[contains(@title, 'campus information')]/text()").getall()
         campus_holder = set()
         study_holder = set()
         if location:
@@ -255,12 +274,14 @@ class TasSpiderSpider(scrapy.Spider):
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              "and", "/"], type_delims=["of", "in", "by"])
 
         course_item['group'] = 141
         course_item['canonicalGroup'] = 'CareerStarter'
 
-        int_link = response.xpath("//div[@class='intake_tab-wrapper']/a[text()='International']/@href").get()
+        int_link = response.xpath(
+            "//div[@class='intake_tab-wrapper']/a[text()='International']/@href").get()
         if int_link:
             yield response.follow(int_link, callback=self.international_parse, meta={'item': course_item})
         elif re.search('/in/', course_item['sourceURL']):
@@ -272,17 +293,20 @@ class TasSpiderSpider(scrapy.Spider):
     def international_parse(response):
         course_item = response.meta['item']
 
-        cricos = response.xpath("//*[@class='course-codes']/*[@class='cricos-code']/text()").get()
+        cricos = response.xpath(
+            "//*[@class='course-codes']/*[@class='cricos-code']/text()").get()
         if cricos:
             course_item['cricosCode'] = cricos.strip()
             course_item["internationalApps"] = 1
 
-        int_fee = response.xpath("//div[@class='cp_cell'][contains(text(), 'Total Fees')]/following-sibling::*").get()
+        int_fee = response.xpath(
+            "//div[@class='cp_cell'][contains(text(), 'Total Fees')]/following-sibling::*").get()
         if int_fee:
             int_fee = re.findall("\$\s?(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
             if int_fee:
                 int_fee = [float(''.join(x)) for x in int_fee]
                 course_item["internationalFeeAnnual"] = max(int_fee)
-                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+                get_total("internationalFeeAnnual",
+                          "internationalFeeTotal", course_item)
 
         yield course_item
