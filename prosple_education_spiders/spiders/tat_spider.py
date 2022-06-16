@@ -25,19 +25,20 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
         if course_item["teachingPeriod"] == 12:
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 12
+                    / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 52
+                    / 52
 
 
 class TatSpiderSpider(scrapy.Spider):
@@ -110,65 +111,80 @@ class TatSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        categories = response.xpath("//*[text()='Browse by industry']/following-sibling::ul//a/@href").getall()
+        categories = response.xpath(
+            "//*[text()='Browse by industry']/following-sibling::ul//a/@href").getall()
 
         for item in categories:
             yield response.follow(item, callback=self.link_parse)
 
     def link_parse(self, response):
-        courses = response.xpath("//div[@class='courses-results']//*[@class='course-result__title']/a/@href").getall()
+        courses = response.xpath(
+            "//div[@class='courses-results']//*[@class='course-result__title']/a/@href").getall()
 
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
 
-        next_page = response.xpath("//a[contains(@class, 'pagination__link--next')]/@href").get()
+        next_page = response.xpath(
+            "//a[contains(@class, 'pagination__link--next')]/@href").get()
         if next_page:
             yield response.follow(next_page, callback=self.link_parse)
 
     def course_parse(self, response):
         course_item = Course()
 
-        course_item['lastUpdate'] = date.today().strftime("%m/%d/%y")
-        course_item['sourceURL'] = response.request.url
-        course_item['published'] = 1
-        course_item['institution'] = self.institution
+        course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
+        course_item["sourceURL"] = response.request.url
+        course_item["published"] = 1
+        course_item["institution"] = self.institution
+        course_item["domesticApplyURL"] = response.request.url
 
-        course_name = response.xpath("//*[contains(@class, 'overview-title')]/text()").get()
+        course_name = response.xpath(
+            "//h1[contains(@class, 'course-code__title')]/text()").get()
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        course_code = response.xpath("//*[contains(@class, 'overview-id')]/text()").get()
+        course_code = response.xpath(
+            "//*[contains(@class, 'course-code__course')]/text()").get()
         if course_code:
             course_item['courseCode'] = course_code.strip()
 
         holder = []
-        summary = response.xpath("//div[@class='pb4']/h3").get()
+        summary = response.xpath("//div[@class='pb4 center']/h3").getall()
         if summary:
             holder.append(summary)
             course_item.set_summary(strip_tags(summary))
 
-        overview = response.xpath("//div[@class='pb4']/h3/following-sibling::*/*").getall()
+        overview = response.xpath(
+            "//div[@class='pb4 center']/h3/following-sibling::*/*").getall()
         for item in overview:
             if re.search('^<p', item) or re.search('^<ul', item) or re.search('^<ol', item):
                 holder.append(item)
+            elif re.search("Read more<", item):
+                break
         if holder:
-            course_item["overview"] = strip_tags(''.join(holder), False)
+            course_item["overview"] = strip_tags(
+                ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         entry = response.xpath(
             "//a[text()='Entry']/following-sibling::*[1]//*[self::p or self::ul or self::ol]").getall()
         if entry:
-            course_item['entryRequirements'] = strip_tags(''.join(entry), False)
+            course_item['entryRequirements'] = strip_tags(
+                ''.join(entry), remove_all_tags=False, remove_hyperlinks=True)
 
         credit = response.xpath("//a[text()='Recognition of prior learning and skills']/following-sibling::*[1]//*["
                                 "self::p or self::ul or self::ol]").getall()
         if credit:
-            course_item['creditTransfer'] = strip_tags(''.join(credit), False)
+            course_item['creditTransfer'] = strip_tags(
+                ''.join(credit), remove_all_tags=False, remove_hyperlinks=True)
 
-        career = response.xpath("//*[text()='Career opportunities']/following-sibling::*").get()
+        career = response.xpath(
+            "//*[text()='Career opportunities']/following-sibling::*").get()
         if career:
-            course_item['careerPathways'] = strip_tags(career, False)
+            course_item['careerPathways'] = strip_tags(
+                career, remove_all_tags=False, remove_hyperlinks=True)
 
-        location = response.xpath("//*[text()='Locations']/following-sibling::*").getall()
+        location = response.xpath(
+            "//*[text()='Locations']/following-sibling::*").getall()
         campus_holder = set()
         study_holder = set()
         if location:
@@ -187,21 +203,26 @@ class TatSpiderSpider(scrapy.Spider):
         if study_holder:
             course_item['modeOfStudy'] = '|'.join(study_holder)
 
-        dom_fee = response.xpath("//*[text()='Commercial']/following-sibling::*").get()
+        dom_fee = response.xpath(
+            "//*[text()='Commercial']/following-sibling::*").get()
         if dom_fee:
             dom_fee = re.findall("\$\s?(\d*),?(\d+)(\.\d\d)?", dom_fee, re.M)
             if dom_fee:
                 course_item["domesticFeeAnnual"] = float(''.join(dom_fee[0]))
                 get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
 
-        csp_fee = response.xpath("//*[text()='Subsidised']/following-sibling::*").get()
+        csp_fee = response.xpath(
+            "//*[text()='Subsidised']/following-sibling::*").get()
         if csp_fee:
             csp_fee = re.findall("\$\s?(\d*),?(\d+)(\.\d\d)?", csp_fee, re.M)
             if csp_fee:
-                course_item["domesticSubFeeAnnual"] = float(''.join(csp_fee[0]))
-                get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
+                course_item["domesticSubFeeAnnual"] = float(
+                    ''.join(csp_fee[0]))
+                get_total("domesticSubFeeAnnual",
+                          "domesticSubFeeTotal", course_item)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              "and", "/"], type_delims=["of", "in", "by"])
 
         course_item['group'] = 141
         course_item['canonicalGroup'] = 'CareerStarter'

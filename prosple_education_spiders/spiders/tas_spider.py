@@ -157,10 +157,11 @@ class TasSpiderSpider(scrapy.Spider):
     def course_parse(self, response):
         course_item = Course()
 
-        course_item['lastUpdate'] = date.today().strftime("%m/%d/%y")
-        course_item['sourceURL'] = response.request.url
-        course_item['published'] = 1
-        course_item['institution'] = self.institution
+        course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
+        course_item["sourceURL"] = response.request.url
+        course_item["published"] = 1
+        course_item["institution"] = self.institution
+        course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1[@class='cp_title']/text()").get()
         if course_name:
