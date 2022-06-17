@@ -124,8 +124,9 @@ class SeroSpiderSpider(scrapy.Spider):
         course_item["domesticApplyURL"] = response.request.url
 
         name = response.xpath(
-            "//*[self::h1 or self::h2][contains(@class, 'elementor-heading-title')]/text()").get()
+            "//*[self::h1 or self::h2][contains(@class, 'elementor-heading-title')]").get()
         if name:
+            name = strip_tags(name)
             if re.search("[A-Z0-9]+[A-Z0-9]+ ", name):
                 course_code, course_name = re.split("\\s", name, maxsplit=1)
                 course_name = course_name.replace("\n", " ")
