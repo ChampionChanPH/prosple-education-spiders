@@ -39,19 +39,20 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
         if course_item["teachingPeriod"] == 12:
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 12
+                    / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 52
+                    / 52
 
 
 # course_data = pkgutil.get_data("prosple_education_spiders", "resources/ara_courses - TEST.csv").decode("utf-8")
@@ -86,6 +87,7 @@ class AraSpiderSpider(scrapy.Spider):
         'n.z. certificate': '4',
         'nz certificate': '4',
         'n.z. cert.': '4',
+        "nz cert": "4",
         "diploma": "5",
         "associate degree": "1",
         "non-award": "13",
@@ -125,7 +127,8 @@ class AraSpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         for item in courses:
-            course = requests.get(MAIN_URL + 'programme/' + item, params=payload)
+            course = requests.get(
+                MAIN_URL + 'programme/' + item, params=payload)
             course = course.json()
 
             course_item = Course()
@@ -148,7 +151,8 @@ class AraSpiderSpider(scrapy.Spider):
                                          flags=re.I | re.M | re.DOTALL)
                 elif re.search('computer networking', course_name, flags=re.I) and \
                         re.search('certificate', course_name, flags=re.I):
-                    course_name = re.sub('( instructors)? certificate', '', course_name, flags=re.I)
+                    course_name = re.sub(
+                        '( instructors)? certificate', '', course_name, flags=re.I)
                 if course_name:
                     course_item['courseName'] = course_name.strip()
 
@@ -182,32 +186,38 @@ class AraSpiderSpider(scrapy.Spider):
                     self.get_period(duration_full[0][1].lower(), course_item)
                 if duration_part:
                     if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
-                        course_item["durationMinPart"] = float(duration_part[0][0])
+                        course_item["durationMinPart"] = float(
+                            duration_part[0][0])
                     else:
                         course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
-                                                         / self.teaching_periods[duration_part[0][1].lower()]
+                            / self.teaching_periods[duration_part[0][1].lower()]
                 if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
                     duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
                                                course['duration'], re.I | re.M | re.DOTALL)
                     if duration_full:
-                        course_item["durationMinFull"] = float(duration_full[0][0])
-                        self.get_period(duration_full[0][1].lower(), course_item)
+                        course_item["durationMinFull"] = float(
+                            duration_full[0][0])
+                        self.get_period(
+                            duration_full[0][1].lower(), course_item)
 
             if 'fees' in course and '2021' in course['fees']:
                 if 'domesticTuitionMaxFee' in course['fees']['2021'] and \
                         course['fees']['2021']['domesticTuitionMaxFee']:
                     course_item['domesticFeeAnnual'] = course['fees']['2021']['domesticTuitionMaxFee']
-                    get_total("domesticFeeAnnual", "domesticFeeTotal", course_item)
+                    get_total("domesticFeeAnnual",
+                              "domesticFeeTotal", course_item)
 
             if 'fees' in course and '2021' in course['fees']:
                 if 'internationalTuitionFee' in course['fees']['2021'] and \
                         course['fees']['2021']['internationalTuitionFee']:
                     course_item['internationalFeeAnnual'] = course['fees']['2021']['internationalTuitionFee']
-                    get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+                    get_total("internationalFeeAnnual",
+                              "internationalFeeTotal", course_item)
                     if 'url' in course and course['url']:
                         course_item["internationalApplyURL"] = course['url']
 
-            course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+            course_item.set_sf_dt(self.degrees, degree_delims=[
+                                  "and", "/"], type_delims=["of", "in", "by"])
 
             if 'teachingPeriod' in course_item and 'durationMinFull' in course_item and \
                     ((course_item['teachingPeriod'] == 1 and course_item['durationMinFull'] <= 0.5) or
