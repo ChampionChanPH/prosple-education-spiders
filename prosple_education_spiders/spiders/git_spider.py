@@ -25,19 +25,20 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
         if course_item["teachingPeriod"] == 12:
             if float(course_item["durationMinFull"]) < 12:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 12
+                    / 12
         if course_item["teachingPeriod"] == 52:
             if float(course_item["durationMinFull"]) < 52:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
                 course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
-                                               / 52
+                    / 52
 
 
 class GitSpiderSpider(scrapy.Spider):
@@ -61,6 +62,7 @@ class GitSpiderSpider(scrapy.Spider):
         "certificate ii": "4",
         'vetdss - certificate ii': '4',
         'vetdss- cert iii': '4',
+        'vetdss - cert iii': '4',
         'vetdss - certificate iii': '4',
         "certificate iii": "4",
         'vetdss - certificate iv': '4',
@@ -70,6 +72,7 @@ class GitSpiderSpider(scrapy.Spider):
         "diploma": "5",
         "associate degree": "1",
         "vcal - victorian certificate": "9",
+        "vce/vcal year 11 preparation - victorian certificate": "9",
         "vce - victorian certificate": "9",
         "non-award": "13",
         "no match": "15"
@@ -116,7 +119,8 @@ class GitSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//*[@id='pageCourseSearchDiv']//*[@class='ResultRow']//a/text()").getall()
+        courses = response.xpath(
+            "//*[@id='pageCourseSearchDiv']//*[@class='ResultRow']//a/text()").getall()
         courses = [x.strip() for x in courses]
         self.international_courses.extend(courses)
 
@@ -133,7 +137,8 @@ class GitSpiderSpider(scrapy.Spider):
                     yield response.follow(all_course, callback=self.sub_parse)
 
     def sub_parse(self, response):
-        courses = response.xpath("//*[@id='pageCourseSearchDiv']//*[@class='ResultRow']//a")
+        courses = response.xpath(
+            "//*[@id='pageCourseSearchDiv']//*[@class='ResultRow']//a")
         yield from response.follow_all(courses, callback=self.course_parse)
 
         check_page = response.xpath("//*[@class='Pages']").get()
@@ -157,12 +162,15 @@ class GitSpiderSpider(scrapy.Spider):
             course_code = re.findall('^[0-9A-Z]+', name_with_code)
             if course_code:
                 course_item['courseCode'] = course_code[0]
-            course_name = re.findall('[0-9A-Z]+?\s(.*)', name_with_code, re.DOTALL)
+            course_name = re.findall(
+                '[0-9A-Z]+?\s(.*)', name_with_code, re.DOTALL)
             if course_name:
                 course_name = re.sub('~', '', course_name[0])
-                course_item.set_course_name(course_name.strip(), self.uidPrefix)
+                course_item.set_course_name(
+                    course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//*[text()='Course description']/following-sibling::node()").getall()
+        overview = response.xpath(
+            "//*[text()='Course description']/following-sibling::node()").getall()
         holder = []
         for index, item in enumerate(overview):
             if re.search('^<(h|a|d)', item):
@@ -177,7 +185,8 @@ class GitSpiderSpider(scrapy.Spider):
             if holder:
                 summary = [strip_tags(x) for x in holder]
                 course_item.set_summary(' '.join(summary))
-                course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+                course_item["overview"] = strip_tags(
+                    ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
         if 'overview' not in course_item:
             for index, item in enumerate(overview):
                 if re.search('^<(h|a|d)', item):
@@ -192,9 +201,11 @@ class GitSpiderSpider(scrapy.Spider):
                 if holder:
                     summary = [strip_tags(x) for x in holder]
                     course_item.set_summary(' '.join(summary))
-                    course_item["overview"] = strip_tags(''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
+                    course_item["overview"] = strip_tags(
+                        ''.join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        career = response.xpath("//*[text()='Possible career outcomes']/following-sibling::node()").getall()
+        career = response.xpath(
+            "//*[text()='Possible career outcomes']/following-sibling::node()").getall()
         holder = []
         for index, item in enumerate(career):
             if re.search('^<(h|a|d)', item):
@@ -236,7 +247,7 @@ class GitSpiderSpider(scrapy.Spider):
                     course_item["durationMinPart"] = float(duration_part[0][0])
                 else:
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
-                                                     / self.teaching_periods[duration_part[0][1].lower()]
+                        / self.teaching_periods[duration_part[0][1].lower()]
             if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
                 duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
                                            duration, re.I | re.M | re.DOTALL)
@@ -300,7 +311,8 @@ class GitSpiderSpider(scrapy.Spider):
                 course_item["domesticSubFeeTotal"] = max(csp_fee)
                 # get_total("domesticSubFeeAnnual", "domesticSubFeeTotal", course_item)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              "and", "/"], type_delims=["of", "in", "by"])
 
         course_item['group'] = 141
         course_item['canonicalGroup'] = 'CareerStarter'
@@ -324,13 +336,15 @@ class GitSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(set(cricos))
 
-        int_fee = response.xpath("//*[contains(text(), 'Total tuition fee:')]/following-sibling::*").get()
+        int_fee = response.xpath(
+            "//*[contains(text(), 'Total tuition fee:')]/following-sibling::*").get()
         if int_fee:
             int_fee = re.findall("\$(\d*),?(\d+)(\.\d\d)?", int_fee, re.M)
             int_fee = [float(''.join(x)) for x in int_fee]
             if int_fee:
                 course_item["internationalFeeAnnual"] = max(int_fee)
-                get_total("internationalFeeAnnual", "internationalFeeTotal", course_item)
+                get_total("internationalFeeAnnual",
+                          "internationalFeeTotal", course_item)
 
         course_item["internationalApps"] = 1
 
