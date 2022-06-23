@@ -259,7 +259,7 @@ class UowSpiderSpider(scrapy.Spider):
         holder = []
         for item in start:
             split_text = item.split("Session:")
-            if len(split_text > 1):
+            if len(split_text) > 1:
                 holder.append(split_text[0])
             elif len(split_text) == 1:
                 holder.append(split_text)
