@@ -180,7 +180,7 @@ class UowSpiderSpider(scrapy.Spider):
 
         for item in courses:
             if re.search("coursefinder.uow.edu.au", item) and item not in self.blacklist_urls:
-                yield response.follow(item, callback=self.course_parse, headers={"User-Agent": self.user_agent})
+                yield SplashRequest(item, callback=self.course_parse, args={'wait': 5})
 
         # yield SplashRequest(self.start_urls[0], callback=self.splash_index, args={'wait': 2}, meta={"url": self.start_urls[0]})
         # yield SplashRequest(self.start_urls[0], self.splash_index, endpoint='execute', args={'lua_source': self.init_lua, 'url': self.start_urls[0]})
