@@ -69,10 +69,12 @@ class UowSpiderSpider(scrapy.Spider):
     blacklist_urls = [
         "http://coursefinder.uow.edu.au/information/index.html?course=master-international-relations-2",
         "http://coursefinder.uow.edu.au/undergrad/index.html",
-        "http://coursefinder.uow.edu.au/information/index.html?course=bachelor-social-science-public-health"
+        "http://coursefinder.uow.edu.au/information/index.html?course=bachelor-social-science-public-health",
+        "https://coursefinder.uow.edu.au/two-masters-two-years/index.html"
     ]
     scraped_urls = []
     superlist_urls = []
+    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36"
 
     institution = "University of Wollongong (UOW)"
     uidPrefix = "AU-UOW-"
@@ -177,8 +179,8 @@ class UowSpiderSpider(scrapy.Spider):
             "//div[contains(@class, 'uw-tabs-content')]//div[@class='cell large-auto']/ul//a/@href").getall()
 
         for item in courses:
-            if re.search("coursefinder.uow.edu.au", item):
-                yield response.follow(item, callback=self.course_parse)
+            if re.search("coursefinder.uow.edu.au", item) and item not in self.blacklist_urls:
+                yield response.follow(item, callback=self.course_parse, headers={"User-Agent": self.user_agent})
 
         # yield SplashRequest(self.start_urls[0], callback=self.splash_index, args={'wait': 2}, meta={"url": self.start_urls[0]})
         # yield SplashRequest(self.start_urls[0], self.splash_index, endpoint='execute', args={'lua_source': self.init_lua, 'url': self.start_urls[0]})
