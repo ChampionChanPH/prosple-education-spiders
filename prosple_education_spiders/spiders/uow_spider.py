@@ -366,4 +366,5 @@ class UowSpiderSpider(scrapy.Spider):
         course_item.set_sf_dt(self.degrees, degree_delims=[
                               'and', '/', '-'], type_delims=['of', 'in', 'by', 'for'])
 
-        yield course_item
+        if course_item["courseName"] not in ["Course Finder", "Start your journey"]:
+            yield course_item
