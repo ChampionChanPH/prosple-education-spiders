@@ -70,7 +70,17 @@ class UowSpiderSpider(scrapy.Spider):
         "http://coursefinder.uow.edu.au/information/index.html?course=master-international-relations-2",
         "http://coursefinder.uow.edu.au/undergrad/index.html",
         "http://coursefinder.uow.edu.au/information/index.html?course=bachelor-social-science-public-health",
-        "https://coursefinder.uow.edu.au/two-masters-two-years/index.html"
+        "https://coursefinder.uow.edu.au/two-masters-two-years/index.html",
+        "https://coursefinder.uow.edu.au/information/index.html?course=bachelor-mathematics-education-deans-scholar",
+        "https://coursefinder.uow.edu.au/creative-performing-arts/ssNODELINK/1674",
+        "https://coursefinder.uow.edu.au/double-degrees/index.html",
+        "https://coursefinder.uow.edu.au/double-degrees/communications-media/index.html",
+        "https://coursefinder.uow.edu.au/double-degrees/engineering/index.html",
+        "https://coursefinder.uow.edu.au/double-degrees/science/index.html",
+        "https://coursefinder.uow.edu.au/double-degrees/mathematics-statistics/index.html",
+        "https://coursefinder.uow.edu.au/information/ssLINK/H20008090",
+        "https://coursefinder.uow.edu.au/undergrad/index.html",
+        "https://coursefinder.uow.edu.au/double-degrees/business/index.html",
     ]
     scraped_urls = []
     superlist_urls = []
@@ -109,6 +119,8 @@ class UowSpiderSpider(scrapy.Spider):
         "certificate i": "4",
         "certificate": "4",
         "diploma": "5",
+        "advanced diploma": "5",
+        "tafe advanced diploma": "5",
         "undergraduate diploma": "5",
         "associate degree": "1",
         "non-award": "13",
@@ -352,6 +364,6 @@ class UowSpiderSpider(scrapy.Spider):
                     #     self.get_period(duration_full[1][1].lower(), course_item)
 
         course_item.set_sf_dt(self.degrees, degree_delims=[
-                              'and', '/'], type_delims=['of', 'in', 'by', 'for'])
+                              'and', '/', '-'], type_delims=['of', 'in', 'by', 'for'])
 
         yield course_item
