@@ -180,7 +180,7 @@ class UowSpiderSpider(scrapy.Spider):
 
         for item in courses:
             if re.search("coursefinder.uow.edu.au", item) and item not in self.blacklist_urls:
-                yield SplashRequest(item, callback=self.course_parse, args={'wait': 5})
+                yield SplashRequest(item, callback=self.course_parse, args={'wait': 5}, meta={'url': item})
 
         # yield SplashRequest(self.start_urls[0], callback=self.splash_index, args={'wait': 2}, meta={"url": self.start_urls[0]})
         # yield SplashRequest(self.start_urls[0], self.splash_index, endpoint='execute', args={'lua_source': self.init_lua, 'url': self.start_urls[0]})
@@ -217,10 +217,10 @@ class UowSpiderSpider(scrapy.Spider):
         course_item = Course()
 
         course_item['lastUpdate'] = date.today().strftime("%m/%d/%y")
-        course_item['sourceURL'] = response.request.url
+        course_item['sourceURL'] = response.meta["url"]
         course_item['published'] = 1
         course_item['institution'] = self.institution
-        course_item["domesticApplyURL"] = response.request.url
+        course_item["domesticApplyURL"] = response.meta["url"]
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
@@ -302,7 +302,7 @@ class UowSpiderSpider(scrapy.Spider):
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
-                course_item["internationalApplyURL"] = response.request.url
+                course_item["internationalApplyURL"] = response.meta["url"]
 
         study = duration = response.xpath(
             "//p[@class='label' and text()='Delivery']/following-sibling::*").getall()
