@@ -384,5 +384,5 @@ class UowSpiderSpider(scrapy.Spider):
         course_item.set_sf_dt(self.degrees, degree_delims=[
                               'and', '/', '-'], type_delims=['of', 'in', 'by', 'for'])
 
-        if course_item["courseName"] not in ["Course Finder", "Start your journey", "Two Masters in"]:
+        if course_item["courseName"] not in ["Course Finder", "Start your journey", " Two Masters in", "Minor Study Areas (Faculty of the Arts, Social Sciences and Humanities) | 2020"]:
             yield course_item
