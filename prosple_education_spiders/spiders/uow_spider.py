@@ -81,6 +81,8 @@ class UowSpiderSpider(scrapy.Spider):
         "http://coursefinder.uow.edu.au/information/ssLINK/H20008090",
         "http://coursefinder.uow.edu.au/undergrad/index.html",
         "http://coursefinder.uow.edu.au/double-degrees/business/index.html",
+        "http://coursefinder.uow.edu.au/information/index.html?course=bachelor-business-honours",
+        "http://coursefinder.uow.edu.au/information/index.html?course=bachelor-business-business-analytics",
         "https://coursefinder.uow.edu.au/information/index.html?course=master-international-relations-2",
         "https://coursefinder.uow.edu.au/undergrad/index.html",
         "https://coursefinder.uow.edu.au/information/index.html?course=bachelor-social-science-public-health",
@@ -95,6 +97,8 @@ class UowSpiderSpider(scrapy.Spider):
         "https://coursefinder.uow.edu.au/information/ssLINK/H20008090",
         "https://coursefinder.uow.edu.au/undergrad/index.html",
         "https://coursefinder.uow.edu.au/double-degrees/business/index.html",
+        "https://coursefinder.uow.edu.au/information/index.html?course=bachelor-business-honours",
+        "https://coursefinder.uow.edu.au/information/index.html?course=bachelor-business-business-analytics",
     ]
     scraped_urls = []
     superlist_urls = []
