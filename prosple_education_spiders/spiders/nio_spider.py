@@ -211,7 +211,7 @@ class NioSpiderSpider(scrapy.Spider):
 
         if duration:
             course_code = re.findall(
-                "([A-Z]{3}.*)<", duration, re.DOTALL | re.M)
+                "([A-Z]{3}.{4,5})<", duration, re.DOTALL | re.M)
             if course_code:
                 course_item["courseCode"] = course_code[0]
 
