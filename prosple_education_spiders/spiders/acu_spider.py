@@ -123,6 +123,7 @@ class AcuSpiderSpider(scrapy.Spider):
         course_item["sourceURL"] = response.request.url
         course_item["published"] = 1
         course_item["institution"] = self.institution
+        course_item["domesticApplyURL"] = response.request.url
 
         course_name = response.xpath("//h1/text()").get()
         if course_name:
@@ -171,10 +172,7 @@ class AcuSpiderSpider(scrapy.Spider):
                 course_item["campusNID"] = "|".join(campus_holder)
 
         start = response.xpath(
-            "//dt[contains(text(), 'Intakes:')]/following-sibling::dd").get()
-        if not start:
-            start = response.xpath(
-                "//div[contains(*/*/text(), 'Intakes:')]/following-sibling::div").get()
+            "//dt[contains(text(), 'Start dates')]/following-sibling::dd").get()
         if start:
             start_holder = []
             for month in self.months:
@@ -182,17 +180,6 @@ class AcuSpiderSpider(scrapy.Spider):
                     start_holder.append(self.months[month])
             if start_holder:
                 course_item["startMonths"] = "|".join(start_holder)
-
-        cricos = response.xpath(
-            "//dt[contains(text(), 'CRICOS:')]/following-sibling::dd").get()
-        if not cricos:
-            cricos = response.xpath(
-                "//div[contains(*/*/text(), 'CRICOS:')]/following-sibling::div").get()
-        if cricos:
-            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
-            if cricos:
-                course_item["cricosCode"] = ", ".join(cricos)
-                course_item["internationalApps"] = 1
 
         atar = response.xpath(
             "//dt[contains(text(), 'ATAR')]/following-sibling::dd").get()
@@ -273,5 +260,26 @@ class AcuSpiderSpider(scrapy.Spider):
                 course_item["courseLevel"] = "Postgraduate"
                 course_item["canonicalGroup"] = "PostgradAustralia"
                 course_item["group"] = 4
+
+        international = response.xpath(
+            "//select[@id='demographic']/option/text()").getall()
+        if "International" in international:
+            url = course_item["sourceURL"].replace("Domestic", "International")
+            yield response.follow(url, callback=self.international_parse, meta={"item": course_item})
+        else:
+            yield course_item
+
+    def international_parse(self, response):
+        course_item = response.meta["item"]
+
+        course_item["internationalApps"] = 1
+        course_item["internationalApplyURL"] = response.request.url
+
+        cricos = response.xpath(
+            "//dt[contains(text(), 'CRICOS Code')]/following-sibling::dd").get()
+        if cricos:
+            cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
+            if cricos:
+                course_item["cricosCode"] = ", ".join(cricos)
 
         yield course_item
