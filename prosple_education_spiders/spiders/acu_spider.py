@@ -25,7 +25,8 @@ def get_total(field_to_use, field_to_update, course_item):
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
 
 
 class AcuSpiderSpider(scrapy.Spider):
@@ -141,14 +142,17 @@ class AcuSpiderSpider(scrapy.Spider):
                 else:
                     holder.append(item)
             if holder:
-                summary = [strip_tags(x) for x in holder if re.search('[.!?]', x, re.M)]
+                summary = [strip_tags(x)
+                           for x in holder if re.search('[.!?]', x, re.M)]
                 course_item.set_summary(' '.join(summary))
                 course_item["overview"] = strip_tags("".join(holder), False)
         if 'overview' not in course_item:
-            overview = response.xpath("//div[@id='main-content']//section/*").getall()
+            overview = response.xpath(
+                "//div[@id='main-content']//section/*").getall()
             if overview:
                 overview = [x for x in overview if strip_tags(x) != '']
-                summary = [strip_tags(x) for x in overview if re.search('[.!?]', x, re.M)]
+                summary = [strip_tags(x)
+                           for x in overview if re.search('[.!?]', x, re.M)]
                 course_item.set_summary(' '.join(summary))
                 holder = []
                 for index, item in enumerate(overview):
@@ -157,26 +161,31 @@ class AcuSpiderSpider(scrapy.Spider):
                     else:
                         holder.append(item)
                 if holder:
-                    course_item["overview"] = strip_tags("".join(holder), False)
+                    course_item["overview"] = strip_tags(
+                        "".join(holder), False)
 
         entry = response.xpath("//div[@id='course--requirements--domestic']/*[contains(*/text(), "
                                "'Essential requirements for admission')]/following-sibling::*[1]/*").getall()
         if entry:
-            course_item["entryRequirements"] = strip_tags("".join(entry), False)
+            course_item["entryRequirements"] = strip_tags(
+                "".join(entry), False)
         if 'entryRequirements' not in course_item:
             entry = response.xpath("//div[contains(*/*/text(), 'Entry requirements and "
                                    "prerequisite')]/following-sibling::div[1]/*/*").getall()
             if entry:
-                course_item["entryRequirements"] = strip_tags("".join(entry), False)
+                course_item["entryRequirements"] = strip_tags(
+                    "".join(entry), False)
 
         career = response.xpath("//div[@id='course--career--domestic']/*[contains(*/text(), "
                                 "'Career paths')]/following-sibling::*[1]/*").getall()
         if career:
             course_item["careerPathways"] = strip_tags("".join(career), False)
 
-        location = response.xpath("//dt[contains(text(), 'Location')]/following-sibling::dd").get()
+        location = response.xpath(
+            "//dt[contains(text(), 'Location')]/following-sibling::dd").get()
         if not location:
-            location = response.xpath("//div[contains(*/*/text(), 'Location')]/following-sibling::div").get()
+            location = response.xpath(
+                "//div[contains(*/*/text(), 'Location')]/following-sibling::div").get()
         if location:
             campus_holder = []
             for campus in self.campuses:
@@ -185,9 +194,11 @@ class AcuSpiderSpider(scrapy.Spider):
             if campus_holder:
                 course_item["campusNID"] = "|".join(campus_holder)
 
-        start = response.xpath("//dt[contains(text(), 'Intakes:')]/following-sibling::dd").get()
+        start = response.xpath(
+            "//dt[contains(text(), 'Intakes:')]/following-sibling::dd").get()
         if not start:
-            start = response.xpath("//div[contains(*/*/text(), 'Intakes:')]/following-sibling::div").get()
+            start = response.xpath(
+                "//div[contains(*/*/text(), 'Intakes:')]/following-sibling::div").get()
         if start:
             start_holder = []
             for month in self.months:
@@ -196,22 +207,27 @@ class AcuSpiderSpider(scrapy.Spider):
             if start_holder:
                 course_item["startMonths"] = "|".join(start_holder)
 
-        cricos = response.xpath("//dt[contains(text(), 'CRICOS:')]/following-sibling::dd").get()
+        cricos = response.xpath(
+            "//dt[contains(text(), 'CRICOS:')]/following-sibling::dd").get()
         if not cricos:
-            cricos = response.xpath("//div[contains(*/*/text(), 'CRICOS:')]/following-sibling::div").get()
+            cricos = response.xpath(
+                "//div[contains(*/*/text(), 'CRICOS:')]/following-sibling::div").get()
         if cricos:
             cricos = re.findall("\d{6}[0-9a-zA-Z]", cricos, re.M)
             if cricos:
                 course_item["cricosCode"] = ", ".join(cricos)
                 course_item["internationalApps"] = 1
 
-        atar = response.xpath("//dt[contains(text(), 'ATAR')]/following-sibling::dd").get()
+        atar = response.xpath(
+            "//dt[contains(text(), 'ATAR')]/following-sibling::dd").get()
         if atar:
             atar = re.findall('\((\d{2}\.\d{2})\)', atar, re.M)
-            atar = [float(x) for x in atar]
-            course_item['guaranteedEntryScore'] = min(atar)
+            if atar:
+                atar = [float(x) for x in atar]
+                course_item['guaranteedEntryScore'] = min(atar)
 
-        course_code = response.xpath("//dt[contains(text(), 'Course code:')]/following-sibling::dd/text()").get()
+        course_code = response.xpath(
+            "//dt[contains(text(), 'Course code:')]/following-sibling::dd/text()").get()
         if not course_code:
             course_code = response.xpath(
                 "//div[contains(*/*/text(), 'Course code:')]/following-sibling::div//text()").get()
@@ -219,9 +235,11 @@ class AcuSpiderSpider(scrapy.Spider):
             if strip_tags(course_code) != '':
                 course_item["courseCode"] = course_code.strip()
 
-        duration = response.xpath("//dt[contains(text(), 'Duration:')]/following-sibling::dd").get()
+        duration = response.xpath(
+            "//dt[contains(text(), 'Duration:')]/following-sibling::dd").get()
         if not duration:
-            duration = response.xpath("//div[contains(*/*/text(), 'Duration:')]/following-sibling::div").get()
+            duration = response.xpath(
+                "//div[contains(*/*/text(), 'Duration:')]/following-sibling::div").get()
         if duration:
             duration_full = re.findall(
                 "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
@@ -239,7 +257,7 @@ class AcuSpiderSpider(scrapy.Spider):
                     course_item["durationMinPart"] = float(duration_part[0][0])
                 else:
                     course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
-                                                     / self.teaching_periods[duration_part[0][1].lower()]
+                        / self.teaching_periods[duration_part[0][1].lower()]
             if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
                 duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
                                            duration, re.I | re.M | re.DOTALL)
@@ -254,12 +272,14 @@ class AcuSpiderSpider(scrapy.Spider):
                     #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
                     #     self.get_period(duration_full[1][1].lower(), course_item)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"], type_delims=["of", "in", "by"])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              "and", "/"], type_delims=["of", "in", "by"])
 
         if 'courseName' in ['General English', 'IELTS Test Preparation', 'English for the Workplace',
                             'English for Academic Purposes (20 weeks)', 'English for Academic Purposes (10 weeks)']:
             if 'durationMinFull' in course_item:
-                course_item['uid'] = course_item['uid'] + '-' + course_item['durationMinFull']
+                course_item['uid'] = course_item['uid'] + \
+                    '-' + course_item['durationMinFull']
 
         if "courseName" in course_item:
             if re.search("postgraduate", course_item["courseName"], re.I):
