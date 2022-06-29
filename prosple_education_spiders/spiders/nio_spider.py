@@ -112,7 +112,7 @@ class NioSpiderSpider(scrapy.Spider):
         summary = response.xpath(
             "//*[@class='et_pb_text_inner']/h2/following-sibling::*").get()
         if summary:
-            course_item.set_summary(summary.strip())
+            course_item.set_summary(strip_tags(summary))
 
         overview = response.xpath(
             "//h2[text()='Course Overview']/following-sibling::*").getall()
