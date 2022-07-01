@@ -20,12 +20,25 @@ def bachelor_honours(course_item):
 
 
 def get_total(field_to_use, field_to_update, course_item):
-    if "durationMinFull" in course_item:
+    if "durationMinFull" in course_item and "teachingPeriod" in course_item:
         if course_item["teachingPeriod"] == 1:
             if float(course_item["durationMinFull"]) < 1:
                 course_item[field_to_update] = course_item[field_to_use]
             else:
-                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"])
+                course_item[field_to_update] = float(
+                    course_item[field_to_use]) * float(course_item["durationMinFull"])
+        if course_item["teachingPeriod"] == 12:
+            if float(course_item["durationMinFull"]) < 12:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                    / 12
+        if course_item["teachingPeriod"] == 52:
+            if float(course_item["durationMinFull"]) < 52:
+                course_item[field_to_update] = course_item[field_to_use]
+            else:
+                course_item[field_to_update] = float(course_item[field_to_use]) * float(course_item["durationMinFull"]) \
+                    / 52
 
 
 class CmuSpiderSpider(scrapy.Spider):
@@ -88,7 +101,8 @@ class CmuSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.xpath("//div[@class='menuitem']//li/a/@href").getall()
+        courses = response.xpath(
+            "//div[contains(@class, 'menuitem')]/ul/li/a/@href").getall()
 
         for item in courses:
             yield response.follow(item, callback=self.course_parse)
@@ -106,7 +120,8 @@ class CmuSpiderSpider(scrapy.Spider):
         if course_name:
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
-        overview = response.xpath("//div[contains(@class, 'content__block')][1]/*").getall()
+        overview = response.xpath(
+            "//div[contains(@class, 'content__block')][1]/*").getall()
         if overview:
             if len(overview[0]) < 35:
                 course_item.set_summary(strip_tags(overview[1]))
@@ -119,7 +134,8 @@ class CmuSpiderSpider(scrapy.Spider):
                 else:
                     holder.append(item)
             if holder:
-                course_item["overview"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
+                course_item["overview"] = strip_tags(
+                    "".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
         cricos = response.xpath("//p[contains(text(), 'CRICOS:')]").getall()
         if cricos:
@@ -130,54 +146,45 @@ class CmuSpiderSpider(scrapy.Spider):
                 course_item["internationalApps"] = 1
                 course_item["internationalApplyURL"] = response.request.url
 
-        duration = response.xpath("//td[text() = 'Duration']/following-sibling::*").get()
+        duration = response.xpath(
+            "//td[text() = 'Duration']/following-sibling::*").get()
         if duration:
-            duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s"
-                                       "?\sfull.time)", duration, re.I | re.M | re.DOTALL)
-            duration_part = re.findall("(\d*?\.?\d*?)\s?t?o?\s?(\d*\.?\d+)(?=\s("
-                                       "year|month|semester|trimester|quarter|week|day)s?\spart.time)", duration,
-                                       re.I | re.M | re.DOTALL)
+            duration_full = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?full)",
+                duration, re.I | re.M | re.DOTALL)
+            duration_part = re.findall(
+                "(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day)s?\s+?part)",
+                duration, re.I | re.M | re.DOTALL)
             if not duration_full and duration_part:
-                self.get_period(duration_part[0][2].lower(), course_item)
+                self.get_period(duration_part[0][1].lower(), course_item)
             if duration_full:
-                if len(duration_full[0]) == 2:
-                    course_item["durationMinFull"] = float(duration_full[0][0])
-                    self.get_period(duration_full[0][1].lower(), course_item)
-                if len(duration_full[0]) == 3:
-                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[0][1]))
-                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[0][1]))
-                    self.get_period(duration_full[0][2].lower(), course_item)
+                course_item["durationMinFull"] = float(duration_full[0][0])
+                self.get_period(duration_full[0][1].lower(), course_item)
             if duration_part:
-                if self.teaching_periods[duration_part[0][2].lower()] == course_item["teachingPeriod"]:
-                    if duration_part[0][0] == "":
-                        course_item["durationMinPart"] = float(duration_part[0][1])
-                    else:
-                        course_item["durationMinPart"] = float(duration_part[0][0])
-                        course_item["durationMaxPart"] = float(duration_part[0][1])
+                if self.teaching_periods[duration_part[0][1].lower()] == course_item["teachingPeriod"]:
+                    course_item["durationMinPart"] = float(duration_part[0][0])
                 else:
-                    if duration_part[0][0] == "":
-                        course_item["durationMinPart"] = float(duration_part[0][1]) * course_item["teachingPeriod"] \
-                                                         / self.teaching_periods[duration_part[0][2].lower()]
-                    else:
-                        course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
-                                                         / self.teaching_periods[duration_part[0][2].lower()]
-                        course_item["durationMaxPart"] = float(duration_part[0][1]) * course_item["teachingPeriod"] \
-                                                         / self.teaching_periods[duration_part[0][2].lower()]
-        if "durationMinFull" not in course_item:
-            duration_full = re.findall("(\d*\.?\d+)(?=-(year|month|semester|trimester|quarter|week|day))", duration,
-                                       re.I | re.M | re.DOTALL)
-            if duration_full:
-                if len(duration_full) == 1:
+                    course_item["durationMinPart"] = float(duration_part[0][0]) * course_item["teachingPeriod"] \
+                        / self.teaching_periods[duration_part[0][1].lower()]
+            if "durationMinFull" not in course_item and "durationMinPart" not in course_item:
+                duration_full = re.findall("(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
+                                           duration, re.I | re.M | re.DOTALL)
+                if duration_full:
                     course_item["durationMinFull"] = float(duration_full[0][0])
                     self.get_period(duration_full[0][1].lower(), course_item)
-                if len(duration_full) == 2:
-                    course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
-                    course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
-                    self.get_period(duration_full[1][1].lower(), course_item)
+                    # if len(duration_full) == 1:
+                    #     course_item["durationMinFull"] = float(duration_full[0][0])
+                    #     self.get_period(duration_full[0][1].lower(), course_item)
+                    # if len(duration_full) == 2:
+                    #     course_item["durationMinFull"] = min(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     course_item["durationMaxFull"] = max(float(duration_full[0][0]), float(duration_full[1][0]))
+                    #     self.get_period(duration_full[1][1].lower(), course_item)
 
-        course_structure = response.xpath("//*[contains(text(), 'Degree Structure')]/following-sibling::*").getall()
+        course_structure = response.xpath(
+            "//*[contains(text(), 'Degree Structure')]/following-sibling::*").getall()
         if not course_structure:
-            course_structure = response.xpath("//*[contains(text(), 'Program Structure')]/following-sibling::*").getall()
+            course_structure = response.xpath(
+                "//*[contains(text(), 'Program Structure')]/following-sibling::*").getall()
         if course_structure:
             holder = []
             for item in course_structure:
@@ -189,9 +196,11 @@ class CmuSpiderSpider(scrapy.Spider):
                 course_item["courseStructure"] = strip_tags("".join(holder), remove_all_tags=False,
                                                             remove_hyperlinks=True)
 
-        learn = response.xpath("//*[contains(text(), 'Learning outcomes')]/following-sibling::*").getall()
+        learn = response.xpath(
+            "//*[contains(text(), 'Learning outcomes')]/following-sibling::*").getall()
         if not learn:
-            learn = response.xpath("//*[contains(text(), 'Learning Outcomes')]/following-sibling::*").getall()
+            learn = response.xpath(
+                "//*[contains(text(), 'Learning Outcomes')]/following-sibling::*").getall()
         if learn:
             holder = []
             for item in learn:
@@ -200,9 +209,11 @@ class CmuSpiderSpider(scrapy.Spider):
                 else:
                     holder.append(item)
             if holder:
-                course_item["whatLearn"] = strip_tags("".join(holder), remove_all_tags=False, remove_hyperlinks=True)
+                course_item["whatLearn"] = strip_tags(
+                    "".join(holder), remove_all_tags=False, remove_hyperlinks=True)
 
-        entry = response.xpath("//*[contains(text(), 'Entry Requirements')]/following-sibling::*").getall()
+        entry = response.xpath(
+            "//*[contains(text(), 'Entry Requirements')]/following-sibling::*").getall()
         if entry:
             holder = []
             for item in entry:
@@ -214,7 +225,8 @@ class CmuSpiderSpider(scrapy.Spider):
                 course_item["entryRequirements"] = strip_tags("".join(holder), remove_all_tags=False,
                                                               remove_hyperlinks=True)
 
-        career = response.xpath("//*[contains(text(), 'Internships and Career Outcomes')]/following-sibling::*").getall()
+        career = response.xpath(
+            "//*[contains(text(), 'Internships and Career Outcomes')]/following-sibling::*").getall()
         if career:
             holder = []
             for item in career:
@@ -226,7 +238,8 @@ class CmuSpiderSpider(scrapy.Spider):
                 course_item["careerPathways"] = strip_tags("".join(holder), remove_all_tags=False,
                                                            remove_hyperlinks=True)
 
-        location = response.xpath("//td[text() = 'Location']/following-sibling::*").get()
+        location = response.xpath(
+            "//td[text() = 'Location']/following-sibling::*").get()
         if location:
             study_holder = []
             campus_holder = []
@@ -239,7 +252,8 @@ class CmuSpiderSpider(scrapy.Spider):
             if study_holder:
                 course_item["modeOfStudy"] = "|".join(study_holder)
 
-        period = response.xpath("//td[text() = 'Intakes']/following-sibling::*").get()
+        period = response.xpath(
+            "//td[text() = 'Intakes']/following-sibling::*").get()
         if period:
             start_holder = []
             for month in self.months:
@@ -248,6 +262,7 @@ class CmuSpiderSpider(scrapy.Spider):
             if start_holder:
                 course_item["startMonths"] = "|".join(start_holder)
 
-        course_item.set_sf_dt(self.degrees, degree_delims=["and", "/"])
+        course_item.set_sf_dt(self.degrees, degree_delims=[
+                              'and', '/'], type_delims=['of', 'in', 'by'])
 
         yield course_item
