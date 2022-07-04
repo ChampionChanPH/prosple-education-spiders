@@ -45,7 +45,27 @@ def get_total(field_to_use, field_to_update, course_item):
 
 class SwiSpiderSpider(scrapy.Spider):
     name = 'swi_spider'
-    start_urls = ['https://www.swinburne.edu.au/courses/find-a-course/']
+    # start_urls = ['https://www.swinburne.edu.au/courses/find-a-course/']
+    start_urls = [
+        'https://www.swinburne.edu.au/courses/find-a-course/applied-innovation',
+        'https://www.swinburne.edu.au/courses/find-a-course/arts-humanities-social-sciences',
+        'https://www.swinburne.edu.au/courses/find-a-course/aviation',
+        'https://www.swinburne.edu.au/courses/find-a-course/built-environment-architecture',
+        'https://www.swinburne.edu.au/courses/find-a-course/business',
+        'https://www.swinburne.edu.au/courses/find-a-course/design',
+        'https://www.swinburne.edu.au/courses/find-a-course/education',
+        'https://www.swinburne.edu.au/courses/find-a-course/engineering',
+        'https://www.swinburne.edu.au/courses/find-a-course/film-television',
+        'https://www.swinburne.edu.au/courses/find-a-course/games-animation',
+        'https://www.swinburne.edu.au/courses/find-a-course/health',
+        'https://www.swinburne.edu.au/courses/find-a-course/information-technology',
+        'https://www.swinburne.edu.au/courses/find-a-course/law',
+        'https://www.swinburne.edu.au/courses/find-a-course/media-communication',
+        'https://www.swinburne.edu.au/courses/find-a-course/nursing',
+        'https://www.swinburne.edu.au/courses/find-a-course/psychology',
+        'https://www.swinburne.edu.au/courses/find-a-course/science',
+        'https://www.swinburne.edu.au/courses/find-a-course/trades-apprenticeships'
+    ]
     http_user = 'b4a56de85d954e9b924ec0e0b7696641'
     user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36"
     institution = "Swinburne University of Technology"
@@ -125,14 +145,12 @@ class SwiSpiderSpider(scrapy.Spider):
             if re.search(item, string_to_use):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
+    # def parse(self, response):
+    #     categories = response.xpath(
+    #         "//div[contains(@class, 'card-body')]//a[contains(@class, 'card-link')]")
+    #     yield response.follow_all(categories, callback=self.sub_parse, headers={"User-Agent": self.user_agent})
+
     def parse(self, response):
-        categories = response.xpath(
-            "//div[contains(@class, 'card-body')]//a[contains(@class, 'card-link')]/@href").getall()
-
-        for item in categories:
-            yield response.follow(item, callback=self.sub_parse, headers={"User-Agent": self.user_agent})
-
-    def sub_parse(self, response):
         sub = response.xpath(
             "//div[@class='content']//ul[@class='list']//a[contains(@class, 'card  ')]/@href").getall()
 
