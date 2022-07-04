@@ -55,7 +55,19 @@ class ViconSpiderSpider(scrapy.Spider):
     uidPrefix = "AU-VIC-ON-"
 
     degrees = {
-        "master": "11"
+        "graduate certificate": "7",
+        "graduate diploma": "8",
+        "master": research_coursework,
+        "mba": research_coursework,
+        "bachelor": bachelor_honours,
+        "doctor": "6",
+        "advanced certificate": "7",
+        "certificate": "4",
+        "advanced diploma": "5",
+        "diploma": "5",
+        "associate degree": "1",
+        "non-award": "13",
+        "no match": "15"
     }
 
     teaching_periods = {
@@ -74,7 +86,8 @@ class ViconSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
-        courses = response.css("h3 a::attr(href)").getall()
+        courses = response.xpath(
+            "//div[@class='accordion__content']//li/a/@href").getall()
         for course in courses:
             if course not in self.blacklist_urls and course not in self.scraped_urls:
                 if (len(self.superlist_urls) != 0 and course in self.superlist_urls) or len(self.superlist_urls) == 0:
