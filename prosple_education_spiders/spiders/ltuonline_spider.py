@@ -133,22 +133,11 @@ class LtuonlineSpiderSpider(scrapy.Spider):
                 name = course_name
             course_item.set_course_name(name.strip(), self.uidPrefix)
 
-        holder = []
-        summary1 = response.xpath(
-            "//h2[contains(@class, 'tux-c-hero__heading')]/text()").get()
-        if summary1:
-            if not re.search('\.$', summary1):
-                holder.append(summary1.strip() + '.')
-            else:
-                holder.append(summary1.strip())
-        summary2 = response.xpath(
-            "//h2[contains(@class, 'tux-c-hero__heading')]/following-sibling::*").getall()
-        if summary2:
-            summary2 = [strip_tags(
-                re.sub('<sup>.*?</sup>', '', x, re.DOTALL)) for x in summary2]
-            holder.extend(summary2)
-        if holder:
-            course_item.set_summary(' '.join(holder))
+        summary = response.xpath(
+            "//div[@class='tux-c-hero-b__heading']/*").getall()
+        if summary:
+            summary = [strip_tags(x) for x in summary]
+            course_item.set_summary(' '.join(summary))
 
         overview = response.xpath(
             "//div[@data-label='One Column'][*/*[@class='h3']]/*/*").getall()
