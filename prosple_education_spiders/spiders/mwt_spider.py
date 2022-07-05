@@ -57,6 +57,9 @@ class MwtSpiderSpider(scrapy.Spider):
                 course_item["teachingPeriod"] = self.teaching_periods[item]
 
     def parse(self, response):
+        yield SplashRequest(response.request.url, callback=self.course_parse, args={'wait': 20})
+
+    def course_parse(self, response):
         course_item = Course()
 
         course_item["lastUpdate"] = date.today().strftime("%m/%d/%y")
@@ -66,22 +69,24 @@ class MwtSpiderSpider(scrapy.Spider):
 
         title = response.xpath("//title/text()").get()
         split_title = re.findall("(\w+):\s(.+)\s–", title, re.DOTALL)
-        if len(split_title) > 0:
+        if split_title:
             course_code, course_name = split_title[0]
             course_item["courseCode"] = course_code.strip()
             course_item.set_course_name(course_name.strip(), self.uidPrefix)
 
         overview = response.xpath("//*[preceding-sibling::*[contains(text(), 'Course Description')] and "
                                   "following-sibling::*[contains(text(), 'Possible job titles')]]").getall()
-        if len(overview) > 0:
+        if overview:
             overview = "".join(overview)
             course_item["overview"] = strip_tags(overview, False)
 
-        career = response.xpath("//*[preceding-sibling::*[contains(text(), 'Possible job titles')]]").get()
-        if career is not None:
+        career = response.xpath(
+            "//*[preceding-sibling::*[contains(text(), 'Possible job titles')]]").get()
+        if career:
             course_item["careerPathways"] = strip_tags(career, False)
 
-        duration = response.xpath("//div[contains(a/text(), 'Volume of Learning')]/following-sibling::*//text()").get()
+        duration = response.xpath(
+            "//div[contains(a/text(), 'Volume of Learning')]/following-sibling::*//text()").get()
         duration = re.findall("(\d*\.?\d+)\s–\s(\d*\.?\d+)(?=\s(year|month|semester|trimester|quarter|week|day))",
                               duration, re.M)
         if len(duration) > 0:
@@ -89,24 +94,29 @@ class MwtSpiderSpider(scrapy.Spider):
             course_item["durationMinPart"] = float(duration[0][1])
             self.get_period(duration[0][2], course_item)
 
-        fee = response.xpath("//div[contains(a/text(), 'Course Cost')]/following-sibling::*//text()").get()
-        if fee is not None:
+        fee = response.xpath(
+            "//div[contains(a/text(), 'Course Cost')]/following-sibling::*//text()").get()
+        if fee:
             fee = re.findall("\$\d*,?\d+", fee, re.M)
             if len(fee) > 0:
                 fee = float(re.sub("[$,]", "", fee[0]))
                 course_item["domesticFeeAnnual"] = fee
 
-        entry = response.xpath("//div[contains(a/text(), 'Entry Requirements')]/following-sibling::*/*").getall()
+        entry = response.xpath(
+            "//div[contains(a/text(), 'Entry Requirements')]/following-sibling::*/*").getall()
         if len(entry) == 0:
             entry = ""
         else:
             entry = "".join(entry)
-        assessment = response.xpath("//div[contains(a/text(), 'Assessment')]/following-sibling::*/*").getall()
+        assessment = response.xpath(
+            "//div[contains(a/text(), 'Assessment')]/following-sibling::*/*").getall()
         if len(assessment) == 0:
             assessment = ""
         else:
-            assessment = "<br><p><strong>Assessment</strong></p>" + "".join(assessment)
-        course_item["entryRequirements"] = strip_tags(entry + assessment, False)
+            assessment = "<br><p><strong>Assessment</strong></p>" + \
+                "".join(assessment)
+        course_item["entryRequirements"] = strip_tags(
+            entry + assessment, False)
 
         unit_competency = response.xpath("//div[contains(a/text(), 'Units of competency "
                                          "required')]/following-sibling::*/*").getall()
@@ -114,14 +124,17 @@ class MwtSpiderSpider(scrapy.Spider):
             unit_competency = ""
         else:
             unit_competency = "".join(unit_competency)
-        unit_required = response.xpath("//div[contains(a/text(), 'Units Required')]/following-sibling::*/*").getall()
+        unit_required = response.xpath(
+            "//div[contains(a/text(), 'Units Required')]/following-sibling::*/*").getall()
         if len(unit_required) == 0:
             unit_required = ""
         else:
             unit_required = "".join(unit_required)
-        course_item["courseStructure"] = strip_tags(unit_competency + unit_required, False)
+        course_item["courseStructure"] = strip_tags(
+            unit_competency + unit_required, False)
 
-        apply = response.xpath("//div[contains(a/text(), 'How to Enrol')]/following-sibling::*/*").getall()
+        apply = response.xpath(
+            "//div[contains(a/text(), 'How to Enrol')]/following-sibling::*/*").getall()
         if len(apply) > 0:
             apply = "".join(apply)
             course_item["howToApply"] = strip_tags(apply, False)
