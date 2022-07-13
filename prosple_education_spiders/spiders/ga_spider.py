@@ -46,7 +46,7 @@ class GaSpiderSpider(scrapy.Spider):
     start_urls = [
         'https://generalassemb.ly/browse/courses-and-classes?eveningOneWeek=true&immersive=true']
     institution = "General Assembly"
-    uidPrefix = "AU-NIO-"
+    uidPrefix = "AU-GA-"
     degrees = {
         "graduate certificate": "7",
         "graduate diploma": "8",
