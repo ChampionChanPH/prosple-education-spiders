@@ -189,4 +189,5 @@ class GaSpiderSpider(scrapy.Spider):
             course_item["whatLearn"] = strip_tags(
                 ''.join(learn), remove_all_tags=False, remove_hyperlinks=True)
 
-        yield course_item
+        if "courseName" in course_item:
+            yield course_item
