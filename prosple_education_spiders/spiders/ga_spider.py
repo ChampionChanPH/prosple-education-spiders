@@ -97,14 +97,16 @@ class GaSpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         courses = response.xpath(
-            "//div[contains(@class, 'css-1gz9vyw')]")
+            "//div[contains(@class, 'css-1k1bltt')]")
 
         for item in courses:
             duration = item.xpath(
-                "..//svg[g[contains(@class, 'ClockOutlineIcon_svg')]]/following-sibling::*").get()
+                ".//svg[g[contains(@class, 'ClockOutlineIcon_svg')]]/following-sibling::*").get()
             study = item.xpath(
-                "..//svg[g[contains(@class, 'LocationMarkerIcon_svg')]]/following-sibling::*").get()
-            yield response.follow(item, callback=self.course_parse, meta={"duration": duration, "study": study})
+                ".//svg[g[contains(@class, 'LocationMarkerIcon_svg')]]/following-sibling::*").get()
+            url = item.xpath("./a/@href").get()
+            if url:
+                yield response.follow(url, callback=self.course_parse, meta={"duration": duration, "study": study})
 
     def course_parse(self, response):
         course_item = Course()
